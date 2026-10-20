@@ -1,0 +1,1110 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cartão de Ponto · Las Vegas</title>
+<meta name="theme-color" content="#C8102E">
+<link rel="icon" id="fav" href="">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#C8102E;--red-d:#9E0C24;--gold:#C8830F;--gold-t:#F5B524;
+  --bg:#F4F1EA;--s1:#FFFFFF;--s2:#FAF8F2;--s3:#EFEAE0;
+  --bd:rgba(26,22,18,.10);--bd2:rgba(26,22,18,.18);
+  --t1:#1A1612;--t2:rgba(26,22,18,.66);--t3:rgba(26,22,18,.46);
+  --ok:#0F8A5A;--ok-bg:rgba(15,138,90,.10);--info:#1F6FC5;--info-bg:rgba(31,111,197,.10);
+  --warn:#A86B05;--warn-bg:rgba(200,131,15,.13);--bad:#B83232;--bad-bg:rgba(184,50,50,.10);
+  --sans:'Manrope',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace;
+  --r:14px;--sh:0 1px 2px rgba(26,22,18,.05),0 8px 24px rgba(26,22,18,.06);
+}
+html,body{background:var(--bg);color:var(--t1);font-family:var(--sans);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;background:radial-gradient(1000px 520px at 50% -12%,rgba(245,181,36,.13),transparent 60%),var(--bg)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--t1)}
+.wrap{max-width:1080px;margin:0 auto;padding:18px 16px 90px}
+.mono{font-family:var(--mono)}
+.muted{color:var(--t2)}.faint{color:var(--t3)}
+.row{display:flex;align-items:center;gap:10px}.between{justify-content:space-between}.wrap-row{flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+.hide{display:none!important}
+
+/* topo */
+.top{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.top img{height:46px;width:auto}
+.top h1{font-size:17px;font-weight:800;letter-spacing:-.01em;line-height:1.1}
+.top .sub{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}
+.clock{margin-left:auto;text-align:right}
+.clock b{font-family:var(--mono);font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1}
+.clock span{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-top:3px}
+
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh)}
+.pad{padding:18px}
+.h2{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin:22px 2px 10px}
+.h2:first-child{margin-top:0}
+
+/* botões */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 16px;border-radius:11px;font-weight:700;font-size:14px;border:1px solid var(--bd2);background:var(--s1);transition:transform .08s,background .15s}
+.btn:active{transform:scale(.98)}
+.btn.pri{background:var(--red);border-color:var(--red);color:#fff}
+.btn.pri:hover{background:var(--red-d)}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--t2)}
+.btn.sm{height:34px;padding:0 12px;font-size:13px;border-radius:9px}
+.btn.big{height:64px;font-size:19px;border-radius:16px;width:100%;letter-spacing:.02em}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.icon-btn{width:38px;height:38px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;color:var(--t2);border:1px solid var(--bd)}
+.icon-btn:hover{background:var(--s2)}
+
+/* chips/abas */
+.tabs{display:flex;gap:4px;background:var(--s3);padding:4px;border-radius:12px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:1;white-space:nowrap;height:38px;padding:0 14px;border-radius:9px;font-weight:700;font-size:13.5px;color:var(--t2);display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.tab.on{background:var(--s1);color:var(--t1);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.badge{min-width:19px;height:19px;padding:0 6px;border-radius:10px;background:var(--red);color:#fff;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}
+.pill{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:12px;font-size:12px;font-weight:700;background:var(--s3);color:var(--t2);white-space:nowrap}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.bad{background:var(--bad-bg);color:var(--bad)}.pill.info{background:var(--info-bg);color:var(--info)}
+.pill.red{background:var(--red);color:#fff}
+.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;display:inline-block}
+
+/* loja */
+.store-switch{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:18px;background:var(--s1);border:1px solid var(--bd);font-weight:700;font-size:13px}
+.store-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:10px}
+.store-card{padding:26px 22px;text-align:left;border-radius:18px;background:var(--s1);border:1px solid var(--bd);box-shadow:var(--sh)}
+.store-card:hover{border-color:var(--red)}
+.store-card b{display:block;font-size:22px;font-weight:800}
+.store-card span{color:var(--t2);font-size:14px}
+
+/* colaboradoras */
+.people{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.person{display:flex;align-items:center;gap:12px;padding:16px;border-radius:16px;background:var(--s1);border:1px solid var(--bd);box-shadow:var(--sh);text-align:left;transition:border-color .15s,transform .08s}
+.person:hover{border-color:var(--red)}
+.person:active{transform:scale(.985)}
+.avatar{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;color:#1A1612;flex-shrink:0}
+.person b{display:block;font-size:15px;font-weight:800;line-height:1.2}
+.person small{font-size:12px;color:var(--t3);font-weight:600}
+.status-in{color:var(--ok)}.status-lunch{color:var(--warn)}
+
+/* PIN */
+.overlay{position:fixed;inset:0;background:rgba(26,22,18,.45);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50;animation:fade .15s}
+@keyframes fade{from{opacity:0}}
+.modal{background:var(--s1);border-radius:20px;width:100%;max-width:420px;max-height:calc(100vh - 32px);overflow:auto;box-shadow:0 24px 70px rgba(0,0,0,.25);animation:pop .18s}
+.modal.wide{max-width:640px}
+@keyframes pop{from{transform:translateY(10px) scale(.98);opacity:0}}
+.modal-h{display:flex;align-items:center;gap:12px;padding:18px 18px 0}
+.modal-h h3{font-size:17px;font-weight:800}
+.modal-b{padding:18px}
+.pin-dots{display:flex;justify-content:center;gap:12px;margin:8px 0 6px}
+.pin-dots i{width:15px;height:15px;border-radius:50%;border:2px solid var(--bd2)}
+.pin-dots i.on{background:var(--t1);border-color:var(--t1)}
+.pin-dots.err i{border-color:var(--bad)}
+.pin-err{text-align:center;color:var(--bad);font-size:13px;font-weight:700;min-height:20px}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px}
+.key{height:62px;border-radius:14px;background:var(--s2);border:1px solid var(--bd);font-size:24px;font-weight:700;font-family:var(--mono)}
+.key:active{background:var(--s3)}
+.key.fn{font-size:15px;font-family:var(--sans);color:var(--t2)}
+
+/* bater */
+.punch-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.slot{border-radius:14px;border:1px solid var(--bd);background:var(--s2);padding:12px 8px;text-align:center}
+.slot small{display:block;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--t3)}
+.slot b{display:block;font-family:var(--mono);font-size:21px;margin-top:4px;color:var(--t3)}
+.slot.done{background:var(--s1)}
+.slot.done b{color:var(--t1)}
+.slot.next{border:2px solid var(--red);background:#fff}
+.slot.next small{color:var(--red)}
+.hello{font-size:24px;font-weight:800;letter-spacing:-.01em}
+.success{text-align:center;padding:28px 10px}
+.success .big-ico{width:76px;height:76px;border-radius:50%;background:var(--ok-bg);color:var(--ok);display:inline-flex;align-items:center;justify-content:center;font-size:40px}
+.success b.time{display:block;font-family:var(--mono);font-size:54px;font-weight:700;letter-spacing:-.03em;margin-top:10px}
+
+/* estatísticas */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{padding:14px 16px;border-radius:14px;background:var(--s1);border:1px solid var(--bd)}
+.stat small{display:block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)}
+.stat b{display:block;font-family:var(--mono);font-size:24px;font-weight:700;margin-top:4px;letter-spacing:-.02em}
+.stat span{font-size:12px;color:var(--t2)}
+.pos{color:var(--ok)}.neg{color:var(--bad)}
+
+/* tabela de dias */
+.days{display:flex;flex-direction:column;gap:6px}
+.day{display:grid;grid-template-columns:86px 1fr auto;gap:10px;align-items:center;padding:11px 14px;border-radius:12px;background:var(--s1);border:1px solid var(--bd);text-align:left;width:100%}
+.day:hover{border-color:var(--bd2)}
+.day.sun{background:transparent;border-style:dashed;opacity:.7}
+.day.future{opacity:.55}
+.day .d1{font-weight:800;font-size:14px}
+.day .d2{font-size:11.5px;color:var(--t3);font-weight:700;text-transform:capitalize}
+.marks{display:flex;flex-wrap:wrap;gap:4px 10px;font-family:var(--mono);font-size:13px;color:var(--t2)}
+.marks .ed{text-decoration:underline dotted var(--gold);text-underline-offset:3px}
+.day .right{text-align:right;font-family:var(--mono);font-size:13px;font-weight:700}
+.day .right small{display:block;font-family:var(--sans);font-size:11px;font-weight:700}
+.flags{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+
+/* tabela admin */
+.table-wrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--bd);background:var(--s1)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);text-align:left;padding:10px 12px;border-bottom:1px solid var(--bd);background:var(--s2);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--bd);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.num{font-family:var(--mono);text-align:right}
+tr.click{cursor:pointer}tr.click:hover td{background:var(--s2)}
+
+/* formulários */
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field label{font-size:12px;font-weight:800;letter-spacing:.05em;color:var(--t2)}
+.inp{height:44px;border-radius:10px;border:1px solid var(--bd2);background:var(--s1);padding:0 12px;width:100%}
+textarea.inp{height:auto;min-height:80px;padding:10px 12px;resize:vertical}
+.inp:focus{outline:2px solid rgba(200,16,46,.35);border-color:var(--red)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px}
+.seg button{padding:12px 8px;border-radius:12px;border:1px solid var(--bd2);background:var(--s1);font-weight:700;font-size:13px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.seg button i{font-size:22px;color:var(--t3)}
+.seg button.on{border:2px solid var(--red);background:#fff}
+.seg button.on i{color:var(--red)}
+.note{padding:12px 14px;border-radius:12px;font-size:13.5px;display:flex;gap:10px;align-items:flex-start}
+.note i{font-size:18px;flex-shrink:0;margin-top:1px}
+.note.info{background:var(--info-bg);color:#15568f}.note.warn{background:var(--warn-bg);color:#7a4f06}
+.note.bad{background:var(--bad-bg);color:var(--bad)}.note.ok{background:var(--ok-bg);color:#0c6e48}
+
+.req{padding:14px 16px;border-radius:14px;background:var(--s1);border:1px solid var(--bd);display:flex;gap:12px;align-items:flex-start}
+.req + .req{margin-top:8px}
+.req .ico{width:38px;height:38px;border-radius:10px;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;color:var(--t2)}
+.req b{font-weight:800}
+.req p{font-size:13.5px;color:var(--t2);margin-top:2px}
+
+.hist{font-size:12.5px;color:var(--t2);border-left:2px solid var(--bd2);padding-left:10px;margin-top:6px}
+.hist div + div{margin-top:4px}
+
+.footer{display:flex;justify-content:center;gap:8px;margin-top:30px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--t1);color:#fff;padding:12px 18px;border-radius:12px;font-weight:700;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.25);z-index:90;max-width:calc(100vw - 32px);animation:pop .2s}
+.toast.bad{background:var(--bad)}
+.spin{display:inline-block;width:18px;height:18px;border:2.5px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-3px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:60px 0;color:var(--t2);font-weight:700}
+.offline-bar{background:var(--warn-bg);color:#7a4f06;border-radius:12px;padding:10px 14px;font-size:13.5px;font-weight:700;margin-bottom:14px;display:flex;gap:8px;align-items:center}
+
+@media (max-width:640px){
+  .top img{height:38px}.clock b{font-size:24px}
+  .day{grid-template-columns:62px 1fr auto;padding:10px 11px}
+  .grid3{grid-template-columns:1fr 1fr}
+  .slot b{font-size:18px}
+  .hide-sm{display:none}
+}
+
+/* espelho para impressão */
+#print{display:none}
+@media print{
+  body{background:#fff}
+  #app,.toast,.overlay{display:none!important}
+  #print{display:block;font-family:var(--sans);font-size:11px;color:#000}
+  #print h1{font-size:16px}
+  #print table{font-size:10.5px}
+  #print th,#print td{padding:4px 6px;border:1px solid #bbb;white-space:nowrap}
+  #print th{background:#eee;color:#000}
+  @page{size:A4;margin:12mm}
+}
+</style>
+</head>
+<body>
+<div id="app"><div class="loading"><span class="spin"></span> Carregando…</div></div>
+<div id="modal"></div>
+<div id="print"></div>
+<script>
+/* ═══════════════════════════════════════════════════════════
+   LAS VEGAS · Cartão de Ponto Online
+   Página única: Bater ponto (loja) · Minha área · Administração
+   Dados ficam na planilha Google (Apps Script) — nada só no aparelho.
+   ═══════════════════════════════════════════════════════════ */
+
+const API_FIXO = 'https://script.google.com/macros/s/AKfycbw_rhPwaL7Xj-Bxcc5QiLUR2kbrNy8KDdUh7V58mi0FM9UUjE32WbAcTSEuUlfeMmpX/exec';   // link /exec do Apps Script (preenchido na publicação)
+const LOGO = 'data:image/png;base64,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';
+const EMPRESA = {nome:'Las Vegas Sex Shop', cnpj:'47.100.282/0001-62'};
+const CAMPOS = ['entrada','saida_almoco','volta_almoco','inicio_pausa','fim_pausa','saida'];
+const NOME = {entrada:'Entrada',saida_almoco:'Saída almoço',volta_almoco:'Volta almoço',inicio_pausa:'Início pausa',fim_pausa:'Fim pausa',saida:'Saída'};
+const CURTO = {entrada:'Entrada',saida_almoco:'Almoço',volta_almoco:'Volta',inicio_pausa:'Pausa',fim_pausa:'Fim pausa',saida:'Saída'};
+const ICO = {entrada:'ti-login',saida_almoco:'ti-tools-kitchen-2',volta_almoco:'ti-arrow-back-up',inicio_pausa:'ti-coffee',fim_pausa:'ti-player-play',saida:'ti-logout'};
+const TIPO_NOME = {normal:'Normal',folga:'Folga (banco)',atestado:'Atestado',ferias:'Férias',abono:'Abonado',falta:'Falta'};
+
+/* ──────────── utilidades ──────────── */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LS = {
+  get(k, d=null){ try{ const v = localStorage.getItem(k); return v==null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+const toM = t => { if(!t) return null; const [h,m] = String(t).split(':').map(Number); return h*60+m; };
+const hm = (m, sinal=false) => {
+  if(m==null || isNaN(m)) return '--:--';
+  const s = m<0 ? '-' : (sinal && m>0 ? '+' : '');
+  const a = Math.abs(Math.round(m));
+  return s + String(Math.floor(a/60)).padStart(2,'0') + ':' + String(a%60).padStart(2,'0');
+};
+const pad = n => String(n).padStart(2,'0');
+const isoD = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const dt = s => new Date(s+'T12:00:00');
+const dow = s => dt(s).getDay();
+const addDays = (s, n) => { const d = dt(s); d.setDate(d.getDate()+n); return isoD(d); };
+const diasDoMes = ym => { const [y,m] = ym.split('-').map(Number); const n = new Date(y,m,0).getDate(); return Array.from({length:n},(_,i)=>`${ym}-${pad(i+1)}`); };
+const nomeMes = ym => { const s = dt(ym+'-15').toLocaleDateString('pt-BR',{month:'long',year:'numeric'}); return s[0].toUpperCase()+s.slice(1); };
+const ddmm = s => s.slice(8,10)+'/'+s.slice(5,7);
+const semana = s => dt(s).toLocaleDateString('pt-BR',{weekday:'short'}).replace('.','');
+const dataLonga = s => { const x = dt(s).toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'}); return x[0].toUpperCase()+x.slice(1); };
+const primeiroNome = n => String(n||'').split(' ')[0];
+const iniciais = n => String(n||'?').split(' ').filter(Boolean).slice(0,2).map(p=>p[0]).join('').toUpperCase();
+const mesDe = s => s.slice(0,7);
+const mesAdd = (ym, n) => { const [y,m] = ym.split('-').map(Number); const d = new Date(y, m-1+n, 15); return d.getFullYear()+'-'+pad(d.getMonth()+1); };
+
+function toast(msg, ruim=false){
+  const t = document.createElement('div'); t.className = 'toast'+(ruim?' bad':''); t.textContent = msg;
+  document.body.appendChild(t); setTimeout(()=>t.remove(), ruim ? 4500 : 2600);
+}
+
+/* ──────────── estado ──────────── */
+const S = {
+  api: API_FIXO || LS.get('lv_api',''),
+  boot: null,             // lojas, colaboradoras, regras, hoje
+  loja: LS.get('lv_loja', null),
+  tela: 'inicio',         // inicio | bater | sucesso | minha | admin | config
+  sess: null,             // {eid, pin, dados}
+  minhaTab: 'mes', minhaMes: null,
+  adm: null,              // {pin, dados, tab, eid, mes}
+  pin: null,              // modal de PIN {alvo, buf, erro, titulo}
+  ocupado: false,
+  offset: 0,              // diferença (min) entre relógio do servidor e do aparelho
+  fila: LS.get('lv_fila', []),
+};
+let timerVolta = null;
+
+/* ──────────── servidor ──────────── */
+async function api(a, dados={}){
+  if(!S.api) throw new Error('Link do servidor não configurado');
+  const r = await fetch(S.api, {method:'POST', body: JSON.stringify({a, ...dados})});
+  const j = await r.json();
+  if(!j.ok) throw new Error(j.erro || 'Erro no servidor');
+  return j;
+}
+function erroRede(e){ return e && (e.name==='TypeError' || /fetch|network|Failed/i.test(e.message||'')); }
+
+async function carregar(){
+  if(!S.api){ S.tela='config'; render(); return; }
+  try{
+    S.boot = await api('boot');
+    LS.set('lv_boot', S.boot);
+    const servidor = toM(S.boot.hora), local = new Date().getHours()*60+new Date().getMinutes();
+    S.offset = (S.boot.hoje === isoD(new Date())) ? servidor - local : 0;
+  }catch(e){
+    S.boot = LS.get('lv_boot', null);
+    if(!S.boot){ render(); toast('Não consegui falar com o servidor: '+e.message, true); return; }
+    toast('Sem conexão — usando dados guardados', true);
+  }
+  render(); enviarFila();
+}
+
+/* ──────────── regras de cálculo (7h20 · folga 8h · ter–sex) ──────────── */
+function trab(r){
+  if(!r || !r.entrada || !r.saida) return null;
+  let t = toM(r.saida) - toM(r.entrada);
+  if(r.saida_almoco && r.volta_almoco) t -= toM(r.volta_almoco) - toM(r.saida_almoco);
+  if(r.inicio_pausa && r.fim_pausa) t -= toM(r.fim_pausa) - toM(r.inicio_pausa);
+  return Math.max(0, t);
+}
+function hojeISO(){ return S.boot?.hoje && S.boot.hoje >= isoD(new Date()) ? S.boot.hoje : isoD(new Date()); }
+
+/** Analisa um dia: previsto, trabalhado, saldo e pendências. */
+function analisaDia(colab, data, r, regras, anterior){
+  const hoje = hojeISO();
+  const w = dow(data);
+  const feriado = regras.feriados.includes(data);
+  const inicio = [regras.inicio_banco, colab.admissao||''].sort().pop();
+  const conta = data >= inicio;
+  const previsto = (w!==0 && !feriado) ? regras.jornada_min : 0;
+  const tipo = (r && r.tipo) || 'normal';
+  const o = {data, r, tipo, previsto:0, trabalhado:0, saldo:0, flags:[], conta, feriado, domingo:w===0, futuro:data>hoje, hoje:data===hoje};
+  if(data > hoje && tipo==='normal') return o;
+  if(['atestado','ferias','abono'].includes(tipo)){ o.previsto=previsto; o.trabalhado=previsto; o.flags.push({n:TIPO_NOME[tipo], c:'info'}); }
+  else if(tipo==='folga'){ o.previsto=previsto; o.saldo=-regras.folga_min; o.flags.push({n:'Folga banco −'+hm(regras.folga_min), c:'info'}); }
+  else if(tipo==='falta'){ o.previsto=previsto; o.flags.push({n:'Falta', c:'bad'}); }
+  else {
+    const t = trab(r);
+    const temAlgo = r && CAMPOS.some(k=>r[k]);
+    if(!temAlgo){
+      if(previsto && data < hoje && conta){ o.previsto=previsto; o.saldo=-previsto; o.flags.push({n:'Sem marcação', c:'bad', pend:true}); }
+    } else if(t==null){
+      o.previsto = previsto;
+      if(data < hoje){ o.flags.push({n:'Falta marcar '+(!r.entrada?'entrada':'saída'), c:'bad', pend:true}); }
+      else o.flags.push({n:'Em andamento', c:'ok'});
+    } else {
+      o.previsto = previsto; o.trabalhado = t;
+      let s = t - previsto;
+      if(previsto && Math.abs(s) <= regras.tolerancia_min) s = 0;
+      o.saldo = s;
+      if(!previsto) o.flags.push({n: feriado?'Trabalhou no feriado':'Trabalhou no domingo', c:'warn'});
+      if((r.saida_almoco && !r.volta_almoco) || (!r.saida_almoco && r.volta_almoco)) o.flags.push({n:'Almoço incompleto', c:'bad', pend:true});
+      if((r.inicio_pausa && !r.fim_pausa) || (!r.inicio_pausa && r.fim_pausa)) o.flags.push({n:'Pausa incompleta', c:'warn'});
+      const alm = (r.saida_almoco && r.volta_almoco) ? toM(r.volta_almoco)-toM(r.saida_almoco) : 0;
+      if(t > 360 && alm < 55) o.flags.push({n: alm ? 'Almoço de '+alm+' min' : 'Sem almoço', c:'warn'});
+      if(t > 600) o.flags.push({n:'Mais de 10h', c:'warn'});
+      if(t < 240 && previsto) o.flags.push({n:'Menos de 4h', c:'bad', pend:true});
+      if(anterior && anterior.saida && r.entrada && addDays(anterior.data,1)===data){
+        const inter = (24*60 - toM(anterior.saida)) + toM(r.entrada);
+        if(inter < 660) o.flags.push({n:'Descanso '+hm(inter)+' (<11h)', c:'warn'});
+      }
+    }
+  }
+  if(!conta){ o.saldo = 0; }
+  return o;
+}
+
+function mapaPontos(pontos, eid){
+  const m = {};
+  pontos.filter(p=>p.colaboradora_id===eid).forEach(p=>{ m[p.data]=p; });
+  return m;
+}
+
+function resumoMes(colab, ym, mapa, regras){
+  const dias = diasDoMes(ym).map(d => analisaDia(colab, d, mapa[d], regras, mapa[addDays(d,-1)]));
+  const t = {trabalhado:0, previsto:0, saldo:0, faltas:0, atestados:0, folgas:0, pend:0, alertas:0, dias};
+  dias.forEach(x=>{
+    if(!x.conta) return;
+    t.trabalhado += x.trabalhado; t.previsto += x.previsto; t.saldo += x.saldo;
+    if(x.tipo==='falta') t.faltas++;
+    if(x.tipo==='atestado') t.atestados++;
+    if(x.tipo==='folga') t.folgas++;
+    x.flags.forEach(f=>{ if(f.pend) t.pend++; else if(f.c==='warn') t.alertas++; });
+  });
+  return t;
+}
+
+function bancoTotal(colab, mapa, regras){
+  let ym = mesDe(regras.inicio_banco), fim = mesDe(hojeISO()), soma = Number(colab.saldo_inicial_min||0), seg=0;
+  while(ym <= fim && seg++ < 36){ soma += resumoMes(colab, ym, mapa, regras).saldo; ym = mesAdd(ym,1); }
+  const futuras = Object.values(mapa).filter(p=>p.tipo==='folga' && p.data > hojeISO()).map(p=>p.data).sort();
+  return {saldo: soma, folgasDisp: soma>0 ? Math.floor(soma/regras.folga_min) : 0, proximas: futuras};
+}
+
+/* ──────────── fila offline ──────────── */
+function salvarFila(){ LS.set('lv_fila', S.fila); }
+async function enviarFila(){
+  if(!S.fila.length || !navigator.onLine) return;
+  const resta = [];
+  for(const f of S.fila){
+    try{ await api('bater', f); }
+    catch(e){ if(erroRede(e)) resta.push(f); else toast('Marcação offline de '+f.nome+' recusada: '+e.message, true); }
+  }
+  const enviadas = S.fila.length - resta.length;
+  S.fila = resta; salvarFila();
+  if(enviadas) toast(enviadas+' marcação(ões) feitas sem internet foram enviadas ✔');
+  if(S.tela==='inicio') render();
+}
+window.addEventListener('online', enviarFila);
+setInterval(enviarFila, 60000);
+
+/* ──────────── render principal ──────────── */
+function render(){
+  clearTimeout(timerVolta);
+  const app = $('#app');
+  if(S.tela==='config'){ app.innerHTML = telaConfig(); return; }
+  if(!S.boot){ app.innerHTML = `<div class="wrap">${topo()}<div class="note bad"><i class="ti ti-wifi-off"></i><div>Não consegui carregar. Confira a internet e <button class="btn sm" onclick="carregar()">tentar de novo</button></div></div></div>`; return; }
+  if(S.tela==='admin'){ app.innerHTML = telaAdmin(); return; }
+  if(S.tela==='minha'){ app.innerHTML = telaMinha(); return; }
+  if(S.tela==='bater'){ app.innerHTML = telaBater(); return; }
+  if(S.tela==='sucesso'){ app.innerHTML = telaSucesso(); timerVolta = setTimeout(sair, 7000); return; }
+  app.innerHTML = telaInicio();
+  tickRelogio();
+}
+const _render = render;
+render = function(){ _render(); tickRelogio(); };
+
+function topo(direita=''){
+  return `<div class="top">
+    <img src="${LOGO}" alt="Las Vegas">
+    <div><h1>Cartão de Ponto</h1><div class="sub">Las Vegas Sex Shop</div></div>
+    ${direita || `<div class="clock"><b id="clk">--:--</b><span id="clkd"></span></div>`}
+  </div>`;
+}
+function agoraServidor(){ const d = new Date(Date.now() + S.offset*60000); return d; }
+function tickRelogio(){
+  const c = $('#clk'); if(!c) return;
+  const d = agoraServidor();
+  c.textContent = pad(d.getHours())+':'+pad(d.getMinutes());
+  const cd = $('#clkd'); if(cd) cd.textContent = d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'}).replace(/\./g,'');
+}
+setInterval(tickRelogio, 10000);
+
+/* ──────────── INÍCIO (computador da loja) ──────────── */
+function telaInicio(){
+  const b = S.boot;
+  if(!S.loja || !b.lojas[S.loja]){
+    return `<div class="wrap">${topo()}
+      <div class="h2">Em qual loja fica este computador?</div>
+      <div class="store-grid">${Object.entries(b.lojas).map(([k,l])=>`
+        <button class="store-card" onclick="escolherLoja('${k}')">
+          <i class="ti ti-building-store" style="font-size:28px;color:var(--red)"></i>
+          <b>Loja ${esc(l.nome)}</b><span>${esc(l.abre)} – ${esc(l.fecha)}</span>
+        </button>`).join('')}
+      </div>
+      <p class="faint" style="margin-top:14px;font-size:13px">No celular pessoal, escolha qualquer uma — a loja de cada marcação pode ser ajustada depois.</p>
+      ${rodape()}</div>`;
+  }
+  const loja = b.lojas[S.loja];
+  const daqui = b.colaboradoras.filter(c=>c.loja===S.loja), outras = b.colaboradoras.filter(c=>c.loja!==S.loja);
+  const card = c => `<button class="person" onclick="abrirPin('${c.id}')">
+      <div class="avatar" style="background:${esc(c.cor||'#F5B524')}">${esc(iniciais(c.nome))}</div>
+      <div class="grow"><b>${esc(primeiroNome(c.nome))}</b><small>${c.temPin?'Toque para bater o ponto':'<span style="color:var(--bad)">PIN não cadastrado</span>'}</small></div>
+      <i class="ti ti-chevron-right faint"></i></button>`;
+  return `<div class="wrap">${topo()}
+    ${S.fila.length?`<div class="offline-bar"><i class="ti ti-cloud-upload"></i> ${S.fila.length} marcação(ões) guardada(s) sem internet — envio automático quando a conexão voltar.</div>`:''}
+    <div class="row between wrap-row" style="margin-bottom:6px">
+      <button class="store-switch" onclick="trocarLoja()"><span class="dot" style="background:var(--red)"></span> Loja ${esc(loja.nome)} · ${esc(loja.abre)}–${esc(loja.fecha)} <i class="ti ti-switch-horizontal faint"></i></button>
+    </div>
+    <div class="h2">Quem vai bater o ponto?</div>
+    <div class="people">${daqui.map(card).join('') || '<p class="muted">Ninguém cadastrado nesta loja.</p>'}</div>
+    ${outras.length?`<div class="h2">Equipe de outra loja</div><div class="people">${outras.map(card).join('')}</div>`:''}
+    <div class="note info" style="margin-top:22px"><i class="ti ti-info-circle"></i><div>Esqueceu de bater, precisa corrigir um horário ou mandar atestado? Toque no seu nome, digite o PIN e vá em <b>Minha área</b> — dá para fazer pelo celular também.</div></div>
+    ${rodape()}</div>`;
+}
+function rodape(){
+  return `<div class="footer">
+    <button class="btn ghost sm" onclick="abrirPin('__admin')"><i class="ti ti-lock"></i> Administração</button>
+    <button class="btn ghost sm" onclick="carregar()"><i class="ti ti-refresh"></i> Atualizar</button>
+  </div>`;
+}
+function escolherLoja(k){ S.loja=k; LS.set('lv_loja',k); render(); }
+function trocarLoja(){ S.loja=null; LS.del('lv_loja'); render(); }
+
+/* ──────────── PIN ──────────── */
+function abrirPin(alvo){
+  if(alvo!=='__admin'){
+    const c = S.boot.colaboradoras.find(x=>x.id===alvo);
+    if(!c.temPin){ toast('Peça para a administração cadastrar o seu PIN.', true); return; }
+    S.pin = {alvo, buf:'', erro:'', titulo: primeiroNome(c.nome), cor:c.cor};
+  } else S.pin = {alvo, buf:'', erro:'', titulo:'Administração'};
+  renderPin();
+}
+function renderPin(){
+  const p = S.pin, m = $('#modal');
+  if(!p){ m.innerHTML=''; return; }
+  m.innerHTML = `<div class="overlay" onclick="if(event.target===this)fecharPin()"><div class="modal" style="max-width:360px">
+    <div class="modal-h">${p.alvo==='__admin'?'<div class="avatar" style="background:var(--t1);color:#fff"><i class="ti ti-lock"></i></div>':`<div class="avatar" style="background:${esc(p.cor)}">${esc(iniciais(p.titulo))}</div>`}
+      <div class="grow"><h3>${esc(p.titulo)}</h3><div class="faint" style="font-size:13px">Digite seu PIN de 6 números</div></div>
+      <button class="icon-btn" onclick="fecharPin()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-b">
+      <div class="pin-dots ${p.erro?'err':''}">${[0,1,2,3,4,5].map(i=>`<i class="${i<p.buf.length?'on':''}"></i>`).join('')}</div>
+      <div class="pin-err">${p.ocupado?'<span class="spin" style="color:var(--t2)"></span>':esc(p.erro)}</div>
+      <div class="keypad">${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="key" onclick="tecla('${n}')">${n}</button>`).join('')}
+        <button class="key fn" onclick="fecharPin()">Cancelar</button><button class="key" onclick="tecla('0')">0</button>
+        <button class="key fn" onclick="tecla('bk')"><i class="ti ti-backspace" style="font-size:22px"></i></button></div>
+    </div></div></div>`;
+}
+function fecharPin(){ S.pin=null; renderPin(); }
+async function tecla(k){
+  const p = S.pin; if(!p || p.ocupado) return;
+  if(k==='bk'){ p.buf=p.buf.slice(0,-1); p.erro=''; renderPin(); return; }
+  if(p.buf.length>=6) return;
+  p.buf += k; p.erro=''; renderPin();
+  if(p.buf.length<6) return;
+  p.ocupado = true; renderPin();
+  try{
+    if(p.alvo==='__admin'){
+      const d = await api('admDados', {adminPin:p.buf});
+      S.adm = {pin:p.buf, dados:d, tab: pendentes(d).length ? 'pedidos' : 'hoje', eid:null, mes:mesDe(d.hoje)};
+      S.pin=null; renderPin(); S.tela='admin'; render();
+    } else {
+      const d = await api('entrar', {eid:p.alvo, pin:p.buf});
+      S.sess = {eid:p.alvo, pin:p.buf, dados:d};
+      S.pin=null; renderPin(); S.minhaTab='mes'; S.minhaMes=mesDe(d.hoje); S.tela='bater'; render();
+    }
+  }catch(e){
+    if(erroRede(e) && p.alvo!=='__admin'){
+      // sem internet: deixa bater o ponto offline
+      const c = S.boot.colaboradoras.find(x=>x.id===p.alvo);
+      S.sess = {eid:p.alvo, pin:p.buf, dados:null, offline:true, nome:c.nome};
+      S.pin=null; renderPin(); S.tela='bater'; render(); return;
+    }
+    p.ocupado=false; p.buf=''; p.erro=e.message; renderPin();
+  }
+}
+document.addEventListener('keydown', ev=>{
+  if(!S.pin) return;
+  if(ev.target && /INPUT|TEXTAREA|SELECT/.test(ev.target.tagName)) return;
+  if(ev.key>='0' && ev.key<='9'){ ev.preventDefault(); tecla(ev.key); }
+  else if(ev.key==='Backspace'){ ev.preventDefault(); tecla('bk'); }
+  else if(ev.key==='Escape') fecharPin();
+});
+
+/* ──────────── BATER PONTO ──────────── */
+function proximoCampo(r){
+  r = r || {};
+  if(r.saida) return null;
+  if(!r.entrada) return 'entrada';
+  if(!r.saida_almoco && !r.volta_almoco && !r.inicio_pausa) return 'saida_almoco';
+  if(r.saida_almoco && !r.volta_almoco) return 'volta_almoco';
+  if(!r.inicio_pausa) return 'inicio_pausa';
+  if(!r.fim_pausa) return 'fim_pausa';
+  return 'saida';
+}
+function registroHoje(){
+  const s = S.sess; if(!s) return {};
+  const hoje = hojeISO();
+  let r = s.dados ? (s.dados.pontos.find(p=>p.data===hoje) || {}) : {};
+  r = {...r};
+  S.fila.filter(f=>f.eid===s.eid && f.dataAparelho===hoje).forEach(f=>{ r[f.campo]=f.horaAparelho; });
+  return r;
+}
+function telaBater(){
+  const s = S.sess;
+  const nome = s.dados ? s.dados.colaboradora.nome : s.nome;
+  const r = registroHoje();
+  const prox = proximoCampo(r);
+  const bloqueado = r.tipo && r.tipo!=='normal';
+  const lojaNome = S.loja ? S.boot.lojas[S.loja]?.nome : '';
+  const podeSaidaDireta = prox && ['saida_almoco','inicio_pausa','fim_pausa'].includes(prox) && r.entrada;
+  return `<div class="wrap" style="max-width:640px">${topo()}
+    ${s.offline?`<div class="offline-bar"><i class="ti ti-wifi-off"></i> Sem internet: a marcação fica guardada neste computador e é enviada sozinha depois.</div>`:''}
+    <div class="card pad">
+      <div class="row between">
+        <div><div class="faint" style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">${esc(dataLonga(hojeISO()))}</div>
+        <div class="hello">Oi, ${esc(primeiroNome(nome))}!</div></div>
+        ${lojaNome?`<span class="pill"><i class="ti ti-building-store"></i> ${esc(lojaNome)}</span>`:''}
+      </div>
+      <div class="punch-grid" style="margin-top:16px">
+        ${CAMPOS.map(k=>`<div class="slot ${r[k]?'done':''} ${k===prox&&!bloqueado?'next':''}"><small>${CURTO[k]}</small><b>${r[k]||'--:--'}</b></div>`).join('')}
+      </div>
+      <div style="margin-top:16px">
+      ${bloqueado ? `<div class="note info"><i class="ti ti-calendar-off"></i><div>Hoje está lançado como <b>${esc(TIPO_NOME[r.tipo])}</b>. Se estiver errado, avise a administração.</div></div>`
+        : prox ? `<button class="btn pri big" id="btn-bater" onclick="bater('${prox}')"><i class="ti ${ICO[prox]}"></i> Registrar ${NOME[prox].toLowerCase()}</button>
+          ${podeSaidaDireta?`<button class="btn" style="width:100%;margin-top:8px" onclick="bater('saida')"><i class="ti ti-logout"></i> Registrar saída (encerrar o dia agora)</button>`:''}
+          <p class="faint" style="font-size:12.5px;text-align:center;margin-top:10px">O horário é o do servidor — não depende do relógio deste computador.</p>`
+        : `<div class="note ok"><i class="ti ti-circle-check"></i><div>Dia encerrado. Trabalhado hoje: <b class="mono">${hm(trab(r))}</b>. Bom descanso! ✨</div></div>`}
+      </div>
+    </div>
+    <div class="row" style="margin-top:12px;gap:8px">
+      ${s.dados?`<button class="btn grow" onclick="irMinha()"><i class="ti ti-user-circle"></i> Minha área</button>`:''}
+      <button class="btn grow" onclick="sair()"><i class="ti ti-arrow-left"></i> Sair</button>
+    </div>
+  </div>`;
+}
+async function bater(campo){
+  const s = S.sess; if(S.ocupado) return;
+  S.ocupado = true;
+  const b = $('#btn-bater'); if(b){ b.disabled=true; b.innerHTML='<span class="spin"></span> Registrando…'; }
+  const d = agoraServidor();
+  const pedido = {eid:s.eid, pin:s.pin, campo, loja:S.loja||undefined};
+  try{
+    if(s.offline) throw new TypeError('offline');
+    const j = await api('bater', pedido);
+    const i = s.dados.pontos.findIndex(p=>p.data===j.ponto.data);
+    if(i>=0) s.dados.pontos[i]=j.ponto; else s.dados.pontos.push(j.ponto);
+    S.ultimo = {campo, hora:j.hora, nome:s.dados.colaboradora.nome, offline:false};
+    S.tela='sucesso';
+  }catch(e){
+    if(erroRede(e)){
+      const nome = s.dados ? s.dados.colaboradora.nome : s.nome;
+      S.fila.push({...pedido, offline:true, horaAparelho:pad(d.getHours())+':'+pad(d.getMinutes()), dataAparelho:isoD(d), nome});
+      salvarFila();
+      S.ultimo = {campo, hora:pad(d.getHours())+':'+pad(d.getMinutes()), nome, offline:true};
+      S.tela='sucesso';
+    } else toast(e.message, true);
+  }
+  S.ocupado=false; render();
+}
+function telaSucesso(){
+  const u = S.ultimo;
+  return `<div class="wrap" style="max-width:520px">${topo()}<div class="card success">
+    <div class="big-ico"><i class="ti ti-check"></i></div>
+    <div style="margin-top:14px;font-weight:800;font-size:18px">${esc(NOME[u.campo])} registrada</div>
+    <b class="time">${esc(u.hora)}</b>
+    <div class="muted">${esc(primeiroNome(u.nome))}${u.offline?' · guardado sem internet, envia sozinho':''}</div>
+    <div class="row" style="justify-content:center;margin-top:20px;gap:8px">
+      ${S.sess?.dados?`<button class="btn" onclick="irMinha()"><i class="ti ti-user-circle"></i> Minha área</button>`:''}
+      <button class="btn pri" onclick="sair()">Concluir</button>
+    </div></div></div>`;
+}
+function sair(){ S.sess=null; S.tela='inicio'; render(); }
+function irMinha(){ S.tela='minha'; render(); }
+
+/* ──────────── MINHA ÁREA (colaboradora) ──────────── */
+function telaMinha(){
+  const d = S.sess.dados, c = d.colaboradora, regras = d.regras;
+  const mapa = mapaPontos(d.pontos, c.id);
+  const ym = S.minhaMes || mesDe(d.hoje);
+  const res = resumoMes(c, ym, mapa, regras);
+  const banco = bancoTotal(c, mapa, regras);
+  const pend = d.solicitacoes.filter(s=>s.status==='pendente').length;
+  let corpo = '';
+  if(S.minhaTab==='mes'){
+    corpo = `${seletorMes(ym,'mudarMesMinha')}
+      <div class="stats" style="margin:12px 0">
+        ${stat('Trabalhado', hm(res.trabalhado), 'previsto '+hm(res.previsto))}
+        ${stat('Saldo do mês', hm(res.saldo,true), res.pend? res.pend+' pendência(s)':'sem pendências', res.saldo)}
+        ${stat('Banco total', hm(banco.saldo,true), banco.folgasDisp? banco.folgasDisp+' folga(s) disponível(is)':'acumulado', banco.saldo)}
+      </div>
+      <div class="days">${res.dias.filter(x=>x.data<=hojeISO() || x.tipo!=='normal').reverse().map(x=>linhaDia(x, 'pedirParaDia')).join('') || '<p class="muted" style="text-align:center;padding:20px">Mês ainda não começou.</p>'}</div>`;
+  } else if(S.minhaTab==='pedidos'){
+    corpo = `<button class="btn pri" style="width:100%;margin-bottom:12px" onclick="novoPedido()"><i class="ti ti-plus"></i> Novo pedido</button>
+      ${d.solicitacoes.length ? d.solicitacoes.slice().reverse().map(s=>cardPedido(s,false)).join('') : '<p class="muted" style="text-align:center;padding:20px">Nenhum pedido ainda.</p>'}`;
+  } else if(S.minhaTab==='banco'){
+    corpo = `<div class="stats">
+        ${stat('Banco de horas', hm(banco.saldo,true), 'desde '+ddmm(regras.inicio_banco)+'/'+regras.inicio_banco.slice(0,4), banco.saldo)}
+        ${stat('Folgas disponíveis', String(banco.folgasDisp), 'cada folga usa '+hm(regras.folga_min))}
+        ${stat('Próxima folga', banco.proximas[0]?ddmm(banco.proximas[0]):'—', banco.proximas[0]?semana(banco.proximas[0]):'nenhuma marcada')}
+      </div>
+      <div class="note info" style="margin-top:14px"><i class="ti ti-info-circle"></i><div>A jornada é de <b>7h20 por dia</b>, de segunda a sábado (44h na semana). O que passar disso vira crédito; cada folga de compensação usa <b>8h</b> e só pode ser de <b>terça a sexta</b>. Para pedir uma folga, vá em <b>Pedidos</b>.</div></div>
+      <div class="h2">Trocar meu PIN</div>
+      <div class="card pad"><div class="grid2"><input class="inp mono" id="novo-pin" inputmode="numeric" maxlength="6" placeholder="Novo PIN (6 números)"><button class="btn" onclick="trocarMeuPin()">Salvar novo PIN</button></div></div>`;
+  }
+  return `<div class="wrap" style="max-width:760px">${topo(`<button class="btn sm" style="margin-left:auto" onclick="sair()"><i class="ti ti-logout"></i> Sair</button>`)}
+    <div class="row" style="margin-bottom:14px"><div class="avatar" style="background:${esc(c.cor)}">${esc(iniciais(c.nome))}</div>
+      <div class="grow"><div style="font-weight:800;font-size:18px">${esc(c.nome)}</div><div class="faint" style="font-size:13px">Loja ${esc(S.boot.lojas[c.loja]?.nome||c.loja)}</div></div>
+      <button class="btn sm" onclick="S.tela='bater';render()"><i class="ti ti-fingerprint"></i> Bater ponto</button></div>
+    <div class="tabs" style="margin-bottom:14px">
+      <button class="tab ${S.minhaTab==='mes'?'on':''}" onclick="S.minhaTab='mes';render()"><i class="ti ti-calendar"></i> Meu mês</button>
+      <button class="tab ${S.minhaTab==='pedidos'?'on':''}" onclick="S.minhaTab='pedidos';render()"><i class="ti ti-send"></i> Pedidos ${pend?`<span class="badge">${pend}</span>`:''}</button>
+      <button class="tab ${S.minhaTab==='banco'?'on':''}" onclick="S.minhaTab='banco';render()"><i class="ti ti-pig-money"></i> Banco</button>
+    </div>
+    ${corpo}</div>`;
+}
+function mudarMesMinha(n){ S.minhaMes = mesAdd(S.minhaMes, n); render(); }
+function seletorMes(ym, fn){
+  return `<div class="row between card" style="padding:6px 8px">
+    <button class="icon-btn" style="border:0" onclick="${fn}(-1)"><i class="ti ti-chevron-left"></i></button>
+    <b style="font-size:15px">${nomeMes(ym)}</b>
+    <button class="icon-btn" style="border:0" onclick="${fn}(1)"><i class="ti ti-chevron-right"></i></button></div>`;
+}
+function stat(t, v, sub, sinal){
+  const cls = sinal==null ? '' : (sinal>0?'pos':sinal<0?'neg':'');
+  return `<div class="stat"><small>${t}</small><b class="${cls}">${v}</b><span>${sub||''}</span></div>`;
+}
+function linhaDia(x, onclick){
+  const r = x.r || {};
+  const hist = (()=>{ try{ return JSON.parse(r.historico||'[]'); }catch(e){ return []; } })();
+  const editados = new Set(hist.map(h=>h.campo));
+  const marks = CAMPOS.filter(k=>r[k]).map(k=>`<span class="${editados.has(k)?'ed':''}" title="${NOME[k]}">${r[k]}</span>`).join('');
+  const dd = x.data.slice(8,10)+'/'+x.data.slice(5,7);
+  let dir = '';
+  if(x.trabalhado || x.saldo) dir = `${x.trabalhado?hm(x.trabalhado):''}<small class="${x.saldo>0?'pos':x.saldo<0?'neg':'faint'}">${x.saldo?hm(x.saldo,true):'em dia'}</small>`;
+  const cls = x.domingo && !marks ? 'sun' : (x.futuro && x.tipo==='normal' ? 'future' : '');
+  const body = marks ? `<div class="marks">${marks}</div>` : `<div class="faint" style="font-size:13px">${x.domingo?'Domingo · descanso':x.feriado?'Feriado':x.futuro?'—':x.tipo!=='normal'?'':'Sem marcação'}</div>`;
+  return `<button class="day ${cls}" onclick="${onclick}('${x.data}')">
+    <div><div class="d1">${dd}</div><div class="d2">${semana(x.data)}${r.loja&&marks?' · '+esc((S.boot.lojas[r.loja]||{}).nome||r.loja):''}</div></div>
+    <div>${body}${x.flags.length?`<div class="flags">${x.flags.map(f=>`<span class="pill ${f.c}">${esc(f.n)}</span>`).join('')}</div>`:''}</div>
+    <div class="right">${dir}</div></button>`;
+}
+function cardPedido(s, admin){
+  const ico = {correcao:'ti-clock-edit', atestado:'ti-file-certificate', folga:'ti-beach', outro:'ti-message-dots'}[s.tipo];
+  const tit = {correcao:'Correção de ponto', atestado:'Atestado', folga:'Folga de banco de horas', outro:'Outro pedido'}[s.tipo];
+  const st = {pendente:'<span class="pill warn">Aguardando</span>', aprovada:'<span class="pill ok">Aprovado</span>', recusada:'<span class="pill bad">Recusado</span>', cancelada:'<span class="pill">Cancelado</span>'}[s.status];
+  const periodo = s.data_fim && s.data_fim!==s.data ? ddmm(s.data)+' a '+ddmm(s.data_fim) : dataLonga(s.data);
+  let det = periodo;
+  if(s.tipo==='correcao') det += ` · ${NOME[s.campo]} → <b class="mono">${esc(s.horario)}</b>`;
+  let atual = '';
+  if(admin && s.tipo==='correcao'){
+    const p = S.adm.dados.pontos.find(p=>p.colaboradora_id===s.colaboradora_id && p.data===s.data);
+    atual = `<p>Hoje está: <span class="mono">${p && p[s.campo] ? esc(p[s.campo]) : 'sem marcação'}</span></p>`;
+  }
+  return `<div class="req"><div class="ico"><i class="ti ${ico}"></i></div><div class="grow">
+    <div class="row between wrap-row"><b>${admin?esc(primeiroNome(s.colaboradora))+' · ':''}${tit}</b>${st}</div>
+    <p>${det}</p>${atual}
+    ${s.motivo?`<p>“${esc(s.motivo)}”</p>`:''}
+    ${s.anexo_url?`<p><a href="${esc(s.anexo_url)}" target="_blank" rel="noopener" style="color:var(--info);font-weight:700"><i class="ti ti-paperclip"></i> Ver anexo</a></p>`:''}
+    ${s.resposta?`<p><i class="ti ti-message-reply"></i> ${esc(s.resposta)}</p>`:''}
+    <p class="faint" style="font-size:12px">Enviado ${esc(s.criada_em.slice(8,10)+'/'+s.criada_em.slice(5,7)+' '+s.criada_em.slice(11,16))}</p>
+    ${!admin && s.status==='pendente'?`<button class="btn sm ghost" style="margin-top:4px;padding:0" onclick="cancelarPedido('${s.id}')">Cancelar pedido</button>`:''}
+    ${admin && s.status==='pendente'?`<div class="row" style="margin-top:10px;gap:8px">
+      <button class="btn sm ok" onclick="decidir('${s.id}',true)"><i class="ti ti-check"></i> Aprovar</button>
+      <button class="btn sm" onclick="decidir('${s.id}',false)"><i class="ti ti-x"></i> Recusar</button></div>`:''}
+  </div></div>`;
+}
+
+/* pedido novo */
+let PED = null;
+function pedirParaDia(data){
+  const r = S.sess.dados.pontos.find(p=>p.data===data) || {};
+  const campo = CAMPOS.find(k=>!r[k] && !k.includes('pausa')) || CAMPOS.find(k=>!r[k]) || 'entrada';
+  novoPedido({tipo:'correcao', data, campo});
+}
+function novoPedido(pre={}){
+  PED = {tipo:'correcao', data:hojeISO(), data_fim:'', campo:'entrada', horario:'', motivo:'', arquivo:null, ...pre};
+  renderPedido();
+}
+function renderPedido(){
+  const p = PED; if(!p){ $('#modal').innerHTML=''; return; }
+  const r = S.sess.dados.pontos.find(x=>x.data===p.data) || {};
+  const tipos = [['correcao','ti-clock-edit','Corrigir / esqueci'],['atestado','ti-file-certificate','Atestado'],['folga','ti-beach','Pedir folga'],['outro','ti-message-dots','Outro']];
+  let campos = '';
+  if(p.tipo==='correcao') campos = `
+    <div class="field"><label>Qual marcação?</label><select class="inp" onchange="PED.campo=this.value;renderPedido()">${CAMPOS.map(k=>`<option value="${k}" ${p.campo===k?'selected':''}>${NOME[k]}${r[k]?' (está '+r[k]+')':' (vazia)'}</option>`).join('')}</select></div>
+    <div class="field"><label>Horário certo</label><input class="inp mono" type="time" value="${esc(p.horario)}" oninput="PED.horario=this.value"></div>
+    <div class="field"><label>O que aconteceu?</label><textarea class="inp" placeholder="Ex.: esqueci de bater a volta do almoço" oninput="PED.motivo=this.value">${esc(p.motivo)}</textarea></div>`;
+  if(p.tipo==='atestado') campos = `
+    <div class="grid2"><div class="field"><label>Primeiro dia</label><input class="inp" type="date" value="${p.data}" onchange="PED.data=this.value"></div>
+    <div class="field"><label>Último dia</label><input class="inp" type="date" value="${p.data_fim||p.data}" onchange="PED.data_fim=this.value"></div></div>
+    <div class="field"><label>Foto ou PDF do atestado</label><input class="inp" style="padding-top:9px" type="file" accept="image/*,application/pdf" onchange="lerArquivo(this)">
+      ${p.arquivo?`<span class="pill ok" style="margin-top:6px"><i class="ti ti-check"></i> ${esc(p.arquivo.nome)}</span>`:''}</div>
+    <div class="field"><label>Observação (opcional)</label><textarea class="inp" oninput="PED.motivo=this.value">${esc(p.motivo)}</textarea></div>`;
+  if(p.tipo==='folga'){
+    const dw = dow(p.data);
+    campos = `<div class="field"><label>Dia da folga</label><input class="inp" type="date" value="${p.data}" min="${hojeISO()}" onchange="PED.data=this.value;renderPedido()"></div>
+    ${[0,1,6].includes(dw)?'<div class="note bad" style="margin-bottom:12px"><i class="ti ti-alert-triangle"></i><div>Folga de banco de horas só pode ser de <b>terça a sexta</b>.</div></div>':''}
+    <div class="field"><label>Observação (opcional)</label><textarea class="inp" oninput="PED.motivo=this.value">${esc(p.motivo)}</textarea></div>`;
+  }
+  if(p.tipo==='outro') campos = `
+    <div class="field"><label>Data</label><input class="inp" type="date" value="${p.data}" onchange="PED.data=this.value"></div>
+    <div class="field"><label>Explique o pedido</label><textarea class="inp" oninput="PED.motivo=this.value">${esc(p.motivo)}</textarea></div>
+    <div class="field"><label>Anexo (opcional)</label><input class="inp" style="padding-top:9px" type="file" accept="image/*,application/pdf" onchange="lerArquivo(this)">
+      ${p.arquivo?`<span class="pill ok" style="margin-top:6px"><i class="ti ti-check"></i> ${esc(p.arquivo.nome)}</span>`:''}</div>`;
+  $('#modal').innerHTML = `<div class="overlay" onclick="if(event.target===this)fecharPedido()"><div class="modal">
+    <div class="modal-h"><h3 class="grow">Novo pedido</h3><button class="icon-btn" onclick="fecharPedido()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-b">
+      <div class="seg">${tipos.map(([k,i,n])=>`<button class="${p.tipo===k?'on':''}" onclick="PED.tipo='${k}';renderPedido()"><i class="ti ${i}"></i>${n}</button>`).join('')}</div>
+      ${p.tipo==='correcao'?`<div class="field"><label>Dia</label><input class="inp" type="date" value="${p.data}" max="${hojeISO()}" onchange="PED.data=this.value;renderPedido()"></div>`:''}
+      ${campos}
+      <button class="btn pri" style="width:100%" id="btn-enviar" onclick="enviarPedido()"><i class="ti ti-send"></i> Enviar para a administração</button>
+    </div></div></div>`;
+}
+function fecharPedido(){ PED=null; renderPedido(); }
+async function lerArquivo(inp){
+  const f = inp.files[0]; if(!f) return;
+  try{
+    if(f.type.startsWith('image/')){
+      const img = await new Promise((ok,er)=>{ const i = new Image(); i.onload=()=>ok(i); i.onerror=er; i.src=URL.createObjectURL(f); });
+      const k = Math.min(1, 1600/Math.max(img.width, img.height));
+      const cv = document.createElement('canvas'); cv.width=Math.round(img.width*k); cv.height=Math.round(img.height*k);
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+      PED.arquivo = {nome:f.name.replace(/\.\w+$/,'')+'.jpg', mime:'image/jpeg', base64: cv.toDataURL('image/jpeg',.82).split(',')[1]};
+    } else {
+      if(f.size > 10*1024*1024){ toast('Arquivo muito grande (máx. 10 MB)', true); return; }
+      const b64 = await new Promise((ok,er)=>{ const r = new FileReader(); r.onload=()=>ok(String(r.result).split(',')[1]); r.onerror=er; r.readAsDataURL(f); });
+      PED.arquivo = {nome:f.name, mime:f.type||'application/pdf', base64:b64};
+    }
+    renderPedido();
+  }catch(e){ toast('Não consegui ler o arquivo', true); }
+}
+async function enviarPedido(){
+  const b = $('#btn-enviar'); b.disabled=true; b.innerHTML='<span class="spin"></span> Enviando…';
+  try{
+    const s = S.sess;
+    s.dados = await api('solicitar', {eid:s.eid, pin:s.pin, ...PED, data_fim: PED.data_fim || PED.data});
+    PED=null; renderPedido(); S.minhaTab='pedidos'; render(); toast('Pedido enviado ✔ A administração vai analisar.');
+  }catch(e){ toast(e.message, true); b.disabled=false; b.innerHTML='<i class="ti ti-send"></i> Enviar para a administração'; }
+}
+async function cancelarPedido(id){
+  try{ const s=S.sess; s.dados = await api('cancelar', {eid:s.eid, pin:s.pin, id}); render(); toast('Pedido cancelado'); }
+  catch(e){ toast(e.message, true); }
+}
+async function trocarMeuPin(){
+  const v = $('#novo-pin').value.trim();
+  if(!/^\d{6}$/.test(v)){ toast('O PIN precisa ter 6 números', true); return; }
+  try{ await api('trocarPin', {eid:S.sess.eid, pin:S.sess.pin, novo:v}); S.sess.pin=v; $('#novo-pin').value=''; toast('PIN trocado ✔ Use o novo da próxima vez.'); }
+  catch(e){ toast(e.message, true); }
+}
+
+/* ──────────── ADMINISTRAÇÃO ──────────── */
+const pendentes = d => d.solicitacoes.filter(s=>s.status==='pendente');
+async function admRecarregar(){
+  try{ S.adm.dados = await api('admDados', {adminPin:S.adm.pin}); render(); toast('Atualizado'); }
+  catch(e){ toast(e.message, true); }
+}
+function telaAdmin(){
+  const A = S.adm, d = A.dados;
+  const np = pendentes(d).length;
+  const tabs = [['pedidos','ti-inbox','Pedidos',np],['hoje','ti-clock','Hoje'],['mes','ti-calendar','Espelho'],['banco','ti-pig-money','Banco de horas'],['equipe','ti-users','Equipe'],['regras','ti-settings','Regras']];
+  let corpo = ({pedidos:admPedidos, hoje:admHoje, mes:admMes, banco:admBanco, equipe:admEquipe, regras:admRegras})[A.tab]();
+  return `<div class="wrap">${topo(`<div class="row" style="margin-left:auto;gap:6px">
+      <button class="icon-btn" title="Atualizar" onclick="admRecarregar()"><i class="ti ti-refresh"></i></button>
+      <button class="btn sm" onclick="S.adm=null;S.tela='inicio';render()"><i class="ti ti-logout"></i> Sair</button></div>`)}
+    <div class="tabs" style="margin-bottom:16px">${tabs.map(([k,i,n,b])=>`<button class="tab ${A.tab===k?'on':''}" onclick="S.adm.tab='${k}';render()"><i class="ti ${i}"></i> ${n} ${b?`<span class="badge">${b}</span>`:''}</button>`).join('')}</div>
+    ${corpo}</div>`;
+}
+function admPedidos(){
+  const d = S.adm.dados, p = pendentes(d);
+  const outros = d.solicitacoes.filter(s=>s.status!=='pendente').slice(-30).reverse();
+  return `${p.length ? p.map(s=>cardPedido(s,true)).join('') : `<div class="note ok"><i class="ti ti-circle-check"></i><div>Nenhum pedido aguardando. 🎉</div></div>`}
+    ${outros.length?`<div class="h2">Últimos decididos</div>${outros.map(s=>cardPedido(s,true)).join('')}`:''}`;
+}
+async function decidir(id, aprovar){
+  const resposta = aprovar ? '' : (prompt('Motivo da recusa (a colaboradora vai ver):') ?? null);
+  if(resposta===null) return;
+  try{ S.adm.dados = await api('admDecidir', {adminPin:S.adm.pin, id, aprovar, resposta}); render(); toast(aprovar?'Aprovado e lançado no ponto ✔':'Pedido recusado'); }
+  catch(e){ toast(e.message, true); }
+}
+function admHoje(){
+  const d = S.adm.dados, hoje = d.hoje;
+  const ativas = d.colaboradoras.filter(c=>c.ativa==='SIM');
+  const blocos = Object.entries(d.lojas).map(([k,l])=>{
+    const linhas = ativas.map(c=>{
+      const r = d.pontos.find(p=>p.colaboradora_id===c.id && p.data===hoje);
+      if(!r && c.loja!==k) return '';
+      if(r && r.loja && r.loja!==k) return '';
+      let st = '<span class="pill">Ainda não chegou</span>';
+      if(r && r.tipo && r.tipo!=='normal') st = `<span class="pill info">${TIPO_NOME[r.tipo]}</span>`;
+      else if(r && r.saida) st = `<span class="pill">Saiu ${r.saida}</span>`;
+      else if(r && r.saida_almoco && !r.volta_almoco) st = `<span class="pill warn">No almoço desde ${r.saida_almoco}</span>`;
+      else if(r && r.inicio_pausa && !r.fim_pausa) st = `<span class="pill warn">Em pausa desde ${r.inicio_pausa}</span>`;
+      else if(r && r.entrada) st = `<span class="pill ok">Trabalhando desde ${r.entrada}</span>`;
+      return `<tr class="click" onclick="abrirEditor('${c.id}','${hoje}')"><td><span class="dot" style="background:${esc(c.cor)}"></span> ${esc(primeiroNome(c.nome))}</td><td>${st}</td>
+        ${CAMPOS.map(f=>`<td class="num hide-sm">${r&&r[f]||''}</td>`).join('')}</tr>`;
+    }).join('');
+    return `<div class="h2">Loja ${esc(l.nome)} · ${esc(l.abre)}–${esc(l.fecha)}</div>
+      <div class="table-wrap"><table><thead><tr><th>Colaboradora</th><th>Agora</th>${CAMPOS.map(f=>`<th class="hide-sm">${CURTO[f]}</th>`).join('')}</tr></thead><tbody>${linhas||'<tr><td colspan="8" class="muted">Ninguém escalado</td></tr>'}</tbody></table></div>`;
+  }).join('');
+  return `<div class="faint" style="font-weight:700">${dataLonga(hoje)} · toque numa linha para corrigir</div>${blocos}`;
+}
+function admColabAtual(){
+  const d = S.adm.dados;
+  const lista = d.colaboradoras.filter(c=>c.ativa==='SIM');
+  if(!S.adm.eid || !d.colaboradoras.some(c=>c.id===S.adm.eid)) S.adm.eid = (lista[0]||d.colaboradoras[0]||{}).id;
+  return d.colaboradoras.find(c=>c.id===S.adm.eid);
+}
+function seletorColab(){
+  const d = S.adm.dados;
+  return `<select class="inp" style="max-width:280px" onchange="S.adm.eid=this.value;render()">
+    ${d.colaboradoras.map(c=>`<option value="${c.id}" ${c.id===S.adm.eid?'selected':''}>${esc(c.nome)}${c.ativa==='SIM'?'':' (inativa)'}</option>`).join('')}</select>`;
+}
+function admMes(){
+  const d = S.adm.dados, c = admColabAtual(); if(!c) return '<p class="muted">Cadastre alguém na aba Equipe.</p>';
+  const mapa = mapaPontos(d.pontos, c.id), res = resumoMes(c, S.adm.mes, mapa, d.regras), banco = bancoTotal(c, mapa, d.regras);
+  return `<div class="row wrap-row" style="gap:10px;margin-bottom:12px">${seletorColab()}<div class="grow" style="min-width:240px">${seletorMes(S.adm.mes,'admMudarMes')}</div></div>
+    <div class="stats" style="margin-bottom:12px">
+      ${stat('Trabalhado', hm(res.trabalhado), 'previsto '+hm(res.previsto))}
+      ${stat('Saldo do mês', hm(res.saldo,true), res.pend?res.pend+' pendência(s) para resolver':'sem pendências', res.saldo)}
+      ${stat('Banco total', hm(banco.saldo,true), banco.folgasDisp+' folga(s) disponível(is)', banco.saldo)}
+      ${stat('Ocorrências', String(res.faltas+res.atestados+res.folgas), `${res.faltas} falta · ${res.atestados} atest. · ${res.folgas} folga`)}
+    </div>
+    <div class="row wrap-row" style="gap:8px;margin-bottom:12px">
+      <button class="btn sm" onclick="imprimirEspelho()"><i class="ti ti-printer"></i> Espelho para assinatura</button>
+      <button class="btn sm" onclick="copiarResumo()"><i class="ti ti-brand-whatsapp"></i> Copiar resumo p/ WhatsApp</button>
+      <button class="btn sm" onclick="exportarCSV()"><i class="ti ti-file-spreadsheet"></i> Baixar CSV do mês</button>
+    </div>
+    ${res.pend?`<div class="note warn" style="margin-bottom:12px"><i class="ti ti-alert-triangle"></i><div>Resolva as pendências (sem marcação / marcação faltando) antes de fechar o mês — número errado no espelho vira prova contra a loja.</div></div>`:''}
+    <div class="days">${res.dias.map(x=>linhaDia(x, 'admEditarDia')).join('')}</div>`;
+}
+function admMudarMes(n){ S.adm.mes = mesAdd(S.adm.mes, n); render(); }
+function admEditarDia(data){ abrirEditor(S.adm.eid, data); }
+
+/* editor de dia (admin) */
+let ED = null;
+function abrirEditor(eid, data){
+  const d = S.adm.dados, c = d.colaboradoras.find(x=>x.id===eid);
+  const r = d.pontos.find(p=>p.colaboradora_id===eid && p.data===data) || {};
+  ED = {eid, data, nome:c.nome, tipo:r.tipo||'normal', loja:r.loja||c.loja, obs:r.obs||'', motivo:'', existe:!!r.data, hist:(()=>{try{return JSON.parse(r.historico||'[]')}catch(e){return[]}})()};
+  CAMPOS.forEach(k=>ED[k]=r[k]||'');
+  renderEditor();
+}
+function renderEditor(){
+  const e = ED; if(!e){ $('#modal').innerHTML=''; return; }
+  const lojas = S.adm.dados.lojas;
+  $('#modal').innerHTML = `<div class="overlay" onclick="if(event.target===this)fecharEditor()"><div class="modal wide">
+    <div class="modal-h"><div class="grow"><h3>${esc(primeiroNome(e.nome))} · ${esc(dataLonga(e.data))}</h3><div class="faint" style="font-size:13px">Tudo que for alterado fica no histórico</div></div><button class="icon-btn" onclick="fecharEditor()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-b">
+      <div class="grid2">
+        <div class="field"><label>Tipo do dia</label><select class="inp" onchange="ED.tipo=this.value;renderEditor()">${Object.entries(TIPO_NOME).map(([k,n])=>`<option value="${k}" ${e.tipo===k?'selected':''}>${n}</option>`).join('')}</select></div>
+        <div class="field"><label>Loja</label><select class="inp" onchange="ED.loja=this.value">${Object.entries(lojas).map(([k,l])=>`<option value="${k}" ${e.loja===k?'selected':''}>${esc(l.nome)}</option>`).join('')}</select></div>
+      </div>
+      ${e.tipo==='folga' && [0,1,6].includes(dow(e.data))?'<div class="note bad" style="margin-bottom:12px"><i class="ti ti-alert-triangle"></i><div>Regra da loja: folga de banco só de terça a sexta.</div></div>':''}
+      ${e.tipo==='normal'?`<div class="grid3">${CAMPOS.map(k=>`<div class="field"><label>${NOME[k]}</label><input class="inp mono" type="time" value="${e[k]}" oninput="ED['${k}']=this.value"></div>`).join('')}</div>`:''}
+      <div class="field"><label>Observação</label><input class="inp" value="${esc(e.obs)}" oninput="ED.obs=this.value"></div>
+      <div class="field"><label>Motivo da alteração</label><input class="inp" placeholder="Ex.: combinado com a colaboradora" value="${esc(e.motivo)}" oninput="ED.motivo=this.value"></div>
+      <div class="row" style="gap:8px"><button class="btn pri grow" id="btn-salvar-dia" onclick="salvarEditor()"><i class="ti ti-device-floppy"></i> Salvar</button>
+        ${e.existe?`<button class="btn" onclick="apagarDia()"><i class="ti ti-trash"></i></button>`:''}</div>
+      ${e.hist.length?`<div class="h2">Histórico</div><div class="hist">${e.hist.slice().reverse().map(h=>`<div><b>${esc(NOME[h.campo]||h.campo)}</b>: ${esc(h.de||'vazio')} → ${esc(h.para||'vazio')} <span class="faint">· ${esc(h.por)}${h.em?' · '+esc(h.em.slice(8,10)+'/'+h.em.slice(5,7)+' '+h.em.slice(11,16)):''}${h.motivo?' · '+esc(h.motivo):''}</span></div>`).join('')}</div>`:''}
+    </div></div></div>`;
+}
+function fecharEditor(){ ED=null; renderEditor(); }
+async function salvarEditor(){
+  const e = ED, b = $('#btn-salvar-dia'); b.disabled=true; b.innerHTML='<span class="spin"></span> Salvando…';
+  const campos = {}; if(e.tipo==='normal') CAMPOS.forEach(k=>campos[k]=e[k]); else CAMPOS.forEach(k=>campos[k]='');
+  try{
+    const j = await api('admPonto', {adminPin:S.adm.pin, eid:e.eid, data:e.data, campos, tipo:e.tipo, loja:e.loja, obs:e.obs, motivo:e.motivo||'Ajuste da administração'});
+    const L = S.adm.dados.pontos, i = L.findIndex(p=>p.chave===j.ponto.chave);
+    if(i>=0) L[i]=j.ponto; else L.push(j.ponto);
+    ED=null; renderEditor(); render(); toast('Salvo ✔');
+  }catch(err){ toast(err.message, true); b.disabled=false; b.innerHTML='<i class="ti ti-device-floppy"></i> Salvar'; }
+}
+async function apagarDia(){
+  if(!confirm('Apagar todas as marcações deste dia?')) return;
+  try{
+    await api('admApagarPonto', {adminPin:S.adm.pin, eid:ED.eid, data:ED.data});
+    S.adm.dados.pontos = S.adm.dados.pontos.filter(p=>p.chave!==ED.eid+'|'+ED.data);
+    ED=null; renderEditor(); render(); toast('Dia apagado');
+  }catch(err){ toast(err.message, true); }
+}
+
+function admBanco(){
+  const d = S.adm.dados, ym = S.adm.mes;
+  const linhas = d.colaboradoras.filter(c=>c.ativa==='SIM').map(c=>{
+    const mapa = mapaPontos(d.pontos, c.id), r = resumoMes(c, ym, mapa, d.regras), b = bancoTotal(c, mapa, d.regras);
+    return `<tr class="click" onclick="S.adm.eid='${c.id}';S.adm.tab='mes';render()">
+      <td><span class="dot" style="background:${esc(c.cor)}"></span> ${esc(primeiroNome(c.nome))} <span class="faint" style="font-size:12px">· ${esc(d.lojas[c.loja]?.nome||c.loja)}</span></td>
+      <td class="num">${hm(r.trabalhado)}</td><td class="num">${hm(r.previsto)}</td>
+      <td class="num ${r.saldo>0?'pos':r.saldo<0?'neg':''}">${hm(r.saldo,true)}</td>
+      <td class="num ${b.saldo>0?'pos':b.saldo<0?'neg':''}"><b>${hm(b.saldo,true)}</b></td>
+      <td class="num">${b.folgasDisp}</td>
+      <td>${b.proximas.length?b.proximas.slice(0,3).map(x=>ddmm(x)).join(', '):'<span class="faint">—</span>'}</td>
+      <td>${r.pend?`<span class="pill bad">${r.pend} pendência</span>`:''} ${r.alertas?`<span class="pill warn">${r.alertas} alerta</span>`:''}</td></tr>`;
+  }).join('');
+  return `<div style="margin-bottom:12px;max-width:420px">${seletorMes(ym,'admMudarMes')}</div>
+    <div class="table-wrap"><table><thead><tr><th>Colaboradora</th><th>Trabalhado</th><th>Previsto</th><th>Saldo mês</th><th>Banco total</th><th>Folgas disp.</th><th>Folgas marcadas</th><th>Atenção</th></tr></thead><tbody>${linhas}</tbody></table></div>
+    <div class="note info" style="margin-top:14px"><i class="ti ti-info-circle"></i><div><b>Como lê:</b> previsto = 7h20 por dia útil (seg–sáb, sem feriados); até ${d.regras.tolerancia_min} min/dia não conta. Cada folga de banco desconta ${hm(d.regras.folga_min)} e só pode ser de terça a sexta. O banco soma desde ${ddmm(d.regras.inicio_banco)}/${d.regras.inicio_banco.slice(0,4)} + saldo inicial de cada uma (aba Equipe). Crédito não compensado até o fim do mês seguinte tem de ser pago como hora extra (+50%).</div></div>
+    <div class="row wrap-row" style="gap:8px;margin-top:12px"><button class="btn sm" onclick="exportarCSV(true)"><i class="ti ti-file-spreadsheet"></i> Baixar CSV do mês (todas)</button></div>`;
+}
+
+function admEquipe(){
+  const d = S.adm.dados;
+  return `<button class="btn pri" style="margin-bottom:12px" onclick="editarColab()"><i class="ti ti-user-plus"></i> Nova colaboradora</button>
+    <div class="table-wrap"><table><thead><tr><th>Nome</th><th>Loja</th><th>Admissão</th><th>Saldo inicial</th><th>PIN</th><th>Situação</th></tr></thead><tbody>
+    ${d.colaboradoras.map(c=>`<tr class="click" onclick="editarColab('${c.id}')"><td><span class="dot" style="background:${esc(c.cor)}"></span> ${esc(c.nome)}</td>
+      <td>${esc(d.lojas[c.loja]?.nome||c.loja)}</td><td>${c.admissao?ddmm(c.admissao)+'/'+c.admissao.slice(0,4):'<span class="faint">—</span>'}</td>
+      <td class="num">${hm(c.saldo_inicial_min,true)}</td><td>${c.temPin?'<span class="pill ok">Cadastrado</span>':'<span class="pill bad">Falta criar</span>'}</td>
+      <td>${c.ativa==='SIM'?'<span class="pill ok">Ativa</span>':'<span class="pill">Inativa</span>'}</td></tr>`).join('')}
+    </tbody></table></div>`;
+}
+let EC = null;
+function editarColab(id){
+  const d = S.adm.dados, c = id ? d.colaboradoras.find(x=>x.id===id) : {nome:'', loja:S.loja||'bosque', cor:'#F5B524', admissao:'', saldo_inicial_min:0, ativa:'SIM'};
+  EC = {id:id||'', nome:c.nome, loja:c.loja, cor:c.cor||'#F5B524', admissao:c.admissao||'', saldo:hm(c.saldo_inicial_min||0), ativa:c.ativa==='SIM', pin:'', temPin:c.temPin};
+  renderColab();
+}
+function renderColab(){
+  const e = EC; if(!e){ $('#modal').innerHTML=''; return; }
+  const lojas = S.adm.dados.lojas;
+  $('#modal').innerHTML = `<div class="overlay" onclick="if(event.target===this){EC=null;renderColab()}"><div class="modal">
+    <div class="modal-h"><h3 class="grow">${e.id?'Editar colaboradora':'Nova colaboradora'}</h3><button class="icon-btn" onclick="EC=null;renderColab()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-b">
+      <div class="field"><label>Nome completo</label><input class="inp" value="${esc(e.nome)}" oninput="EC.nome=this.value"></div>
+      <div class="grid2">
+        <div class="field"><label>Loja principal</label><select class="inp" onchange="EC.loja=this.value">${Object.entries(lojas).map(([k,l])=>`<option value="${k}" ${e.loja===k?'selected':''}>${esc(l.nome)}</option>`).join('')}</select></div>
+        <div class="field"><label>Admissão</label><input class="inp" type="date" value="${e.admissao}" onchange="EC.admissao=this.value"></div>
+        <div class="field"><label>Saldo inicial do banco (±hh:mm)</label><input class="inp mono" value="${esc(e.saldo)}" oninput="EC.saldo=this.value" placeholder="+00:00"></div>
+        <div class="field"><label>Cor</label><input class="inp" type="color" value="${esc(e.cor)}" oninput="EC.cor=this.value" style="padding:4px"></div>
+      </div>
+      <div class="field"><label>${e.temPin?'Trocar PIN (deixe vazio para manter)':'Criar PIN de 6 números'}</label><input class="inp mono" inputmode="numeric" maxlength="6" value="${esc(e.pin)}" oninput="EC.pin=this.value"></div>
+      <label class="row" style="margin-bottom:14px;font-weight:700"><input type="checkbox" ${e.ativa?'checked':''} onchange="EC.ativa=this.checked" style="width:18px;height:18px"> Ativa (aparece na tela do ponto)</label>
+      <button class="btn pri" style="width:100%" id="btn-colab" onclick="salvarColab()"><i class="ti ti-device-floppy"></i> Salvar</button>
+    </div></div></div>`;
+}
+async function salvarColab(){
+  const e = EC;
+  const m = /^([+-])?(\d{1,3}):(\d{2})$/.exec(e.saldo.trim()||'0:00');
+  if(!m){ toast('Saldo inicial no formato +hh:mm ou -hh:mm', true); return; }
+  const saldo = (m[1]==='-'?-1:1)*(Number(m[2])*60+Number(m[3]));
+  if(e.pin && !/^\d{6}$/.test(e.pin)){ toast('O PIN precisa ter 6 números', true); return; }
+  const b = $('#btn-colab'); b.disabled=true;
+  try{
+    S.adm.dados = await api('admColab', {adminPin:S.adm.pin, id:e.id||undefined, nome:e.nome, loja:e.loja, cor:e.cor, admissao:e.admissao, saldo_inicial_min:saldo, ativa:e.ativa, pin:e.pin||undefined});
+    EC=null; renderColab(); render(); toast('Salvo ✔'+(e.pin?' PIN: '+e.pin+' — passe para ela':''));
+    carregarBootSilencioso();
+  }catch(err){ toast(err.message, true); b.disabled=false; }
+}
+async function carregarBootSilencioso(){ try{ S.boot = await api('boot'); LS.set('lv_boot', S.boot); }catch(e){} }
+
+function admRegras(){
+  const d = S.adm.dados, r = d.regras;
+  return `<div class="card pad" style="max-width:640px">
+    <div class="grid2">
+      <div class="field"><label>Jornada por dia útil (min)</label><input class="inp mono" id="cf-jornada_min" value="${r.jornada_min}"></div>
+      <div class="field"><label>Cada folga consome (min)</label><input class="inp mono" id="cf-folga_min" value="${r.folga_min}"></div>
+      <div class="field"><label>Tolerância diária (min)</label><input class="inp mono" id="cf-tolerancia_min" value="${r.tolerancia_min}"></div>
+      <div class="field"><label>Banco conta a partir de</label><input class="inp" type="date" id="cf-inicio_banco" value="${r.inicio_banco}"></div>
+    </div>
+    <div class="field"><label>Feriados (AAAA-MM-DD, separados por vírgula)</label><textarea class="inp mono" id="cf-feriados" style="font-size:13px">${esc(r.feriados.join(', '))}</textarea></div>
+    <button class="btn pri" onclick="salvarRegras()"><i class="ti ti-device-floppy"></i> Salvar regras</button>
+    <p class="faint" style="font-size:12.5px;margin-top:10px">Nunca recalcule mês já fechado com regra nova: mude a data de início do banco e lance o saldo de fechamento como "saldo inicial" de cada uma.</p>
+  </div>
+  <div class="h2">Horário das lojas</div>
+  <div class="card pad" style="max-width:640px">${Object.entries(d.lojas).map(([k,l])=>`<div class="grid3"><div class="field"><label>Loja</label><input class="inp" value="${esc(l.nome)}" disabled></div>
+    <div class="field"><label>Abre</label><input class="inp mono" type="time" id="lj-${k}-abre" value="${l.abre}"></div><div class="field"><label>Fecha</label><input class="inp mono" type="time" id="lj-${k}-fecha" value="${l.fecha}"></div></div>`).join('')}
+    <button class="btn" onclick="salvarLojas()"><i class="ti ti-device-floppy"></i> Salvar horários</button></div>
+  <div class="h2">PIN da administração</div>
+  <div class="card pad" style="max-width:640px"><div class="grid2"><input class="inp mono" id="adm-novo-pin" inputmode="numeric" maxlength="6" placeholder="Novo PIN (6 números)"><button class="btn" onclick="trocarPinAdmin()">Trocar PIN</button></div></div>
+  <div class="h2">Este aparelho</div>
+  <div class="card pad" style="max-width:640px"><div class="row wrap-row" style="gap:8px"><button class="btn sm" onclick="trocarLoja();S.adm=null;S.tela='inicio';render()"><i class="ti ti-building-store"></i> Trocar loja deste computador</button>
+    ${API_FIXO?'':`<button class="btn sm" onclick="S.tela='config';render()"><i class="ti ti-link"></i> Link do servidor</button>`}</div></div>`;
+}
+async function salvarRegras(){
+  try{
+    for(const k of ['jornada_min','folga_min','tolerancia_min','inicio_banco','feriados']){
+      let v = $('#cf-'+k).value.trim();
+      if(k==='feriados') v = v.split(/[\s,;]+/).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x)).join(',');
+      S.adm.dados = await api('admConfig', {adminPin:S.adm.pin, chave:k, valor:v});
+    }
+    render(); toast('Regras salvas ✔');
+  }catch(e){ toast(e.message, true); }
+}
+async function salvarLojas(){
+  const l = JSON.parse(JSON.stringify(S.adm.dados.lojas));
+  Object.keys(l).forEach(k=>{ l[k].abre=$('#lj-'+k+'-abre').value; l[k].fecha=$('#lj-'+k+'-fecha').value; });
+  try{ S.adm.dados = await api('admConfig', {adminPin:S.adm.pin, chave:'lojas', valor:JSON.stringify(l)}); carregarBootSilencioso(); render(); toast('Horários salvos ✔'); }
+  catch(e){ toast(e.message, true); }
+}
+async function trocarPinAdmin(){
+  const v = $('#adm-novo-pin').value.trim();
+  if(!/^\d{6}$/.test(v)){ toast('O PIN precisa ter 6 números', true); return; }
+  try{ await api('admTrocarPin', {adminPin:S.adm.pin, novo:v}); S.adm.pin=v; $('#adm-novo-pin').value=''; toast('PIN da administração trocado ✔'); }
+  catch(e){ toast(e.message, true); }
+}
+
+/* ──────────── espelho / exportações ──────────── */
+function imprimirEspelho(){
+  const d = S.adm.dados, c = admColabAtual(), ym = S.adm.mes;
+  const mapa = mapaPontos(d.pontos, c.id), res = resumoMes(c, ym, mapa, d.regras), banco = bancoTotal(c, mapa, d.regras);
+  const linhas = res.dias.map(x=>{
+    const r = x.r || {};
+    const tipo = x.domingo && !r.entrada ? 'DSR' : x.feriado && !r.entrada ? 'Feriado' : (x.tipo!=='normal' ? TIPO_NOME[x.tipo] : '');
+    return `<tr><td>${ddmm(x.data)} ${semana(x.data)}</td>${CAMPOS.map(k=>`<td>${r[k]||''}</td>`).join('')}<td>${x.trabalhado?hm(x.trabalhado):''}</td><td>${x.previsto?hm(x.previsto):''}</td><td>${x.saldo?hm(x.saldo,true):''}</td><td>${esc([tipo, ...x.flags.filter(f=>f.c!=='info').map(f=>f.n)].filter(Boolean).join(' · '))}</td></tr>`;
+  }).join('');
+  $('#print').innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:10px">
+      <img src="${LOGO}" style="height:40px"><div><h1>Espelho de Ponto — ${nomeMes(ym)}</h1><div>${EMPRESA.nome} · CNPJ ${EMPRESA.cnpj}</div></div></div>
+    <p><b>Colaboradora:</b> ${esc(c.nome)} &nbsp; · &nbsp; <b>Loja:</b> ${esc(d.lojas[c.loja]?.nome||c.loja)} &nbsp; · &nbsp; <b>Jornada:</b> 7h20 por dia, seg a sáb (44h semanais)</p>
+    <table style="width:100%;border-collapse:collapse;margin-top:8px"><thead><tr><th>Dia</th>${CAMPOS.map(k=>`<th>${CURTO[k]}</th>`).join('')}<th>Trab.</th><th>Prev.</th><th>Saldo</th><th>Obs.</th></tr></thead><tbody>${linhas}</tbody></table>
+    <p style="margin-top:10px"><b>Trabalhado:</b> ${hm(res.trabalhado)} · <b>Previsto:</b> ${hm(res.previsto)} · <b>Saldo do mês:</b> ${hm(res.saldo,true)} · <b>Banco de horas acumulado:</b> ${hm(banco.saldo,true)}</p>
+    <p style="margin-top:8px">Declaro que os horários acima conferem com a minha jornada. Caso discorde de algum registro, tenho 5 (cinco) dias úteis a partir do recebimento para contestar por escrito. Saldo credor do banco de horas deve ser compensado até o fim do mês seguinte; o que não for compensado será pago como hora extra com adicional de 50%.</p>
+    <div style="display:flex;gap:40px;margin-top:46px">
+      <div style="flex:1;border-top:1px solid #000;padding-top:4px;text-align:center">${EMPRESA.nome}<br>Empregadora</div>
+      <div style="flex:1;border-top:1px solid #000;padding-top:4px;text-align:center">${esc(c.nome)}<br>Colaboradora</div></div>
+    <p style="margin-top:14px;color:#555">Rio Branco/AC, ____ de ______________ de ${ym.slice(0,4)}.</p>`;
+  setTimeout(()=>window.print(), 300);
+}
+function copiarResumo(){
+  const d = S.adm.dados, c = admColabAtual(), ym = S.adm.mes;
+  const mapa = mapaPontos(d.pontos, c.id), res = resumoMes(c, ym, mapa, d.regras), banco = bancoTotal(c, mapa, d.regras);
+  const txt = `🕐 *Seu ponto de ${nomeMes(ym)}*\n\nOi, ${primeiroNome(c.nome)}! Segue o resumo:\n\n⏱️ *Trabalhado:* ${hm(res.trabalhado)}\n📋 *Previsto:* ${hm(res.previsto)}\n${res.saldo>=0?'➕':'➖'} *Saldo do mês:* ${hm(res.saldo,true)}\n🏦 *Banco de horas:* ${hm(banco.saldo,true)}${banco.folgasDisp?`\n🌴 *Folgas disponíveis:* ${banco.folgasDisp}`:''}${res.pend?`\n\n⚠️ _Tem ${res.pend} dia(s) com marcação pendente — confere na sua área do Cartão de Ponto e manda a correção por lá._`:''}\n\n_Qualquer dúvida, é só chamar_ 💛`;
+  navigator.clipboard.writeText(txt).then(()=>toast('Resumo copiado ✔ Cole no WhatsApp'), ()=>{ prompt('Copie o texto:', txt); });
+}
+function exportarCSV(todas){
+  const d = S.adm.dados, ym = S.adm.mes;
+  const ids = todas ? d.colaboradoras.map(c=>c.id) : [admColabAtual().id];
+  const q = v => /[",\n]/.test(v) ? '"'+String(v).replace(/"/g,'""')+'"' : String(v??'');
+  const head = 'funcionaria,loja,data,'+CAMPOS.join(',')+',tipo,obs';
+  const rows = d.pontos.filter(p=>ids.includes(p.colaboradora_id) && p.data.startsWith(ym)).sort((a,b)=>(a.colaboradora+a.data).localeCompare(b.colaboradora+b.data))
+    .map(p=>[p.colaboradora,p.loja,p.data,...CAMPOS.map(k=>p[k]),p.tipo==='normal'?'':p.tipo,p.obs].map(q).join(','));
+  const blob = new Blob(['﻿'+[head,...rows].join('\n')], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `pontos-${ym}${todas?'':'-'+admColabAtual().id}.csv`; a.click();
+}
+
+/* ──────────── configuração do link (só sem API_FIXO) ──────────── */
+function telaConfig(){
+  return `<div class="wrap" style="max-width:620px">${topo(' ')}
+    <div class="card pad"><div class="h2">Conectar à planilha</div>
+    <p class="muted" style="margin-bottom:12px">Cole o link do App da Web do Apps Script (termina em <b>/exec</b>).</p>
+    <div class="field"><input class="inp" id="api-url" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(S.api)}"></div>
+    <button class="btn pri" onclick="salvarApi()"><i class="ti ti-plug-connected"></i> Conectar</button></div></div>`;
+}
+async function salvarApi(){
+  const v = $('#api-url').value.trim();
+  if(!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec/.test(v)){ toast('Link inválido — precisa terminar em /exec', true); return; }
+  S.api = v; LS.set('lv_api', v); S.tela='inicio'; carregar();
+}
+
+try{ $('#fav').href = LOGO; }catch(e){}
+carregar();
+</script>
+</body>
+</html>
