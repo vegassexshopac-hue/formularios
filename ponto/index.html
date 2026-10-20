@@ -31,6 +31,11 @@ input,select,textarea{font:inherit;color:var(--t1)}
 .row{display:flex;align-items:center;gap:10px}.between{justify-content:space-between}.wrap-row{flex-wrap:wrap}
 .grow{flex:1;min-width:0}
 .hide{display:none!important}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.quick button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px 8px;border-radius:14px;background:var(--s1);border:1px solid var(--bd);box-shadow:var(--sh);font-weight:700;font-size:13.5px;line-height:1.2;text-align:center;min-height:92px}
+.quick button:hover{border-color:var(--red)}
+.quick button i{font-size:26px;color:var(--red)}
+@media (max-width:640px){.quick{grid-template-columns:1fr 1fr}}
 
 /* topo */
 .top{display:flex;align-items:center;gap:14px;margin-bottom:18px}
@@ -267,7 +272,7 @@ function toast(msg, ruim=false){
 
 /* ──────────── estado ──────────── */
 const S = {
-  api: API_FIXO || LS.get('lv_api',''),
+  api: LS.get('lv_api_teste','') || API_FIXO || LS.get('lv_api',''),
   boot: null,             // lojas, colaboradoras, regras, hoje
   loja: LS.get('lv_loja', null),
   tela: 'inicio',         // inicio | bater | sucesso | minha | admin | config
@@ -453,7 +458,7 @@ function telaInicio(){
       ${rodape()}</div>`;
   }
   const loja = b.lojas[S.loja];
-  const daqui = b.colaboradoras.filter(c=>c.loja===S.loja), outras = b.colaboradoras.filter(c=>c.loja!==S.loja);
+  const todas = b.colaboradoras.slice().sort((x,y)=>x.nome.localeCompare(y.nome));
   const card = c => `<button class="person" onclick="abrirPin('${c.id}')">
       <div class="avatar" style="background:${esc(c.cor||'#F5B524')}">${esc(iniciais(c.nome))}</div>
       <div class="grow"><b>${esc(primeiroNome(c.nome))}</b><small>${c.temPin?'Toque para bater o ponto':'<span style="color:var(--bad)">PIN não cadastrado</span>'}</small></div>
@@ -464,8 +469,7 @@ function telaInicio(){
       <button class="store-switch" onclick="trocarLoja()"><span class="dot" style="background:var(--red)"></span> Loja ${esc(loja.nome)} · ${esc(loja.abre)}–${esc(loja.fecha)} <i class="ti ti-switch-horizontal faint"></i></button>
     </div>
     <div class="h2">Quem vai bater o ponto?</div>
-    <div class="people">${daqui.map(card).join('') || '<p class="muted">Ninguém cadastrado nesta loja.</p>'}</div>
-    ${outras.length?`<div class="h2">Equipe de outra loja</div><div class="people">${outras.map(card).join('')}</div>`:''}
+    <div class="people">${todas.map(card).join('') || '<p class="muted">Ninguém cadastrado ainda.</p>'}</div>
     <div class="note info" style="margin-top:22px"><i class="ti ti-info-circle"></i><div>Esqueceu de bater, precisa corrigir um horário ou mandar atestado? Toque no seu nome, digite o PIN e vá em <b>Minha área</b> — dá para fazer pelo celular também.</div></div>
     ${rodape()}</div>`;
 }
@@ -584,11 +588,22 @@ function telaBater(){
         : `<div class="note ok"><i class="ti ti-circle-check"></i><div>Dia encerrado. Trabalhado hoje: <b class="mono">${hm(trab(r))}</b>. Bom descanso! ✨</div></div>`}
       </div>
     </div>
-    <div class="row" style="margin-top:12px;gap:8px">
-      ${s.dados?`<button class="btn grow" onclick="irMinha()"><i class="ti ti-user-circle"></i> Minha área</button>`:''}
-      <button class="btn grow" onclick="sair()"><i class="ti ti-arrow-left"></i> Sair</button>
-    </div>
+    ${s.dados?blocoPedidos():''}
+    <button class="btn" style="width:100%;margin-top:14px" onclick="sair()"><i class="ti ti-arrow-left"></i> Sair</button>
   </div>`;
+}
+function blocoPedidos(){
+  const sol = S.sess.dados.solicitacoes;
+  const pend = sol.filter(x=>x.status==='pendente').length;
+  const novas = sol.filter(x=>x.status!=='pendente' && x.decidido_em && x.decidido_em.slice(0,10) >= addDays(hojeISO(),-3));
+  return `<div class="h2">Precisa de algo?</div>
+    <div class="quick">
+      <button onclick="novoPedido({tipo:'correcao'})"><i class="ti ti-clock-edit"></i>Esqueci de bater /<br>corrigir horário</button>
+      <button onclick="novoPedido({tipo:'atestado'})"><i class="ti ti-file-certificate"></i>Enviar<br>atestado</button>
+      <button onclick="novoPedido({tipo:'folga'})"><i class="ti ti-beach"></i>Pedir<br>folga</button>
+      <button onclick="S.minhaTab='mes';irMinha()"><i class="ti ti-calendar-stats"></i>Meu mês e<br>banco de horas</button>
+    </div>
+    ${pend||novas.length?`<button class="note ${pend?'warn':'info'}" style="width:100%;margin-top:10px;text-align:left" onclick="S.minhaTab='pedidos';irMinha()"><i class="ti ti-inbox"></i><div>${pend?`<b>${pend} pedido(s) aguardando</b> a administração.`:''} ${novas.length?`${novas.length} pedido(s) respondido(s) recentemente.`:''} Toque para ver.</div></button>`:''}`;
 }
 async function bater(campo){
   const s = S.sess; if(S.ocupado) return;
@@ -622,7 +637,7 @@ function telaSucesso(){
     <b class="time">${esc(u.hora)}</b>
     <div class="muted">${esc(primeiroNome(u.nome))}${u.offline?' · guardado sem internet, envia sozinho':''}</div>
     <div class="row" style="justify-content:center;margin-top:20px;gap:8px">
-      ${S.sess?.dados?`<button class="btn" onclick="irMinha()"><i class="ti ti-user-circle"></i> Minha área</button>`:''}
+      ${S.sess?.dados?`<button class="btn" onclick="S.tela='bater';render()"><i class="ti ti-send"></i> Fazer um pedido</button>`:''}
       <button class="btn pri" onclick="sair()">Concluir</button>
     </div></div></div>`;
 }
@@ -661,7 +676,7 @@ function telaMinha(){
   }
   return `<div class="wrap" style="max-width:760px">${topo(`<button class="btn sm" style="margin-left:auto" onclick="sair()"><i class="ti ti-logout"></i> Sair</button>`)}
     <div class="row" style="margin-bottom:14px"><div class="avatar" style="background:${esc(c.cor)}">${esc(iniciais(c.nome))}</div>
-      <div class="grow"><div style="font-weight:800;font-size:18px">${esc(c.nome)}</div><div class="faint" style="font-size:13px">Loja ${esc(S.boot.lojas[c.loja]?.nome||c.loja)}</div></div>
+      <div class="grow"><div style="font-weight:800;font-size:18px">${esc(c.nome)}</div><div class="faint" style="font-size:13px">Las Vegas Sex Shop</div></div>
       <button class="btn sm" onclick="S.tela='bater';render()"><i class="ti ti-fingerprint"></i> Bater ponto</button></div>
     <div class="tabs" style="margin-bottom:14px">
       <button class="tab ${S.minhaTab==='mes'?'on':''}" onclick="S.minhaTab='mes';render()"><i class="ti ti-calendar"></i> Meu mês</button>
@@ -791,7 +806,7 @@ async function enviarPedido(){
   try{
     const s = S.sess;
     s.dados = await api('solicitar', {eid:s.eid, pin:s.pin, ...PED, data_fim: PED.data_fim || PED.data});
-    PED=null; renderPedido(); S.minhaTab='pedidos'; render(); toast('Pedido enviado ✔ A administração vai analisar.');
+    PED=null; renderPedido(); if(S.tela==='minha') S.minhaTab='pedidos'; render(); toast('Pedido enviado ✔ A administração vai analisar.');
   }catch(e){ toast(e.message, true); b.disabled=false; b.innerHTML='<i class="ti ti-send"></i> Enviar para a administração'; }
 }
 async function cancelarPedido(id){
@@ -840,8 +855,8 @@ function admHoje(){
   const blocos = Object.entries(d.lojas).map(([k,l])=>{
     const linhas = ativas.map(c=>{
       const r = d.pontos.find(p=>p.colaboradora_id===c.id && p.data===hoje);
-      if(!r && c.loja!==k) return '';
-      if(r && r.loja && r.loja!==k) return '';
+      if(!r || !CAMPOS.some(f=>r[f]) && (!r.tipo || r.tipo==='normal')) return '';
+      if((r.loja||'')!==k) return '';
       let st = '<span class="pill">Ainda não chegou</span>';
       if(r && r.tipo && r.tipo!=='normal') st = `<span class="pill info">${TIPO_NOME[r.tipo]}</span>`;
       else if(r && r.saida) st = `<span class="pill">Saiu ${r.saida}</span>`;
@@ -852,9 +867,11 @@ function admHoje(){
         ${CAMPOS.map(f=>`<td class="num hide-sm">${r&&r[f]||''}</td>`).join('')}</tr>`;
     }).join('');
     return `<div class="h2">Loja ${esc(l.nome)} · ${esc(l.abre)}–${esc(l.fecha)}</div>
-      <div class="table-wrap"><table><thead><tr><th>Colaboradora</th><th>Agora</th>${CAMPOS.map(f=>`<th class="hide-sm">${CURTO[f]}</th>`).join('')}</tr></thead><tbody>${linhas||'<tr><td colspan="8" class="muted">Ninguém escalado</td></tr>'}</tbody></table></div>`;
+      <div class="table-wrap"><table><thead><tr><th>Colaboradora</th><th>Agora</th>${CAMPOS.map(f=>`<th class="hide-sm">${CURTO[f]}</th>`).join('')}</tr></thead><tbody>${linhas||'<tr><td colspan="8" class="muted">Ninguém bateu ponto aqui hoje</td></tr>'}</tbody></table></div>`;
   }).join('');
-  return `<div class="faint" style="font-weight:700">${dataLonga(hoje)} · toque numa linha para corrigir</div>${blocos}`;
+  const faltam = ativas.filter(c=>{ const r = d.pontos.find(p=>p.colaboradora_id===c.id && p.data===hoje); return !r || (!CAMPOS.some(f=>r[f]) && (!r.tipo || r.tipo==='normal')); });
+  const blocoFaltam = faltam.length ? `<div class="h2">Ainda não bateram hoje</div><div class="row wrap-row" style="gap:8px">${faltam.map(c=>`<button class="pill" style="height:32px;cursor:pointer" onclick="abrirEditor('${c.id}','${hoje}')"><span class="dot" style="background:${esc(c.cor)}"></span> ${esc(primeiroNome(c.nome))}</button>`).join('')}</div>` : '';
+  return `<div class="faint" style="font-weight:700">${dataLonga(hoje)} · toque numa linha para corrigir</div>${blocos}${blocoFaltam}`;
 }
 function admColabAtual(){
   const d = S.adm.dados;
@@ -941,7 +958,7 @@ function admBanco(){
   const linhas = d.colaboradoras.filter(c=>c.ativa==='SIM').map(c=>{
     const mapa = mapaPontos(d.pontos, c.id), r = resumoMes(c, ym, mapa, d.regras), b = bancoTotal(c, mapa, d.regras);
     return `<tr class="click" onclick="S.adm.eid='${c.id}';S.adm.tab='mes';render()">
-      <td><span class="dot" style="background:${esc(c.cor)}"></span> ${esc(primeiroNome(c.nome))} <span class="faint" style="font-size:12px">· ${esc(d.lojas[c.loja]?.nome||c.loja)}</span></td>
+      <td><span class="dot" style="background:${esc(c.cor)}"></span> ${esc(primeiroNome(c.nome))}</td>
       <td class="num">${hm(r.trabalhado)}</td><td class="num">${hm(r.previsto)}</td>
       <td class="num ${r.saldo>0?'pos':r.saldo<0?'neg':''}">${hm(r.saldo,true)}</td>
       <td class="num ${b.saldo>0?'pos':b.saldo<0?'neg':''}"><b>${hm(b.saldo,true)}</b></td>
@@ -958,9 +975,9 @@ function admBanco(){
 function admEquipe(){
   const d = S.adm.dados;
   return `<button class="btn pri" style="margin-bottom:12px" onclick="editarColab()"><i class="ti ti-user-plus"></i> Nova colaboradora</button>
-    <div class="table-wrap"><table><thead><tr><th>Nome</th><th>Loja</th><th>Admissão</th><th>Saldo inicial</th><th>PIN</th><th>Situação</th></tr></thead><tbody>
+    <div class="table-wrap"><table><thead><tr><th>Nome</th><th>Admissão</th><th>Saldo inicial</th><th>PIN</th><th>Situação</th></tr></thead><tbody>
     ${d.colaboradoras.map(c=>`<tr class="click" onclick="editarColab('${c.id}')"><td><span class="dot" style="background:${esc(c.cor)}"></span> ${esc(c.nome)}</td>
-      <td>${esc(d.lojas[c.loja]?.nome||c.loja)}</td><td>${c.admissao?ddmm(c.admissao)+'/'+c.admissao.slice(0,4):'<span class="faint">—</span>'}</td>
+      <td>${c.admissao?ddmm(c.admissao)+'/'+c.admissao.slice(0,4):'<span class="faint">—</span>'}</td>
       <td class="num">${hm(c.saldo_inicial_min,true)}</td><td>${c.temPin?'<span class="pill ok">Cadastrado</span>':'<span class="pill bad">Falta criar</span>'}</td>
       <td>${c.ativa==='SIM'?'<span class="pill ok">Ativa</span>':'<span class="pill">Inativa</span>'}</td></tr>`).join('')}
     </tbody></table></div>`;
@@ -979,10 +996,10 @@ function renderColab(){
     <div class="modal-b">
       <div class="field"><label>Nome completo</label><input class="inp" value="${esc(e.nome)}" oninput="EC.nome=this.value"></div>
       <div class="grid2">
-        <div class="field"><label>Loja principal</label><select class="inp" onchange="EC.loja=this.value">${Object.entries(lojas).map(([k,l])=>`<option value="${k}" ${e.loja===k?'selected':''}>${esc(l.nome)}</option>`).join('')}</select></div>
         <div class="field"><label>Admissão</label><input class="inp" type="date" value="${e.admissao}" onchange="EC.admissao=this.value"></div>
         <div class="field"><label>Saldo inicial do banco (±hh:mm)</label><input class="inp mono" value="${esc(e.saldo)}" oninput="EC.saldo=this.value" placeholder="+00:00"></div>
         <div class="field"><label>Cor</label><input class="inp" type="color" value="${esc(e.cor)}" oninput="EC.cor=this.value" style="padding:4px"></div>
+        <div></div>
       </div>
       <div class="field"><label>${e.temPin?'Trocar PIN (deixe vazio para manter)':'Criar PIN de 6 números'}</label><input class="inp mono" inputmode="numeric" maxlength="6" value="${esc(e.pin)}" oninput="EC.pin=this.value"></div>
       <label class="row" style="margin-bottom:14px;font-weight:700"><input type="checkbox" ${e.ativa?'checked':''} onchange="EC.ativa=this.checked" style="width:18px;height:18px"> Ativa (aparece na tela do ponto)</label>
@@ -1057,12 +1074,12 @@ function imprimirEspelho(){
   const linhas = res.dias.map(x=>{
     const r = x.r || {};
     const tipo = x.domingo && !r.entrada ? 'DSR' : x.feriado && !r.entrada ? 'Feriado' : (x.tipo!=='normal' ? TIPO_NOME[x.tipo] : '');
-    return `<tr><td>${ddmm(x.data)} ${semana(x.data)}</td>${CAMPOS.map(k=>`<td>${r[k]||''}</td>`).join('')}<td>${x.trabalhado?hm(x.trabalhado):''}</td><td>${x.previsto?hm(x.previsto):''}</td><td>${x.saldo?hm(x.saldo,true):''}</td><td>${esc([tipo, ...x.flags.filter(f=>f.c!=='info').map(f=>f.n)].filter(Boolean).join(' · '))}</td></tr>`;
+    return `<tr><td>${ddmm(x.data)} ${semana(x.data)}${r.loja&&r.entrada?' · '+esc((d.lojas[r.loja]||{}).nome||''):''}</td>${CAMPOS.map(k=>`<td>${r[k]||''}</td>`).join('')}<td>${x.trabalhado?hm(x.trabalhado):''}</td><td>${x.previsto?hm(x.previsto):''}</td><td>${x.saldo?hm(x.saldo,true):''}</td><td>${esc([tipo, ...x.flags.filter(f=>f.c!=='info').map(f=>f.n)].filter(Boolean).join(' · '))}</td></tr>`;
   }).join('');
   $('#print').innerHTML = `
     <div style="display:flex;align-items:center;gap:12px;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:10px">
       <img src="${LOGO}" style="height:40px"><div><h1>Espelho de Ponto — ${nomeMes(ym)}</h1><div>${EMPRESA.nome} · CNPJ ${EMPRESA.cnpj}</div></div></div>
-    <p><b>Colaboradora:</b> ${esc(c.nome)} &nbsp; · &nbsp; <b>Loja:</b> ${esc(d.lojas[c.loja]?.nome||c.loja)} &nbsp; · &nbsp; <b>Jornada:</b> 7h20 por dia, seg a sáb (44h semanais)</p>
+    <p><b>Colaboradora:</b> ${esc(c.nome)} &nbsp; · &nbsp; <b>Jornada:</b> 7h20 por dia, seg a sáb (44h semanais)</p>
     <table style="width:100%;border-collapse:collapse;margin-top:8px"><thead><tr><th>Dia</th>${CAMPOS.map(k=>`<th>${CURTO[k]}</th>`).join('')}<th>Trab.</th><th>Prev.</th><th>Saldo</th><th>Obs.</th></tr></thead><tbody>${linhas}</tbody></table>
     <p style="margin-top:10px"><b>Trabalhado:</b> ${hm(res.trabalhado)} · <b>Previsto:</b> ${hm(res.previsto)} · <b>Saldo do mês:</b> ${hm(res.saldo,true)} · <b>Banco de horas acumulado:</b> ${hm(banco.saldo,true)}</p>
     <p style="margin-top:8px">Declaro que os horários acima conferem com a minha jornada. Caso discorde de algum registro, tenho 5 (cinco) dias úteis a partir do recebimento para contestar por escrito. Saldo credor do banco de horas deve ser compensado até o fim do mês seguinte; o que não for compensado será pago como hora extra com adicional de 50%.</p>
