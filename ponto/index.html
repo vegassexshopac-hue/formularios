@@ -36,6 +36,32 @@ input,select,textarea{font:inherit;color:var(--t1)}
 .quick button:hover{border-color:var(--red)}
 .quick button i{font-size:26px;color:var(--red)}
 @media (max-width:640px){.quick{grid-template-columns:1fr 1fr}}
+.voltar{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 18px 0 14px;border-radius:12px;background:var(--t1);color:#fff;font-weight:800;font-size:15px;margin-bottom:14px;box-shadow:var(--sh)}
+.voltar i{font-size:20px}
+.voltar:active{transform:scale(.98)}
+/* agenda */
+.cal{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.cal-h{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--bd)}
+.cal-h b{font-size:16px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.cal-dow{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);text-align:center;padding:8px 0;background:var(--s2);border-bottom:1px solid var(--bd)}
+.cal-day{min-height:96px;border-right:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:5px;text-align:left;display:flex;flex-direction:column;gap:3px;background:var(--s1);cursor:pointer;min-width:0}
+.cal-day:nth-child(7n){border-right:0}
+.cal-day:hover{background:var(--s2)}
+.cal-day.fora{background:var(--s2);opacity:.5}
+.cal-day.dom{background:#FBFAF7}
+.cal-day .n{font-size:12.5px;font-weight:800;color:var(--t2);display:flex;align-items:center;justify-content:space-between}
+.cal-day.hoje .n span{background:var(--red);color:#fff;border-radius:10px;padding:0 7px}
+.chip{display:block;font-size:11.5px;font-weight:700;line-height:1.25;padding:2px 6px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.chip.folga{background:#DDF3E8;color:#0B6B46}.chip.ausente,.chip.atestado{background:#E6EBF3;color:#3D4F6B}.chip.ferias{background:#EFE3FA;color:#6A2E9C}
+.chip.cha{background:#FBDDE2;color:#A10D26}.chip.campanha{background:#FDEFC8;color:#8A5C08}.chip.evento{background:#FFE4D1;color:#A3470B}.chip.reuniao{background:#DCEBFB;color:#185A9D}.chip.aviso{background:#EEEAE2;color:#5C5246}.chip.feriado{background:#F4F1EA;color:#7A6F60;border:1px dashed var(--bd2)}
+.chip.mais{background:transparent;color:var(--t3);padding:0 4px}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+@media (max-width:640px){
+  .cal-day{min-height:62px;padding:3px}
+  .chip{font-size:9.5px;padding:1px 3px}
+  .cal-dow{font-size:9.5px}
+}
 
 /* topo */
 .top{display:flex;align-items:center;gap:14px;margin-bottom:18px}
@@ -424,7 +450,29 @@ function render(){
   tickRelogio();
 }
 const _render = render;
-render = function(){ _render(); tickRelogio(); };
+render = function(){
+  _render(); tickRelogio();
+  try{ if(S.tela!=='inicio' && (!history.state || history.state.lv!==S.tela)) history.pushState({lv:S.tela}, ''); }catch(e){}
+};
+function modalAberto(){ return !!$('#modal').innerHTML.trim(); }
+function fecharModal(){ PED=null; ED=null; EC=null; EV=null; S.pin=null; $('#modal').innerHTML=''; }
+/** Volta uma tela (mesmo efeito do botão Voltar e do voltar do navegador). */
+function voltar(){
+  if(modalAberto()){ fecharModal(); return; }
+  if(S.tela==='minha'){ S.tela='bater'; render(); return; }
+  if(S.tela==='bater' || S.tela==='sucesso'){ sair(); return; }
+  if(S.tela==='admin'){ S.adm=null; S.tela='inicio'; render(); return; }
+  if(S.tela==='config'){ S.tela='inicio'; render(); return; }
+  if(!S.loja && S.lojaAnterior){ S.loja=S.lojaAnterior; LS.set('lv_loja',S.loja); render(); }
+}
+window.addEventListener('popstate', ()=>{
+  const tinhaModal = modalAberto();
+  voltar();
+  // mantém a pessoa dentro do sistema: o voltar do navegador nunca fecha a página no meio do uso
+  try{ if(tinhaModal || S.tela!=='inicio') history.pushState({lv:S.tela}, ''); }catch(e){}
+});
+document.addEventListener('keydown', ev=>{ if(ev.key==='Escape' && !S.pin && modalAberto()) fecharModal(); });
+const btnVoltar = (txt='Voltar') => `<button class="voltar" onclick="voltar()"><i class="ti ti-arrow-left"></i> ${txt}</button>`;
 
 function topo(direita=''){
   return `<div class="top">
@@ -447,6 +495,7 @@ function telaInicio(){
   const b = S.boot;
   if(!S.loja || !b.lojas[S.loja]){
     return `<div class="wrap">${topo()}
+      ${S.lojaAnterior?btnVoltar():''}
       <div class="h2">Em qual loja fica este computador?</div>
       <div class="store-grid">${Object.entries(b.lojas).map(([k,l])=>`
         <button class="store-card" onclick="escolherLoja('${k}')">
@@ -470,7 +519,9 @@ function telaInicio(){
     </div>
     <div class="h2">Quem vai bater o ponto?</div>
     <div class="people">${todas.map(card).join('') || '<p class="muted">Ninguém cadastrado ainda.</p>'}</div>
-    <div class="note info" style="margin-top:22px"><i class="ti ti-info-circle"></i><div>Esqueceu de bater, precisa corrigir um horário ou mandar atestado? Toque no seu nome, digite o PIN e vá em <b>Minha área</b> — dá para fazer pelo celular também.</div></div>
+    <div class="h2" style="display:flex;justify-content:space-between;align-items:center">Agenda da equipe <span class="faint" style="font-size:11px;letter-spacing:.05em;text-transform:none;font-weight:600">atualiza sozinha</span></div>
+    ${calendario(b.calendario, false)}
+    <div class="note info" style="margin-top:22px"><i class="ti ti-info-circle"></i><div>Esqueceu de bater, precisa corrigir um horário, mandar atestado ou pedir folga? Toque no seu nome e digite o PIN — os botões ficam logo abaixo do ponto. Dá para fazer pelo celular também.</div></div>
     ${rodape()}</div>`;
 }
 function rodape(){
@@ -480,7 +531,65 @@ function rodape(){
   </div>`;
 }
 function escolherLoja(k){ S.loja=k; LS.set('lv_loja',k); render(); }
-function trocarLoja(){ S.loja=null; LS.del('lv_loja'); render(); }
+function trocarLoja(){ S.lojaAnterior=S.loja; S.loja=null; LS.del('lv_loja'); render(); }
+
+/* ──────────── AGENDA DA EQUIPE ──────────── */
+const TIPO_EV = {cha:{n:'Chá de lingerie',e:'💝'}, campanha:{n:'Campanha',e:'📣'}, evento:{n:'Evento',e:'🎉'}, reuniao:{n:'Reunião',e:'👥'}, aviso:{n:'Aviso',e:'📌'}};
+const TIPO_AUS = {folga:{n:'Folga',e:'🌴'}, ausente:{n:'Ausente',e:'•'}, atestado:{n:'Atestado',e:'🩺'}, ferias:{n:'Férias',e:'✈️'}};
+function itensDoDia(cal, data, regras){
+  const it = [];
+  if(regras && regras.feriados.includes(data)) it.push({cls:'feriado', txt:'Feriado', det:'Feriado'});
+  (cal?.eventos||[]).filter(e=>data>=e.data && data<=(e.data_fim||e.data)).forEach(e=>{
+    const t = TIPO_EV[e.tipo]||TIPO_EV.evento;
+    it.push({cls:e.tipo, txt:t.e+' '+e.titulo, det:`${t.e} <b>${esc(e.titulo)}</b> · ${t.n}${e.loja&&S.boot.lojas[e.loja]?' · Loja '+esc(S.boot.lojas[e.loja].nome):''}${e.obs?'<br><span class="faint">'+esc(e.obs)+'</span>':''}`, ev:e});
+  });
+  (cal?.ausencias||[]).filter(a=>a.data===data).forEach(a=>{
+    const t = TIPO_AUS[a.tipo]||TIPO_AUS.ausente;
+    it.push({cls:a.tipo, txt:(a.tipo==='ausente'?'':t.e+' ')+a.nome+(a.tipo==='ausente'?' · ausente':''), det:`${t.e} <b>${esc(a.nome)}</b> · ${t.n}`});
+  });
+  return it;
+}
+function calendario(cal, admin){
+  const ym = S.calMes || mesDe(hojeISO());
+  const [y,m] = ym.split('-').map(Number);
+  const primeiro = new Date(y, m-1, 1).getDay();
+  const dias = diasDoMes(ym), hoje = hojeISO(), regras = S.boot?.regras;
+  const cells = [];
+  for(let i=0;i<primeiro;i++) cells.push('<div class="cal-day fora"></div>');
+  dias.forEach(d=>{
+    const it = itensDoDia(cal, d, regras);
+    const max = 3;
+    cells.push(`<button class="cal-day ${d===hoje?'hoje':''} ${dow(d)===0?'dom':''}" onclick="verDia('${d}',${admin?'true':'false'})">
+      <div class="n"><span>${Number(d.slice(8))}</span></div>
+      ${it.slice(0,max).map(x=>`<span class="chip ${x.cls}">${esc(x.txt)}</span>`).join('')}
+      ${it.length>max?`<span class="chip mais">+${it.length-max}</span>`:''}</button>`);
+  });
+  while(cells.length%7) cells.push('<div class="cal-day fora"></div>');
+  return `<div class="cal">
+    <div class="cal-h"><button class="icon-btn" style="border:0" onclick="mudarCal(-1)"><i class="ti ti-chevron-left"></i></button>
+      <b>${nomeMes(ym)}</b>
+      <button class="icon-btn" style="border:0" onclick="mudarCal(1)"><i class="ti ti-chevron-right"></i></button></div>
+    <div class="cal-grid">${['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map(x=>`<div class="cal-dow">${x}</div>`).join('')}${cells.join('')}</div>
+  </div>
+  <div class="legend"><span class="chip folga">🌴 Folga</span><span class="chip ${admin?'atestado':'ausente'}">${admin?'🩺 Atestado':'Ausente'}</span><span class="chip ferias">✈️ Férias</span><span class="chip cha">💝 Chá de lingerie</span><span class="chip campanha">📣 Campanha</span><span class="chip evento">🎉 Evento</span><span class="chip reuniao">👥 Reunião</span><span class="chip aviso">📌 Aviso</span></div>`;
+}
+function mudarCal(n){ S.calMes = mesAdd(S.calMes || mesDe(hojeISO()), n); render(); }
+function verDia(d, admin){
+  const cal = admin ? S.adm.dados.calendario : S.boot.calendario;
+  const it = itensDoDia(cal, d, S.boot.regras);
+  $('#modal').innerHTML = `<div class="overlay" onclick="if(event.target===this)fecharModal()"><div class="modal">
+    <div class="modal-h"><h3 class="grow">${esc(dataLonga(d))}</h3><button class="icon-btn" onclick="fecharModal()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-b">
+      ${it.length ? it.map(x=>`<div class="req" style="align-items:center">${admin&&x.ev?`<div class="grow">${x.det}</div><button class="btn sm" onclick="editarEvento('${x.ev.id}')"><i class="ti ti-pencil"></i> Editar</button>`:`<div class="grow">${x.det}</div>`}</div>`).join('') : '<p class="muted">Nada marcado neste dia.</p>'}
+      ${admin?`<button class="btn pri" style="width:100%;margin-top:12px" onclick="editarEvento(null,'${d}')"><i class="ti ti-plus"></i> Adicionar evento neste dia</button>`:''}
+      <button class="btn" style="width:100%;margin-top:8px" onclick="fecharModal()"><i class="ti ti-arrow-left"></i> Voltar</button>
+    </div></div></div>`;
+}
+// atualização automática da agenda/equipe na tela inicial
+setInterval(async ()=>{
+  if(S.tela!=='inicio' || modalAberto() || document.hidden) return;
+  try{ S.boot = await api('boot'); LS.set('lv_boot', S.boot); if(S.tela==='inicio' && !modalAberto()) render(); }catch(e){}
+}, 60000);
 
 /* ──────────── PIN ──────────── */
 function abrirPin(alvo){
@@ -570,6 +679,7 @@ function telaBater(){
   const lojaNome = S.loja ? S.boot.lojas[S.loja]?.nome : '';
   const podeSaidaDireta = prox && ['saida_almoco','inicio_pausa','fim_pausa'].includes(prox) && r.entrada;
   return `<div class="wrap" style="max-width:640px">${topo()}
+    ${btnVoltar('Sair')}
     ${s.offline?`<div class="offline-bar"><i class="ti ti-wifi-off"></i> Sem internet: a marcação fica guardada neste computador e é enviada sozinha depois.</div>`:''}
     <div class="card pad">
       <div class="row between">
@@ -675,6 +785,7 @@ function telaMinha(){
       <div class="card pad"><div class="grid2"><input class="inp mono" id="novo-pin" inputmode="numeric" maxlength="6" placeholder="Novo PIN (6 números)"><button class="btn" onclick="trocarMeuPin()">Salvar novo PIN</button></div></div>`;
   }
   return `<div class="wrap" style="max-width:760px">${topo(`<button class="btn sm" style="margin-left:auto" onclick="sair()"><i class="ti ti-logout"></i> Sair</button>`)}
+    ${btnVoltar()}
     <div class="row" style="margin-bottom:14px"><div class="avatar" style="background:${esc(c.cor)}">${esc(iniciais(c.nome))}</div>
       <div class="grow"><div style="font-weight:800;font-size:18px">${esc(c.nome)}</div><div class="faint" style="font-size:13px">Las Vegas Sex Shop</div></div>
       <button class="btn sm" onclick="S.tela='bater';render()"><i class="ti ti-fingerprint"></i> Bater ponto</button></div>
@@ -765,8 +876,10 @@ function renderPedido(){
     <div class="field"><label>Observação (opcional)</label><textarea class="inp" oninput="PED.motivo=this.value">${esc(p.motivo)}</textarea></div>`;
   if(p.tipo==='folga'){
     const dw = dow(p.data);
+    const jaFora = (S.boot.calendario?.ausencias||[]).filter(a=>a.data===p.data && a.eid!==S.sess.eid);
     campos = `<div class="field"><label>Dia da folga</label><input class="inp" type="date" value="${p.data}" min="${hojeISO()}" onchange="PED.data=this.value;renderPedido()"></div>
     ${[0,1,6].includes(dw)?'<div class="note bad" style="margin-bottom:12px"><i class="ti ti-alert-triangle"></i><div>Folga de banco de horas só pode ser de <b>terça a sexta</b>.</div></div>':''}
+    ${jaFora.length?`<div class="note warn" style="margin-bottom:12px"><i class="ti ti-users"></i><div>Nesse dia já ${jaFora.length>1?'estão':'está'} fora: <b>${jaFora.map(a=>esc(a.nome)).join(', ')}</b>.</div></div>`:''}
     <div class="field"><label>Observação (opcional)</label><textarea class="inp" oninput="PED.motivo=this.value">${esc(p.motivo)}</textarea></div>`;
   }
   if(p.tipo==='outro') campos = `
@@ -829,11 +942,12 @@ async function admRecarregar(){
 function telaAdmin(){
   const A = S.adm, d = A.dados;
   const np = pendentes(d).length;
-  const tabs = [['pedidos','ti-inbox','Pedidos',np],['hoje','ti-clock','Hoje'],['mes','ti-calendar','Espelho'],['banco','ti-pig-money','Banco de horas'],['equipe','ti-users','Equipe'],['regras','ti-settings','Regras']];
-  let corpo = ({pedidos:admPedidos, hoje:admHoje, mes:admMes, banco:admBanco, equipe:admEquipe, regras:admRegras})[A.tab]();
+  const tabs = [['pedidos','ti-inbox','Pedidos',np],['hoje','ti-clock','Hoje'],['mes','ti-calendar','Espelho'],['banco','ti-pig-money','Banco de horas'],['agenda','ti-calendar-event','Agenda'],['equipe','ti-users','Equipe'],['regras','ti-settings','Regras']];
+  let corpo = ({pedidos:admPedidos, hoje:admHoje, mes:admMes, banco:admBanco, agenda:admAgenda, equipe:admEquipe, regras:admRegras})[A.tab]();
   return `<div class="wrap">${topo(`<div class="row" style="margin-left:auto;gap:6px">
       <button class="icon-btn" title="Atualizar" onclick="admRecarregar()"><i class="ti ti-refresh"></i></button>
       <button class="btn sm" onclick="S.adm=null;S.tela='inicio';render()"><i class="ti ti-logout"></i> Sair</button></div>`)}
+    ${btnVoltar('Sair da administração')}
     <div class="tabs" style="margin-bottom:16px">${tabs.map(([k,i,n,b])=>`<button class="tab ${A.tab===k?'on':''}" onclick="S.adm.tab='${k}';render()"><i class="ti ${i}"></i> ${n} ${b?`<span class="badge">${b}</span>`:''}</button>`).join('')}</div>
     ${corpo}</div>`;
 }
@@ -846,7 +960,7 @@ function admPedidos(){
 async function decidir(id, aprovar){
   const resposta = aprovar ? '' : (prompt('Motivo da recusa (a colaboradora vai ver):') ?? null);
   if(resposta===null) return;
-  try{ S.adm.dados = await api('admDecidir', {adminPin:S.adm.pin, id, aprovar, resposta}); render(); toast(aprovar?'Aprovado e lançado no ponto ✔':'Pedido recusado'); }
+  try{ S.adm.dados = await api('admDecidir', {adminPin:S.adm.pin, id, aprovar, resposta}); render(); carregarBootSilencioso(); toast(aprovar?'Aprovado e lançado no ponto e na agenda ✔':'Pedido recusado'); }
   catch(e){ toast(e.message, true); }
 }
 function admHoje(){
@@ -941,7 +1055,8 @@ async function salvarEditor(){
     const j = await api('admPonto', {adminPin:S.adm.pin, eid:e.eid, data:e.data, campos, tipo:e.tipo, loja:e.loja, obs:e.obs, motivo:e.motivo||'Ajuste da administração'});
     const L = S.adm.dados.pontos, i = L.findIndex(p=>p.chave===j.ponto.chave);
     if(i>=0) L[i]=j.ponto; else L.push(j.ponto);
-    ED=null; renderEditor(); render(); toast('Salvo ✔');
+    ED=null; renderEditor(); render(); carregarBootSilencioso(); toast('Salvo ✔');
+    api('admDados', {adminPin:S.adm.pin}).then(d=>{ if(S.adm){ S.adm.dados=d; if(S.adm.tab==='agenda') render(); } }).catch(()=>{});
   }catch(err){ toast(err.message, true); b.disabled=false; b.innerHTML='<i class="ti ti-device-floppy"></i> Salvar'; }
 }
 async function apagarDia(){
@@ -970,6 +1085,48 @@ function admBanco(){
     <div class="table-wrap"><table><thead><tr><th>Colaboradora</th><th>Trabalhado</th><th>Previsto</th><th>Saldo mês</th><th>Banco total</th><th>Folgas disp.</th><th>Folgas marcadas</th><th>Atenção</th></tr></thead><tbody>${linhas}</tbody></table></div>
     <div class="note info" style="margin-top:14px"><i class="ti ti-info-circle"></i><div><b>Como lê:</b> previsto = 7h20 por dia útil (seg–sáb, sem feriados); até ${d.regras.tolerancia_min} min/dia não conta. Cada folga de banco desconta ${hm(d.regras.folga_min)} e só pode ser de terça a sexta. O banco soma desde ${ddmm(d.regras.inicio_banco)}/${d.regras.inicio_banco.slice(0,4)} + saldo inicial de cada uma (aba Equipe). Crédito não compensado até o fim do mês seguinte tem de ser pago como hora extra (+50%).</div></div>
     <div class="row wrap-row" style="gap:8px;margin-top:12px"><button class="btn sm" onclick="exportarCSV(true)"><i class="ti ti-file-spreadsheet"></i> Baixar CSV do mês (todas)</button></div>`;
+}
+
+function admAgenda(){
+  const d = S.adm.dados, ev = (d.calendario?.eventos||[]).slice().sort((a,b)=>a.data.localeCompare(b.data));
+  const prox = ev.filter(e=>(e.data_fim||e.data) >= d.hoje);
+  return `<button class="btn pri" style="margin-bottom:12px" onclick="editarEvento()"><i class="ti ti-plus"></i> Novo evento / campanha</button>
+    ${calendario(d.calendario, true)}
+    <div class="note info" style="margin-top:12px"><i class="ti ti-info-circle"></i><div>Folgas, atestados e férias entram sozinhos quando você aprova o pedido (ou lança no Espelho). Para a equipe, atestado aparece só como <b>"Ausente"</b> — o motivo fica visível apenas aqui.</div></div>
+    <div class="h2">Próximos eventos</div>
+    ${prox.length ? prox.map(e=>{ const t=TIPO_EV[e.tipo]||TIPO_EV.evento; return `<div class="req" style="align-items:center"><div class="ico">${t.e}</div><div class="grow"><b>${esc(e.titulo)}</b><p>${t.n} · ${ddmm(e.data)}${e.data_fim&&e.data_fim!==e.data?' a '+ddmm(e.data_fim):''}${e.loja&&d.lojas[e.loja]?' · Loja '+esc(d.lojas[e.loja].nome):''}</p></div><button class="btn sm" onclick="editarEvento('${e.id}')"><i class="ti ti-pencil"></i> Editar</button></div>`; }).join('') : '<p class="muted">Nenhum evento marcado.</p>'}`;
+}
+let EV = null;
+function editarEvento(id, data){
+  const e = id ? (S.adm.dados.calendario.eventos.find(x=>x.id===id)||{}) : {};
+  EV = {id:id||'', titulo:e.titulo||'', tipo:e.tipo||'cha', data:e.data||data||hojeISO(), data_fim:e.data_fim||'', loja:e.loja||'', obs:e.obs||''};
+  renderEvento();
+}
+function renderEvento(){
+  const e = EV; if(!e){ $('#modal').innerHTML=''; return; }
+  const lojas = S.adm.dados.lojas;
+  $('#modal').innerHTML = `<div class="overlay" onclick="if(event.target===this)fecharModal()"><div class="modal">
+    <div class="modal-h"><h3 class="grow">${e.id?'Editar evento':'Novo evento'}</h3><button class="icon-btn" onclick="fecharModal()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-b">
+      <div class="seg">${Object.entries(TIPO_EV).map(([k,t])=>`<button class="${e.tipo===k?'on':''}" onclick="EV.tipo='${k}';renderEvento()"><span style="font-size:22px">${t.e}</span>${t.n}</button>`).join('')}</div>
+      <div class="field"><label>Nome</label><input class="inp" value="${esc(e.titulo)}" placeholder="Ex.: Chá de lingerie da Leandra" oninput="EV.titulo=this.value"></div>
+      <div class="grid2"><div class="field"><label>Começa em</label><input class="inp" type="date" value="${e.data}" onchange="EV.data=this.value"></div>
+      <div class="field"><label>Termina em (opcional)</label><input class="inp" type="date" value="${e.data_fim}" onchange="EV.data_fim=this.value"></div></div>
+      <div class="field"><label>Loja</label><select class="inp" onchange="EV.loja=this.value"><option value="">Todas / fora da loja</option>${Object.entries(lojas).map(([k,l])=>`<option value="${k}" ${e.loja===k?'selected':''}>${esc(l.nome)}</option>`).join('')}</select></div>
+      <div class="field"><label>Detalhes (opcional)</label><textarea class="inp" placeholder="Ex.: equipe: Sabrynna e Cibelly · 19h" oninput="EV.obs=this.value">${esc(e.obs)}</textarea></div>
+      <div class="row" style="gap:8px"><button class="btn pri grow" id="btn-ev" onclick="salvarEvento()"><i class="ti ti-device-floppy"></i> Salvar na agenda</button>
+      ${e.id?`<button class="btn" onclick="apagarEvento()"><i class="ti ti-trash"></i></button>`:''}</div>
+    </div></div></div>`;
+}
+async function salvarEvento(){
+  const b = $('#btn-ev'); b.disabled=true;
+  try{ S.adm.dados = await api('admEvento', {adminPin:S.adm.pin, ...EV}); fecharModal(); render(); carregarBootSilencioso(); toast('Salvo na agenda ✔ A equipe já vê.'); }
+  catch(e){ toast(e.message, true); b.disabled=false; }
+}
+async function apagarEvento(){
+  if(!confirm('Apagar este evento da agenda?')) return;
+  try{ S.adm.dados = await api('admApagarEvento', {adminPin:S.adm.pin, id:EV.id}); fecharModal(); render(); carregarBootSilencioso(); toast('Evento apagado'); }
+  catch(e){ toast(e.message, true); }
 }
 
 function admEquipe(){
