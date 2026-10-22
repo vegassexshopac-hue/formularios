@@ -3,263 +3,296 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Cartão de Ponto · Las Vegas</title>
-<meta name="theme-color" content="#C8102E">
+<title>Las Vegas · Portal da Equipe</title>
+<meta name="theme-color" content="#15100D">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="icon" id="fav" href="">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --red:#C8102E;--red-d:#9E0C24;--gold:#C8830F;--gold-t:#F5B524;
-  --bg:#F4F1EA;--s1:#FFFFFF;--s2:#FAF8F2;--s3:#EFEAE0;
-  --bd:rgba(26,22,18,.10);--bd2:rgba(26,22,18,.18);
-  --t1:#1A1612;--t2:rgba(26,22,18,.66);--t3:rgba(26,22,18,.46);
-  --ok:#0F8A5A;--ok-bg:rgba(15,138,90,.10);--info:#1F6FC5;--info-bg:rgba(31,111,197,.10);
-  --warn:#A86B05;--warn-bg:rgba(200,131,15,.13);--bad:#B83232;--bad-bg:rgba(184,50,50,.10);
-  --sans:'Manrope',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace;
-  --r:14px;--sh:0 1px 2px rgba(26,22,18,.05),0 8px 24px rgba(26,22,18,.06);
+  --noite:#15100D;--noite2:#1E1613;--veludo:#2A1B18;--veludo2:#36241F;
+  --vermelho:#E3101F;--vermelho2:#B30A17;--dourado:#F5B524;--dourado2:#FFD15C;--ouro-escuro:#A8740E;
+  --creme:#FFF4E0;--creme2:rgba(255,244,224,.68);--creme3:rgba(255,244,224,.42);
+  --linha:rgba(255,244,224,.10);--linha2:rgba(255,244,224,.2);
+  --ok:#3DDC97;--ok-bg:rgba(61,220,151,.14);--info:#7FB7FF;--info-bg:rgba(127,183,255,.14);
+  --warn:#FFC857;--warn-bg:rgba(255,200,87,.14);--bad:#FF6B6B;--bad-bg:rgba(255,107,107,.14);
+  --font:'Bricolage Grotesque',system-ui,sans-serif;
+  --r:18px;--sh:0 10px 30px rgba(0,0,0,.35);
 }
-html,body{background:var(--bg);color:var(--t1);font-family:var(--sans);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
-body{min-height:100vh;background:radial-gradient(1000px 520px at 50% -12%,rgba(245,181,36,.13),transparent 60%),var(--bg)}
+html,body{background:var(--noite);color:var(--creme);font-family:var(--font);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;background:
+  radial-gradient(900px 500px at 50% -10%, rgba(227,16,31,.22), transparent 60%),
+  radial-gradient(700px 400px at 100% 100%, rgba(245,181,36,.08), transparent 60%),
+  var(--noite)}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
-input,select,textarea{font:inherit;color:var(--t1)}
-.wrap{max-width:1080px;margin:0 auto;padding:18px 16px 90px}
-.mono{font-family:var(--mono)}
-.muted{color:var(--t2)}.faint{color:var(--t3)}
-.row{display:flex;align-items:center;gap:10px}.between{justify-content:space-between}.wrap-row{flex-wrap:wrap}
-.grow{flex:1;min-width:0}
+input,select,textarea{font:inherit;color:var(--creme)}
+a{color:var(--dourado2)}
+.wrap{max-width:1040px;margin:0 auto;padding:16px 16px 110px;animation:entra .35s ease-out both}
+@keyframes entra{from{opacity:0;transform:translateY(10px)}}
 .hide{display:none!important}
-.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.quick button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px 8px;border-radius:14px;background:var(--s1);border:1px solid var(--bd);box-shadow:var(--sh);font-weight:700;font-size:13.5px;line-height:1.2;text-align:center;min-height:92px}
-.quick button:hover{border-color:var(--red)}
-.quick button i{font-size:26px;color:var(--red)}
-@media (max-width:640px){.quick{grid-template-columns:1fr 1fr}}
-.voltar{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 18px 0 14px;border-radius:12px;background:var(--t1);color:#fff;font-weight:800;font-size:15px;margin-bottom:14px;box-shadow:var(--sh)}
-.voltar i{font-size:20px}
-.voltar:active{transform:scale(.98)}
-/* agenda */
-.cal{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
-.cal-h{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--bd)}
-.cal-h b{font-size:16px}
-.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
-.cal-dow{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);text-align:center;padding:8px 0;background:var(--s2);border-bottom:1px solid var(--bd)}
-.cal-day{min-height:96px;border-right:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:5px;text-align:left;display:flex;flex-direction:column;gap:3px;background:var(--s1);cursor:pointer;min-width:0}
-.cal-day:nth-child(7n){border-right:0}
-.cal-day:hover{background:var(--s2)}
-.cal-day.fora{background:var(--s2);opacity:.5}
-.cal-day.dom{background:#FBFAF7}
-.cal-day .n{font-size:12.5px;font-weight:800;color:var(--t2);display:flex;align-items:center;justify-content:space-between}
-.cal-day.hoje .n span{background:var(--red);color:#fff;border-radius:10px;padding:0 7px}
-.chip{display:block;font-size:11.5px;font-weight:700;line-height:1.25;padding:2px 6px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.chip.folga{background:#DDF3E8;color:#0B6B46}.chip.ausente,.chip.atestado{background:#E6EBF3;color:#3D4F6B}.chip.ferias{background:#EFE3FA;color:#6A2E9C}
-.chip.cha{background:#FBDDE2;color:#A10D26}.chip.campanha{background:#FDEFC8;color:#8A5C08}.chip.evento{background:#FFE4D1;color:#A3470B}.chip.reuniao{background:#DCEBFB;color:#185A9D}.chip.aviso{background:#EEEAE2;color:#5C5246}.chip.feriado{background:#F4F1EA;color:#7A6F60;border:1px dashed var(--bd2)}
-.chip.mais{background:transparent;color:var(--t3);padding:0 4px}
-.legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-@media (max-width:640px){
-  .cal-day{min-height:62px;padding:3px}
-  .chip{font-size:9.5px;padding:1px 3px}
-  .cal-dow{font-size:9.5px}
-}
+.suave{color:var(--creme2)}.apagado{color:var(--creme3)}
+.linha{display:flex;align-items:center;gap:10px}.entre{justify-content:space-between}.quebra{flex-wrap:wrap}
+.cresce{flex:1;min-width:0}
+.num{font-variant-numeric:tabular-nums}
 
-/* topo */
-.top{display:flex;align-items:center;gap:14px;margin-bottom:18px}
-.top img{height:46px;width:auto}
-.top h1{font-size:17px;font-weight:800;letter-spacing:-.01em;line-height:1.1}
-.top .sub{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}
-.clock{margin-left:auto;text-align:right}
-.clock b{font-family:var(--mono);font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1}
-.clock span{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-top:3px}
+/* ───── letreiro ───── */
+.letreiro{position:relative;display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:22px;background:linear-gradient(160deg,var(--veludo2),var(--veludo));border:1.5px solid rgba(245,181,36,.45);box-shadow:var(--sh),inset 0 0 0 1px rgba(255,244,224,.04);margin-bottom:18px;overflow:visible}
+.letreiro img{height:52px;width:auto;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4))}
+.letreiro h1{font-size:19px;font-weight:800;letter-spacing:-.01em;line-height:1.1;font-variation-settings:'opsz' 96}
+.letreiro .sub{font-size:13px;color:var(--dourado);font-weight:600}
+.lampadas{position:absolute;inset:-7px;pointer-events:none;border-radius:28px}
+.lampadas i{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--ouro-escuro);box-shadow:0 0 0 rgba(255,209,92,0);animation:pisca 2.6s ease-in-out infinite;animation-delay:calc(var(--i) * -.13s)}
+.lampadas.correndo i{animation:corre 1.6s linear 1, pisca 2.6s ease-in-out infinite 1.6s}
+@keyframes pisca{0%,100%{background:var(--ouro-escuro);box-shadow:0 0 0 rgba(255,209,92,0)}50%{background:var(--dourado2);box-shadow:0 0 10px 2px rgba(255,209,92,.55)}}
+@keyframes corre{0%,70%,100%{background:var(--ouro-escuro);box-shadow:none}10%,30%{background:var(--dourado2);box-shadow:0 0 12px 3px rgba(255,209,92,.7)}}
+.relogio{margin-left:auto;text-align:right;line-height:1}
+.relogio b{font-size:34px;font-weight:800;letter-spacing:-.02em;color:var(--creme);font-variation-settings:'opsz' 96}
+.relogio span{display:block;font-size:12.5px;color:var(--creme3);margin-top:4px;text-transform:capitalize}
 
-.card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh)}
+/* ───── superfícies ───── */
+.cartao{background:var(--veludo);border:1px solid var(--linha);border-radius:var(--r);box-shadow:var(--sh)}
 .pad{padding:18px}
-.h2{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin:22px 2px 10px}
-.h2:first-child{margin-top:0}
+h2.secao{font-size:15px;font-weight:700;color:var(--dourado);margin:22px 4px 10px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+h2.secao small{font-size:12px;font-weight:500;color:var(--creme3)}
+h2.secao:first-child{margin-top:0}
 
-/* botões */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 16px;border-radius:11px;font-weight:700;font-size:14px;border:1px solid var(--bd2);background:var(--s1);transition:transform .08s,background .15s}
-.btn:active{transform:scale(.98)}
-.btn.pri{background:var(--red);border-color:var(--red);color:#fff}
-.btn.pri:hover{background:var(--red-d)}
-.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
-.btn.ghost{border-color:transparent;background:transparent;color:var(--t2)}
-.btn.sm{height:34px;padding:0 12px;font-size:13px;border-radius:9px}
-.btn.big{height:64px;font-size:19px;border-radius:16px;width:100%;letter-spacing:.02em}
+/* ───── botões ───── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;border-radius:12px;font-weight:700;font-size:15px;border:1px solid var(--linha2);background:var(--veludo2);color:var(--creme);transition:transform .08s,filter .15s}
+.btn:hover{filter:brightness(1.1)}.btn:active{transform:scale(.97)}
+.btn.pri{background:var(--vermelho);border-color:var(--vermelho);color:#fff;box-shadow:0 6px 18px rgba(227,16,31,.35)}
+.btn.ouro{background:var(--dourado);border-color:var(--dourado);color:#2A1B18}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:#0f2a1f}
+.btn.fantasma{border-color:transparent;background:transparent;color:var(--creme2)}
+.btn.p{height:36px;padding:0 12px;font-size:13.5px;border-radius:10px}
+.btn.largo{width:100%}
 .btn[disabled]{opacity:.45;pointer-events:none}
-.icon-btn{width:38px;height:38px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;color:var(--t2);border:1px solid var(--bd)}
-.icon-btn:hover{background:var(--s2)}
+.icone{width:40px;height:40px;border-radius:11px;display:inline-flex;align-items:center;justify-content:center;color:var(--creme2);border:1px solid var(--linha)}
+.icone:hover{background:var(--veludo2)}
+.voltar{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 16px 0 12px;border-radius:12px;background:var(--creme);color:var(--noite);font-weight:800;font-size:15px;margin-bottom:14px}
+.voltar i{font-size:20px}
 
-/* chips/abas */
-.tabs{display:flex;gap:4px;background:var(--s3);padding:4px;border-radius:12px;overflow-x:auto;scrollbar-width:none}
-.tabs::-webkit-scrollbar{display:none}
-.tab{flex:1;white-space:nowrap;height:38px;padding:0 14px;border-radius:9px;font-weight:700;font-size:13.5px;color:var(--t2);display:inline-flex;align-items:center;justify-content:center;gap:6px}
-.tab.on{background:var(--s1);color:var(--t1);box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.badge{min-width:19px;height:19px;padding:0 6px;border-radius:10px;background:var(--red);color:#fff;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}
-.pill{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:12px;font-size:12px;font-weight:700;background:var(--s3);color:var(--t2);white-space:nowrap}
-.pill.ok{background:var(--ok-bg);color:var(--ok)}.pill.warn{background:var(--warn-bg);color:var(--warn)}
-.pill.bad{background:var(--bad-bg);color:var(--bad)}.pill.info{background:var(--info-bg);color:var(--info)}
-.pill.red{background:var(--red);color:#fff}
-.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;display:inline-block}
+/* ───── abas / selos ───── */
+.abas{display:flex;gap:4px;background:var(--noite2);padding:4px;border-radius:14px;overflow-x:auto;scrollbar-width:none;border:1px solid var(--linha)}
+.abas::-webkit-scrollbar{display:none}
+.aba{flex:1;white-space:nowrap;height:40px;padding:0 14px;border-radius:10px;font-weight:700;font-size:14px;color:var(--creme2);display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.aba.on{background:var(--vermelho);color:#fff}
+.contador{min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--dourado);color:#2A1B18;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}
+.selo{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:13px;font-size:12.5px;font-weight:700;background:var(--veludo2);color:var(--creme2);white-space:nowrap;border:1px solid var(--linha)}
+.selo.ok{background:var(--ok-bg);color:var(--ok);border-color:transparent}.selo.warn{background:var(--warn-bg);color:var(--warn);border-color:transparent}
+.selo.bad{background:var(--bad-bg);color:var(--bad);border-color:transparent}.selo.info{background:var(--info-bg);color:var(--info);border-color:transparent}
+.ponto{width:10px;height:10px;border-radius:50%;flex-shrink:0;display:inline-block}
 
-/* loja */
-.store-switch{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:18px;background:var(--s1);border:1px solid var(--bd);font-weight:700;font-size:13px}
-.store-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:10px}
-.store-card{padding:26px 22px;text-align:left;border-radius:18px;background:var(--s1);border:1px solid var(--bd);box-shadow:var(--sh)}
-.store-card:hover{border-color:var(--red)}
-.store-card b{display:block;font-size:22px;font-weight:800}
-.store-card span{color:var(--t2);font-size:14px}
+/* ───── pessoas ───── */
+.pessoas{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.pessoa{display:flex;align-items:center;gap:12px;padding:16px;border-radius:18px;background:var(--veludo);border:1px solid var(--linha);box-shadow:var(--sh);text-align:left;transition:border-color .15s,transform .1s}
+.pessoa:hover{border-color:var(--dourado)}.pessoa:active{transform:scale(.98)}
+.avatar{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#1A1210;flex-shrink:0;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18)}
+.pessoa b{display:block;font-size:16px;font-weight:800;line-height:1.15}
+.pessoa small{font-size:12.5px;color:var(--creme3);font-weight:500}
 
-/* colaboradoras */
-.people{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
-.person{display:flex;align-items:center;gap:12px;padding:16px;border-radius:16px;background:var(--s1);border:1px solid var(--bd);box-shadow:var(--sh);text-align:left;transition:border-color .15s,transform .08s}
-.person:hover{border-color:var(--red)}
-.person:active{transform:scale(.985)}
-.avatar{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;color:#1A1612;flex-shrink:0}
-.person b{display:block;font-size:15px;font-weight:800;line-height:1.2}
-.person small{font-size:12px;color:var(--t3);font-weight:600}
-.status-in{color:var(--ok)}.status-lunch{color:var(--warn)}
-
-/* PIN */
-.overlay{position:fixed;inset:0;background:rgba(26,22,18,.45);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50;animation:fade .15s}
+/* ───── PIN ───── */
+.veu{position:fixed;inset:0;background:rgba(10,6,5,.7);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50;animation:fade .15s}
 @keyframes fade{from{opacity:0}}
-.modal{background:var(--s1);border-radius:20px;width:100%;max-width:420px;max-height:calc(100vh - 32px);overflow:auto;box-shadow:0 24px 70px rgba(0,0,0,.25);animation:pop .18s}
-.modal.wide{max-width:640px}
-@keyframes pop{from{transform:translateY(10px) scale(.98);opacity:0}}
-.modal-h{display:flex;align-items:center;gap:12px;padding:18px 18px 0}
-.modal-h h3{font-size:17px;font-weight:800}
-.modal-b{padding:18px}
-.pin-dots{display:flex;justify-content:center;gap:12px;margin:8px 0 6px}
-.pin-dots i{width:15px;height:15px;border-radius:50%;border:2px solid var(--bd2)}
-.pin-dots i.on{background:var(--t1);border-color:var(--t1)}
-.pin-dots.err i{border-color:var(--bad)}
-.pin-err{text-align:center;color:var(--bad);font-size:13px;font-weight:700;min-height:20px}
-.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px}
-.key{height:62px;border-radius:14px;background:var(--s2);border:1px solid var(--bd);font-size:24px;font-weight:700;font-family:var(--mono)}
-.key:active{background:var(--s3)}
-.key.fn{font-size:15px;font-family:var(--sans);color:var(--t2)}
+.modal{background:var(--veludo);border:1px solid var(--linha2);border-radius:22px;width:100%;max-width:440px;max-height:calc(100vh - 32px);overflow:auto;box-shadow:0 30px 80px rgba(0,0,0,.6);animation:pop .2s}
+.modal.largo{max-width:660px}
+@keyframes pop{from{transform:translateY(12px) scale(.98);opacity:0}}
+.modal-t{display:flex;align-items:center;gap:12px;padding:18px 18px 0}
+.modal-t h3{font-size:18px;font-weight:800}
+.modal-c{padding:18px}
+.pin-pontos{display:flex;justify-content:center;gap:12px;margin:8px 0 6px}
+.pin-pontos i{width:16px;height:16px;border-radius:50%;border:2px solid var(--linha2)}
+.pin-pontos i.on{background:var(--dourado);border-color:var(--dourado);box-shadow:0 0 10px rgba(245,181,36,.5)}
+.pin-pontos.err i{border-color:var(--bad)}
+.pin-erro{text-align:center;color:var(--bad);font-size:13.5px;font-weight:700;min-height:20px}
+.teclado{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px}
+.tecla{height:64px;border-radius:16px;background:var(--veludo2);border:1px solid var(--linha);font-size:26px;font-weight:700;color:var(--creme)}
+.tecla:active{background:var(--noite2)}
+.tecla.fn{font-size:15px;color:var(--creme2)}
 
-/* bater */
-.punch-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.slot{border-radius:14px;border:1px solid var(--bd);background:var(--s2);padding:12px 8px;text-align:center}
-.slot small{display:block;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--t3)}
-.slot b{display:block;font-family:var(--mono);font-size:21px;margin-top:4px;color:var(--t3)}
-.slot.done{background:var(--s1)}
-.slot.done b{color:var(--t1)}
-.slot.next{border:2px solid var(--red);background:#fff}
-.slot.next small{color:var(--red)}
-.hello{font-size:24px;font-weight:800;letter-spacing:-.01em}
-.success{text-align:center;padding:28px 10px}
-.success .big-ico{width:76px;height:76px;border-radius:50%;background:var(--ok-bg);color:var(--ok);display:inline-flex;align-items:center;justify-content:center;font-size:40px}
-.success b.time{display:block;font-family:var(--mono);font-size:54px;font-weight:700;letter-spacing:-.03em;margin-top:10px}
+/* ───── bater ponto ───── */
+.hoje-grade{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.vaga{border-radius:14px;border:1px solid var(--linha);background:var(--noite2);padding:12px 8px;text-align:center}
+.vaga small{display:block;font-size:12px;font-weight:700;color:var(--creme3)}
+.vaga b{display:block;font-size:22px;margin-top:3px;color:var(--creme3)}
+.vaga.feita b{color:var(--creme)}.vaga.feita{background:var(--veludo2)}
+.vaga.proxima{border:2px solid var(--dourado);background:rgba(245,181,36,.08)}
+.vaga.proxima small{color:var(--dourado)}
+.ola{font-size:28px;font-weight:800;letter-spacing:-.01em;font-variation-settings:'opsz' 96}
+.camera{position:relative;width:88px;height:88px;border-radius:50%;overflow:hidden;background:var(--noite2);border:3px solid var(--dourado);flex-shrink:0;box-shadow:0 0 0 4px rgba(245,181,36,.15)}
+.camera video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.camera .sem{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:11px;color:var(--creme3);text-align:center;gap:2px}
+.camera .sem i{font-size:22px}
+.botao-ponto{position:relative;width:100%;height:76px;border-radius:20px;background:linear-gradient(180deg,#FF3B49,var(--vermelho) 55%,var(--vermelho2));color:#fff;font-size:22px;font-weight:800;letter-spacing:.01em;display:flex;align-items:center;justify-content:center;gap:12px;box-shadow:0 10px 30px rgba(227,16,31,.45),inset 0 1px 0 rgba(255,255,255,.35);animation:pulso 2.2s ease-in-out infinite}
+.botao-ponto i{font-size:28px}
+.botao-ponto:active{transform:scale(.98)}
+.botao-ponto[disabled]{animation:none;opacity:.6}
+@keyframes pulso{0%,100%{box-shadow:0 10px 30px rgba(227,16,31,.45),0 0 0 0 rgba(227,16,31,.5)}60%{box-shadow:0 10px 30px rgba(227,16,31,.45),0 0 0 16px rgba(227,16,31,0)}}
+.sucesso{text-align:center;padding:30px 12px;position:relative;overflow:hidden}
+.check{width:96px;height:96px;margin:0 auto}
+.check circle{fill:none;stroke:var(--ok);stroke-width:4;stroke-dasharray:300;stroke-dashoffset:300;animation:traco .6s ease-out forwards}
+.check path{fill:none;stroke:var(--ok);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:80;stroke-dashoffset:80;animation:traco .4s ease-out .45s forwards}
+@keyframes traco{to{stroke-dashoffset:0}}
+.sucesso b.hora{display:block;font-size:64px;font-weight:800;letter-spacing:-.03em;margin-top:8px;font-variation-settings:'opsz' 96}
+.confete{position:absolute;top:40%;left:50%;width:10px;height:14px;border-radius:2px;opacity:0;animation:voa 1.3s ease-out forwards;animation-delay:var(--d)}
+@keyframes voa{0%{opacity:1;transform:translate(0,0) rotate(0)}100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(540deg)}}
 
-/* estatísticas */
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.stat{padding:14px 16px;border-radius:14px;background:var(--s1);border:1px solid var(--bd)}
-.stat small{display:block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)}
-.stat b{display:block;font-family:var(--mono);font-size:24px;font-weight:700;margin-top:4px;letter-spacing:-.02em}
-.stat span{font-size:12px;color:var(--t2)}
+/* ───── atalhos ───── */
+.atalhos{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.atalhos button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:16px 8px;border-radius:16px;background:var(--veludo);border:1px solid var(--linha);box-shadow:var(--sh);font-weight:700;font-size:14px;line-height:1.2;text-align:center;min-height:100px;color:var(--creme)}
+.atalhos button:hover{border-color:var(--dourado)}
+.atalhos button i{font-size:28px;color:var(--dourado)}
+@media (max-width:640px){.atalhos{grid-template-columns:1fr 1fr}}
+
+/* ───── números ───── */
+.numeros{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.numero{padding:14px 16px;border-radius:16px;background:var(--veludo);border:1px solid var(--linha)}
+.numero small{display:block;font-size:12.5px;font-weight:600;color:var(--creme3)}
+.numero b{display:block;font-size:26px;font-weight:800;margin-top:2px;letter-spacing:-.02em;font-variation-settings:'opsz' 96}
+.numero span{font-size:12.5px;color:var(--creme2)}
 .pos{color:var(--ok)}.neg{color:var(--bad)}
+.medidor{height:8px;border-radius:4px;background:var(--noite2);overflow:hidden;margin-top:8px}
+.medidor i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--dourado),var(--dourado2));transition:width .6s ease-out}
 
-/* tabela de dias */
-.days{display:flex;flex-direction:column;gap:6px}
-.day{display:grid;grid-template-columns:86px 1fr auto;gap:10px;align-items:center;padding:11px 14px;border-radius:12px;background:var(--s1);border:1px solid var(--bd);text-align:left;width:100%}
-.day:hover{border-color:var(--bd2)}
-.day.sun{background:transparent;border-style:dashed;opacity:.7}
-.day.future{opacity:.55}
-.day .d1{font-weight:800;font-size:14px}
-.day .d2{font-size:11.5px;color:var(--t3);font-weight:700;text-transform:capitalize}
-.marks{display:flex;flex-wrap:wrap;gap:4px 10px;font-family:var(--mono);font-size:13px;color:var(--t2)}
-.marks .ed{text-decoration:underline dotted var(--gold);text-underline-offset:3px}
-.day .right{text-align:right;font-family:var(--mono);font-size:13px;font-weight:700}
-.day .right small{display:block;font-family:var(--sans);font-size:11px;font-weight:700}
-.flags{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+/* ───── lista de dias ───── */
+.dias{display:flex;flex-direction:column;gap:6px}
+.dia{display:grid;grid-template-columns:78px 1fr auto;gap:10px;align-items:center;padding:11px 14px;border-radius:14px;background:var(--veludo);border:1px solid var(--linha);text-align:left;width:100%;color:var(--creme)}
+.dia:hover{border-color:var(--linha2)}
+.dia.dom{background:transparent;border-style:dashed;opacity:.65}
+.dia.futuro{opacity:.5}
+.dia .d1{font-weight:800;font-size:15px}
+.dia .d2{font-size:12px;color:var(--creme3);font-weight:600;text-transform:capitalize}
+.marcas{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:14px;color:var(--creme2)}
+.marcas .ed{text-decoration:underline dotted var(--dourado);text-underline-offset:3px}
+.dia .dir{text-align:right;font-size:14px;font-weight:700}
+.dia .dir small{display:block;font-size:11.5px;font-weight:700}
+.avisos{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
 
-/* tabela admin */
-.table-wrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--bd);background:var(--s1)}
-table{border-collapse:collapse;width:100%;font-size:13.5px}
-th{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);text-align:left;padding:10px 12px;border-bottom:1px solid var(--bd);background:var(--s2);white-space:nowrap}
-td{padding:10px 12px;border-bottom:1px solid var(--bd);white-space:nowrap}
+/* ───── tabela ───── */
+.tabela{overflow-x:auto;border-radius:var(--r);border:1px solid var(--linha);background:var(--veludo)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{font-size:12.5px;font-weight:700;color:var(--creme3);text-align:left;padding:10px 12px;border-bottom:1px solid var(--linha);background:var(--noite2);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--linha);white-space:nowrap}
 tr:last-child td{border-bottom:0}
-td.num{font-family:var(--mono);text-align:right}
-tr.click{cursor:pointer}tr.click:hover td{background:var(--s2)}
+td.n{text-align:right}
+tr.clica{cursor:pointer}tr.clica:hover td{background:var(--veludo2)}
 
-/* formulários */
-.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
-.field label{font-size:12px;font-weight:800;letter-spacing:.05em;color:var(--t2)}
-.inp{height:44px;border-radius:10px;border:1px solid var(--bd2);background:var(--s1);padding:0 12px;width:100%}
+/* ───── formulários ───── */
+.campo{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.campo label{font-size:13px;font-weight:700;color:var(--creme2)}
+.inp{height:46px;border-radius:12px;border:1px solid var(--linha2);background:var(--noite2);padding:0 12px;width:100%;color:var(--creme);color-scheme:dark}
 textarea.inp{height:auto;min-height:80px;padding:10px 12px;resize:vertical}
-.inp:focus{outline:2px solid rgba(200,16,46,.35);border-color:var(--red)}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px}
-.seg button{padding:12px 8px;border-radius:12px;border:1px solid var(--bd2);background:var(--s1);font-weight:700;font-size:13px;display:flex;flex-direction:column;align-items:center;gap:4px}
-.seg button i{font-size:22px;color:var(--t3)}
-.seg button.on{border:2px solid var(--red);background:#fff}
-.seg button.on i{color:var(--red)}
-.note{padding:12px 14px;border-radius:12px;font-size:13.5px;display:flex;gap:10px;align-items:flex-start}
-.note i{font-size:18px;flex-shrink:0;margin-top:1px}
-.note.info{background:var(--info-bg);color:#15568f}.note.warn{background:var(--warn-bg);color:#7a4f06}
-.note.bad{background:var(--bad-bg);color:var(--bad)}.note.ok{background:var(--ok-bg);color:#0c6e48}
+.inp:focus{outline:2px solid rgba(245,181,36,.5);border-color:var(--dourado)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.opcoes{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px}
+.opcoes button{padding:12px 8px;border-radius:14px;border:1px solid var(--linha2);background:var(--noite2);font-weight:700;font-size:13.5px;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--creme2)}
+.opcoes button i{font-size:24px;color:var(--creme3)}
+.opcoes button.on{border:2px solid var(--dourado);background:rgba(245,181,36,.1);color:var(--creme)}
+.opcoes button.on i{color:var(--dourado)}
+.nota{padding:12px 14px;border-radius:14px;font-size:14px;display:flex;gap:10px;align-items:flex-start;border:1px solid transparent}
+.nota i{font-size:19px;flex-shrink:0;margin-top:1px}
+.nota.info{background:var(--info-bg);color:#CFE3FF}.nota.warn{background:var(--warn-bg);color:#FFE6A8}
+.nota.bad{background:var(--bad-bg);color:#FFC2C2}.nota.ok{background:var(--ok-bg);color:#C8F5E1}
 
-.req{padding:14px 16px;border-radius:14px;background:var(--s1);border:1px solid var(--bd);display:flex;gap:12px;align-items:flex-start}
-.req + .req{margin-top:8px}
-.req .ico{width:38px;height:38px;border-radius:10px;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;color:var(--t2)}
-.req b{font-weight:800}
-.req p{font-size:13.5px;color:var(--t2);margin-top:2px}
-
-.hist{font-size:12.5px;color:var(--t2);border-left:2px solid var(--bd2);padding-left:10px;margin-top:6px}
-.hist div + div{margin-top:4px}
-
-.footer{display:flex;justify-content:center;gap:8px;margin-top:30px;flex-wrap:wrap}
-.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--t1);color:#fff;padding:12px 18px;border-radius:12px;font-weight:700;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.25);z-index:90;max-width:calc(100vw - 32px);animation:pop .2s}
-.toast.bad{background:var(--bad)}
-.spin{display:inline-block;width:18px;height:18px;border:2.5px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-3px}
+.pedido{padding:14px 16px;border-radius:16px;background:var(--veludo);border:1px solid var(--linha);display:flex;gap:12px;align-items:flex-start}
+.pedido + .pedido{margin-top:8px}
+.pedido .ico{width:40px;height:40px;border-radius:12px;background:var(--noite2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;color:var(--dourado)}
+.pedido b{font-weight:800}
+.pedido p{font-size:14px;color:var(--creme2);margin-top:2px}
+.historico{font-size:13px;color:var(--creme2);border-left:2px solid var(--linha2);padding-left:10px;margin-top:6px}
+.historico div + div{margin-top:4px}
+.rodape{display:flex;justify-content:center;gap:6px;margin-top:28px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--creme);color:var(--noite);padding:12px 18px;border-radius:14px;font-weight:700;font-size:14.5px;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:90;max-width:calc(100vw - 32px);animation:pop .2s}
+.toast.bad{background:var(--bad);color:#2a0b0b}
+.gira{display:inline-block;width:18px;height:18px;border:2.5px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-3px}
 @keyframes sp{to{transform:rotate(360deg)}}
-.loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:60px 0;color:var(--t2);font-weight:700}
-.offline-bar{background:var(--warn-bg);color:#7a4f06;border-radius:12px;padding:10px 14px;font-size:13.5px;font-weight:700;margin-bottom:14px;display:flex;gap:8px;align-items:center}
+.carregando{display:flex;align-items:center;justify-content:center;gap:10px;padding:70px 0;color:var(--creme2);font-weight:700}
+.faixa{background:var(--warn-bg);color:#FFE6A8;border-radius:14px;padding:10px 14px;font-size:14px;font-weight:600;margin-bottom:14px;display:flex;gap:8px;align-items:center}
+
+/* ───── agenda ───── */
+.cal{background:var(--veludo);border:1px solid var(--linha);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.cal-t{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--linha)}
+.cal-t b{font-size:17px}
+.cal-grade{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.cal-sem{font-size:12px;font-weight:700;color:var(--creme3);text-align:center;padding:8px 0;background:var(--noite2);border-bottom:1px solid var(--linha)}
+.cal-dia{min-height:92px;border-right:1px solid var(--linha);border-bottom:1px solid var(--linha);padding:5px;text-align:left;display:flex;flex-direction:column;gap:3px;background:transparent;cursor:pointer;min-width:0;color:var(--creme)}
+.cal-dia:nth-child(7n){border-right:0}
+.cal-dia:hover{background:var(--veludo2)}
+.cal-dia.fora{opacity:.3}
+.cal-dia .n{font-size:13px;font-weight:800;color:var(--creme2)}
+.cal-dia.hoje .n span{background:var(--vermelho);color:#fff;border-radius:10px;padding:0 7px}
+.chip{display:block;font-size:11.5px;font-weight:700;line-height:1.25;padding:2px 6px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.chip.folga{background:rgba(61,220,151,.2);color:#9FF0CC}.chip.ausente,.chip.atestado{background:rgba(127,183,255,.2);color:#BFD9FF}.chip.ferias{background:rgba(190,140,255,.22);color:#E0CCFF}
+.chip.cha{background:rgba(227,16,31,.35);color:#FFC9CD}.chip.campanha{background:rgba(245,181,36,.3);color:#FFE6A8}.chip.evento{background:rgba(255,140,60,.28);color:#FFD9BF}.chip.reuniao{background:rgba(127,183,255,.2);color:#BFD9FF}.chip.aviso{background:var(--veludo2);color:var(--creme2)}.chip.feriado{background:transparent;color:var(--creme3);border:1px dashed var(--linha2)}
+.chip.mais{background:transparent;color:var(--creme3);padding:0 4px}
+.legenda{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+@media (max-width:640px){.cal-dia{min-height:62px;padding:3px}.chip{font-size:9.5px;padding:1px 3px}.cal-sem{font-size:10px}}
+
+/* ───── portal: barra inferior ───── */
+.barra{position:fixed;left:0;right:0;bottom:0;background:rgba(21,16,13,.92);backdrop-filter:blur(10px);border-top:1px solid var(--linha);display:flex;z-index:40;padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+.barra button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:12px;font-size:11.5px;font-weight:700;color:var(--creme3);position:relative}
+.barra button i{font-size:22px}
+.barra button.on{color:var(--dourado)}
+.barra .contador{position:absolute;top:4px;right:calc(50% - 22px)}
+.mural{display:flex;flex-direction:column;gap:8px}
+.mural .item{padding:12px 14px;border-radius:14px;background:var(--veludo);border-left:4px solid var(--dourado);font-size:14px}
+.mural .item b{display:block}
+.links{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.links a{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:var(--veludo);border:1px solid var(--linha);color:var(--creme);text-decoration:none;font-weight:700;font-size:14px}
+.links a i{font-size:22px;color:var(--dourado)}
 
 @media (max-width:640px){
-  .top img{height:38px}.clock b{font-size:24px}
-  .day{grid-template-columns:62px 1fr auto;padding:10px 11px}
-  .grid3{grid-template-columns:1fr 1fr}
-  .slot b{font-size:18px}
-  .hide-sm{display:none}
+  .letreiro img{height:40px}.letreiro h1{font-size:16px}.relogio b{font-size:26px}
+  .dia{grid-template-columns:62px 1fr auto;padding:10px 11px}
+  .g3{grid-template-columns:1fr 1fr}
+  .vaga b{font-size:18px}
+  .esconde-p{display:none}
+  .ola{font-size:24px}
 }
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-/* espelho para impressão */
+/* ───── impressão ───── */
 #print{display:none}
 @media print{
-  body{background:#fff}
-  #app,.toast,.overlay{display:none!important}
-  #print{display:block;font-family:var(--sans);font-size:11px;color:#000}
+  body{background:#fff;color:#000}
+  #app,.toast,.veu,.barra{display:none!important}
+  #print{display:block;font-family:var(--font);font-size:11px;color:#000}
   #print h1{font-size:16px}
-  #print table{font-size:10.5px}
-  #print th,#print td{padding:4px 6px;border:1px solid #bbb;white-space:nowrap}
-  #print th{background:#eee;color:#000}
+  #print table{font-size:10.5px;width:100%;border-collapse:collapse}
+  #print th,#print td{padding:4px 6px;border:1px solid #bbb;white-space:nowrap;color:#000;background:#fff}
+  #print th{background:#eee}
+  #print .pagina{page-break-after:always}
   @page{size:A4;margin:12mm}
 }
 </style>
 </head>
 <body>
-<div id="app"><div class="loading"><span class="spin"></span> Carregando…</div></div>
+<div id="app"><div class="carregando"><span class="gira"></span> Abrindo…</div></div>
 <div id="modal"></div>
 <div id="print"></div>
 <script>
 /* ═══════════════════════════════════════════════════════════
-   LAS VEGAS · Cartão de Ponto Online
-   Página única: Bater ponto (loja) · Minha área · Administração
-   Dados ficam na planilha Google (Apps Script) — nada só no aparelho.
+   LAS VEGAS · Portal da Equipe + Cartão de Ponto
+   Modo loja (computador autorizado): bater ponto com foto.
+   Portal (celular / qualquer lugar): meu mês, pedidos, agenda, avisos.
+   Administração: pedidos, hoje, espelho, banco, agenda, equipe, aparelhos, regras.
    ═══════════════════════════════════════════════════════════ */
 
-const API_FIXO = 'https://script.google.com/macros/s/AKfycbw_rhPwaL7Xj-Bxcc5QiLUR2kbrNy8KDdUh7V58mi0FM9UUjE32WbAcTSEuUlfeMmpX/exec';   // link /exec do Apps Script (preenchido na publicação)
+const API_FIXO = 'https://script.google.com/macros/s/AKfycbw_rhPwaL7Xj-Bxcc5QiLUR2kbrNy8KDdUh7V58mi0FM9UUjE32WbAcTSEuUlfeMmpX/exec';
+const PIN_SALT = 'lv-jornada-bosque-2026';
 const LOGO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIIAAABYCAMAAAAOeN+GAAAAYFBMVEXsERDrAxDnBRD+rwfpAg//5wX+rgf+swfzXwb8ngf97e73lJv////zYGr/xgf////////1eoPyZgWzAATxOUZ/AAD2Vw73YQ76vcH/xwf/wAkAAADtAhD0AA7/sgfrAhGAgR3mAAAAIHRSTlPnniccbBegY/fU9f8W/09fnv8YBf8CqWv/jv8A/A36T6qTnucAAAj0SURBVHjaxVqLYqsoEOUp0UTTJO29d1cJ//+XOw8QSKNJbLuXtjYownEeZ4YxYvw/mpdh+aL4XyAoE/zfhiCD+rsQvJHqr0LwIXipwtchaL0NwCWADtR3SME2eqMOFJrCd5iju+qNOhjHII0aNzmlLRbV1w0QvKKlDRpC/PyqFFwWfrMBgiIrAG/w8Cel8Rsg2PbqdFTDyxAU6UAFRAAS8BvZEVZuHdys21chMIARjvAprNjiIwgW5H8FbeC/VyBEAJ4p0TMApTZ5hMa1r4TgeQg+PrWvSFktRqoHTsmrMwRtP9OVbZyuGSMBYEbIzcgldTyAoDOEFlqDzSU1WX21bgDSmk9hTFQe7M8DgmJFOCO3QijFEJE4PfusHRR5noOWxI3+Jw00gKIUHdAgwTU2QrDuBsEMADQwKDNhEwYpBK94eFZFLeSm0B4vwE+bILi2BpDUDus1EYAQcABTs2AselzgHx/kcsawBkE3iwBaezG49q5t2h2D0LZ11uB65dogAVxfrpDTMgR9q4MmuYFrweoYwGCRPRiEAv9oySJptY9oBbi8ChvYEQD8e2uIKATgqWbUgQE4mygsgrC/f4OocNVsBSGgla4EiWUIzpELFspwSNXOapKAmAFUICS4qL1AupoFj7Ig19icLxQWSXYfJAFo7C2ZR5sAngBwobA+vxoinoXArtE0VhGAXWPvRZQoCdCV1mo9Nr0MoYneYZYBYBtmEK6159VU6WUI4PKtc+1uFQCBiC56tsAT4TlBPAXBQTBAFYgHAAoQRkHwaILaAsGHKqb5sNvBsskG2l/GFPMqU+XG2FV6YGkZ/+uXlKVjmPtprLjNuYn1pzjWyxgEDAPYcTeM1dWQQhR3lXVx4MSGQY2oJHcXIcRJcaivugTAidQxNLjuqnkoBIyhnS9Ov1F1YZ5HrUMweUmctkQAXFx0Q41PRUCCgtYE8M8ZgnCgx2ImtQbBi/40Tae9mPp+8vYMN/R7aDCd0PSY76dZSPhcAi732OXH7DtoPXUN3gr3naBrmgbgitOeB4c1CAEmEQJn6fZT+AcVeur6nm5UJCK4zhg8iQiGnvZzV3R7vBs+XFAmf2CeHrtSa0FXebBcgwCLwIrdfv8OKxkSPELoWfSyhKB4TTFrQsSLdPAezu1hefxD1p4YAs0kHkDYAwAEAeKjaHTq9qf3EsJUQHi/hdDjDQgBlfYH5oKf2QZgpscQFA7selIFp0MshVIRp54gzYroUbYid0GFsQtPDaO7NBNJ4SQeKAI1iMbI+qVbyRx7smMyx2idkp1Q7CtzFPvuD141bI79tBfvKE8KHTgWpbtujtl7ORjUXjjeeOFiF4RQkAait03uyttiSQVBW1MAsMWipiaucK8rCkAgJFHxgMls2boVCBBiQwEA+VpUFGzuEXTi3IWur+gbLg/WNQsQGtyaxIRgyGWKUORgGMSC+qi741L3ZvuizK8dmhcE0WoXKOaEXTveGUAwGH6o9mbnSG5561NAyFsTwYn5j7UE4gK7jmiXgnYGxdbEnavtKLakEtwiFudJuPD/ovzcuJCQB46qmIGniMmXwRSTylmCrHA8JwAQ60TOMrAnZGGY0dgMnA5kcjhcitR8Hsg2q6SYZ0z5hEk5zZntUqASbN6aCI613GQKSbfuGWK0IXoq+EIVrimKJCKU+YQYbZKERmWI0V2JDXhr4ksIF5GJJzMLyQRvuCQoJYSarxIdyIrYFO7YKacxuDcTYAgmb00qCIjbMN/S4+KOyJhZPp7/cfwycQPHysKBMgpPSqYnGgsXAjMF7D9xavAL4VrgMZEYq4KAz4gKjAFhUnV6FRISma+FOi3yKVJHCLy6T84BC1+cAynAkLa1dyAgfMpnfaRbMWfAgaToWcaSUzYw3A9DZ7yhMgsPC35KgYsAZYBNi2JwkNiZSVzd+BmCp4gY+HlVmdbGx2NNlVomCCYONklKHFlTSBEhlzUxMdKQli5BUAQ6GT+4XhkCZgmpFQg4mwghzumDLMJYgjBcBUZHMMY7EEwVfecp1HxRFUbJBYWRIXjae5oir49JAldG5KwIlkLTwMBdKmyWEEr/inQn82T4SWR389lG5GwrRfoBWvPlACooAjkop4V2OEXaKhIELImAY038kfzXTwIrefl5yFCK7QbdIylnBO0ZVkS6EAkMZ5AzBNvs8GPjgB0bNPdYNMnkFkJcgExizFlPLSNVk86HKGRPppCo1ZtKKZEglSN2bNjlKE0pICSh08WbDClbir/hvah+ulmlJzbpkZJTxWoIbD+vmsNUcwkJhJGxKfzkuXqMEjYUcPKulCpYkiOGnG/iwATOjx08hDQ2+DhDmAGYs9M6QnDacahcLR94/1zpZuX1B86QAITzYImURUoah1jHeljD+GLiFGtBRtv0xi0mbmd9dfbnQaRiVNBUEvN1+qotJjFz+mp/InOcK6T26vJuQpQvONx1ruh8O4iUuoLJcsV8YSuj9XUYU1npFsTheDwe+Hig33gSz8HfgT/H46eXClz74aKk0yu1Jkylm5jl7aoS7zi+veHkdDy8QcOFDh11u8PYHcfj2xGP3bE7LAOY356sFP2w+Gx531SDOMLqCIHW7ngZxIIQ3t4SCgJyqAFEGsDdw51X3+LuewiNIJgoMgiQMCzCsjh2byRuVEuHUjjQpcMbSeHw2QvF7R7qUekz7q1qtjqSAOh4oF+CQFLA8wcUCaI73gdws5N8ovraAGWqx5T5JA9FIny1AIyUeQ7bQWQeQiLUW2rQ3uqr3kqZmYeY8zaXwfUZbw+3O/4XeKgmwk2VeKLMF3kbaeA+EW58GYCUaRcpc3yJCDd/l6WgzIcgMg+RT33PK5GZMhd4e7xLA/YpAbz0jZ5EmWsgZgCXJSL8GoQbyvwMYuYhyAiXiPCrEIgy7XCfMjMPDbp1L0366nfc7lJmyUNAZ378UQhWf6LMkofwhfarRP76N/28PrcFZTbNC0T4TRDS9wciCK70A4DhCSL8PggVZaYa4tM88E0QmDLdqGCzHDxWUt3Wib70rU+izMHadrMAvgyB2Kp9hQjvtv8Ax5v4Bma3OycAAAAASUVORK5CYII=';
 const EMPRESA = {nome:'Las Vegas Sex Shop', cnpj:'47.100.282/0001-62'};
 const CAMPOS = ['entrada','saida_almoco','volta_almoco','inicio_pausa','fim_pausa','saida'];
-const NOME = {entrada:'Entrada',saida_almoco:'Saída almoço',volta_almoco:'Volta almoço',inicio_pausa:'Início pausa',fim_pausa:'Fim pausa',saida:'Saída'};
+const NOME = {entrada:'Entrada',saida_almoco:'Saída para o almoço',volta_almoco:'Volta do almoço',inicio_pausa:'Início da pausa',fim_pausa:'Fim da pausa',saida:'Saída'};
 const CURTO = {entrada:'Entrada',saida_almoco:'Almoço',volta_almoco:'Volta',inicio_pausa:'Pausa',fim_pausa:'Fim pausa',saida:'Saída'};
-const ICO = {entrada:'ti-login',saida_almoco:'ti-tools-kitchen-2',volta_almoco:'ti-arrow-back-up',inicio_pausa:'ti-coffee',fim_pausa:'ti-player-play',saida:'ti-logout'};
+const ICO = {entrada:'ti-login-2',saida_almoco:'ti-tools-kitchen-2',volta_almoco:'ti-arrow-back-up',inicio_pausa:'ti-coffee',fim_pausa:'ti-player-play',saida:'ti-logout-2'};
 const TIPO_NOME = {normal:'Normal',folga:'Folga (banco)',atestado:'Atestado',ferias:'Férias',abono:'Abonado',falta:'Falta'};
+const TIPO_EV = {cha:{n:'Chá de lingerie',e:'💝'}, campanha:{n:'Campanha',e:'📣'}, evento:{n:'Evento',e:'🎉'}, reuniao:{n:'Reunião',e:'👥'}, aviso:{n:'Aviso',e:'📌'}};
+const TIPO_AUS = {folga:{n:'Folga',e:'🌴'}, ausente:{n:'Ausente',e:'•'}, atestado:{n:'Atestado',e:'🩺'}, ferias:{n:'Férias',e:'✈️'}};
 
 /* ──────────── utilidades ──────────── */
 const $ = s => document.querySelector(s);
@@ -290,6 +323,14 @@ const primeiroNome = n => String(n||'').split(' ')[0];
 const iniciais = n => String(n||'?').split(' ').filter(Boolean).slice(0,2).map(p=>p[0]).join('').toUpperCase();
 const mesDe = s => s.slice(0,7);
 const mesAdd = (ym, n) => { const [y,m] = ym.split('-').map(Number); const d = new Date(y, m-1+n, 15); return d.getFullYear()+'-'+pad(d.getMonth()+1); };
+const fmtTel = t => { t = String(t||'').replace(/\D/g,''); if(t.length===11) return `(${t.slice(0,2)}) ${t.slice(2,7)}-${t.slice(7)}`; if(t.length===13) return `+${t.slice(0,2)} (${t.slice(2,4)}) ${t.slice(4,9)}-${t.slice(9)}`; return t; };
+const telWa = t => { t = String(t||'').replace(/\D/g,''); if(!t) return ''; return t.length<=11 ? '55'+t : t; };
+async function sha256(txt){
+  if(!window.crypto?.subtle) return null;
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(txt));
+  return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+async function credencial(campo, pin){ const h = await sha256(PIN_SALT+':'+pin); return h ? {[campo+'Hash']:h} : {[campo]:pin}; }
 
 function toast(msg, ruim=false){
   const t = document.createElement('div'); t.className = 'toast'+(ruim?' bad':''); t.textContent = msg;
@@ -299,18 +340,20 @@ function toast(msg, ruim=false){
 /* ──────────── estado ──────────── */
 const S = {
   api: LS.get('lv_api_teste','') || API_FIXO || LS.get('lv_api',''),
-  boot: null,             // lojas, colaboradoras, regras, hoje
-  loja: LS.get('lv_loja', null),
-  tela: 'inicio',         // inicio | bater | sucesso | minha | admin | config
-  sess: null,             // {eid, pin, dados}
-  minhaTab: 'mes', minhaMes: null,
-  adm: null,              // {pin, dados, tab, eid, mes}
-  pin: null,              // modal de PIN {alvo, buf, erro, titulo}
+  boot: null,
+  aparelho: LS.get('lv_aparelho', null),   // {token, nome, loja} — só no computador autorizado da loja
+  tela: 'inicio',                            // inicio | bater | sucesso | portal | admin | config
+  sess: null,                                // {eid, cred, dados}
+  portalTab: 'inicio', portalMes: null,
+  adm: null,
+  pin: null,
   ocupado: false,
-  offset: 0,              // diferença (min) entre relógio do servidor e do aparelho
+  offset: 0,
   fila: LS.get('lv_fila', []),
+  primeiraVez: true,
 };
 let timerVolta = null;
+const modoLoja = () => !!(S.aparelho && S.aparelho.token);
 
 /* ──────────── servidor ──────────── */
 async function api(a, dados={}){
@@ -329,15 +372,16 @@ async function carregar(){
     LS.set('lv_boot', S.boot);
     const servidor = toM(S.boot.hora), local = new Date().getHours()*60+new Date().getMinutes();
     S.offset = (S.boot.hoje === isoD(new Date())) ? servidor - local : 0;
+    if(S.aparelho){ try{ const r = await api('aparelho', {token:S.aparelho.token}); if(!r.aparelho){ S.aparelho=null; LS.del('lv_aparelho'); toast('Este computador não está mais autorizado a bater ponto.', true); } else { S.aparelho = {...S.aparelho, ...r.aparelho}; LS.set('lv_aparelho', S.aparelho); } }catch(e){} }
   }catch(e){
     S.boot = LS.get('lv_boot', null);
     if(!S.boot){ render(); toast('Não consegui falar com o servidor: '+e.message, true); return; }
-    toast('Sem conexão — usando dados guardados', true);
+    toast('Sem conexão — mostrando os dados guardados', true);
   }
   render(); enviarFila();
 }
 
-/* ──────────── regras de cálculo (7h20 · folga 8h · ter–sex) ──────────── */
+/* ──────────── regras (7h20 · folga 8h · ter–sex) ──────────── */
 function trab(r){
   if(!r || !r.entrada || !r.saida) return null;
   let t = toM(r.saida) - toM(r.entrada);
@@ -346,12 +390,8 @@ function trab(r){
   return Math.max(0, t);
 }
 function hojeISO(){ return S.boot?.hoje && S.boot.hoje >= isoD(new Date()) ? S.boot.hoje : isoD(new Date()); }
-
-/** Analisa um dia: previsto, trabalhado, saldo e pendências. */
 function analisaDia(colab, data, r, regras, anterior){
-  const hoje = hojeISO();
-  const w = dow(data);
-  const feriado = regras.feriados.includes(data);
+  const hoje = hojeISO(), w = dow(data), feriado = regras.feriados.includes(data);
   const inicio = [regras.inicio_banco, colab.admissao||''].sort().pop();
   const conta = data >= inicio;
   const previsto = (w!==0 && !feriado) ? regras.jornada_min : 0;
@@ -359,7 +399,7 @@ function analisaDia(colab, data, r, regras, anterior){
   const o = {data, r, tipo, previsto:0, trabalhado:0, saldo:0, flags:[], conta, feriado, domingo:w===0, futuro:data>hoje, hoje:data===hoje};
   if(data > hoje && tipo==='normal') return o;
   if(['atestado','ferias','abono'].includes(tipo)){ o.previsto=previsto; o.trabalhado=previsto; o.flags.push({n:TIPO_NOME[tipo], c:'info'}); }
-  else if(tipo==='folga'){ o.previsto=previsto; o.saldo=-regras.folga_min; o.flags.push({n:'Folga banco −'+hm(regras.folga_min), c:'info'}); }
+  else if(tipo==='folga'){ o.previsto=previsto; o.saldo=-regras.folga_min; o.flags.push({n:'Folga do banco −'+hm(regras.folga_min), c:'info'}); }
   else if(tipo==='falta'){ o.previsto=previsto; o.flags.push({n:'Falta', c:'bad'}); }
   else {
     const t = trab(r);
@@ -368,7 +408,7 @@ function analisaDia(colab, data, r, regras, anterior){
       if(previsto && data < hoje && conta){ o.previsto=previsto; o.saldo=-previsto; o.flags.push({n:'Sem marcação', c:'bad', pend:true}); }
     } else if(t==null){
       o.previsto = previsto;
-      if(data < hoje){ o.flags.push({n:'Falta marcar '+(!r.entrada?'entrada':'saída'), c:'bad', pend:true}); }
+      if(data < hoje) o.flags.push({n:'Falta marcar '+(!r.entrada?'entrada':'saída'), c:'bad', pend:true});
       else o.flags.push({n:'Em andamento', c:'ok'});
     } else {
       o.previsto = previsto; o.trabalhado = t;
@@ -384,49 +424,40 @@ function analisaDia(colab, data, r, regras, anterior){
       if(t < 240 && previsto) o.flags.push({n:'Menos de 4h', c:'bad', pend:true});
       if(anterior && anterior.saida && r.entrada && addDays(anterior.data,1)===data){
         const inter = (24*60 - toM(anterior.saida)) + toM(r.entrada);
-        if(inter < 660) o.flags.push({n:'Descanso '+hm(inter)+' (<11h)', c:'warn'});
+        if(inter < 660) o.flags.push({n:'Descanso de '+hm(inter)+' (menos de 11h)', c:'warn'});
       }
     }
   }
-  if(!conta){ o.saldo = 0; }
+  if(!conta) o.saldo = 0;
   return o;
 }
-
-function mapaPontos(pontos, eid){
-  const m = {};
-  pontos.filter(p=>p.colaboradora_id===eid).forEach(p=>{ m[p.data]=p; });
-  return m;
-}
-
+function mapaPontos(pontos, eid){ const m = {}; pontos.filter(p=>p.colaboradora_id===eid).forEach(p=>{ m[p.data]=p; }); return m; }
 function resumoMes(colab, ym, mapa, regras){
   const dias = diasDoMes(ym).map(d => analisaDia(colab, d, mapa[d], regras, mapa[addDays(d,-1)]));
   const t = {trabalhado:0, previsto:0, saldo:0, faltas:0, atestados:0, folgas:0, pend:0, alertas:0, dias};
   dias.forEach(x=>{
     if(!x.conta) return;
     t.trabalhado += x.trabalhado; t.previsto += x.previsto; t.saldo += x.saldo;
-    if(x.tipo==='falta') t.faltas++;
-    if(x.tipo==='atestado') t.atestados++;
-    if(x.tipo==='folga') t.folgas++;
+    if(x.tipo==='falta') t.faltas++; if(x.tipo==='atestado') t.atestados++; if(x.tipo==='folga') t.folgas++;
     x.flags.forEach(f=>{ if(f.pend) t.pend++; else if(f.c==='warn') t.alertas++; });
   });
   return t;
 }
-
 function bancoTotal(colab, mapa, regras){
   let ym = mesDe(regras.inicio_banco), fim = mesDe(hojeISO()), soma = Number(colab.saldo_inicial_min||0), seg=0;
   while(ym <= fim && seg++ < 36){ soma += resumoMes(colab, ym, mapa, regras).saldo; ym = mesAdd(ym,1); }
   const futuras = Object.values(mapa).filter(p=>p.tipo==='folga' && p.data > hojeISO()).map(p=>p.data).sort();
-  return {saldo: soma, folgasDisp: soma>0 ? Math.floor(soma/regras.folga_min) : 0, proximas: futuras};
+  return {saldo: soma, folgasDisp: soma>0 ? Math.floor(soma/regras.folga_min) : 0, proximas: futuras, folgasMarcadas: futuras.length};
 }
 
-/* ──────────── fila offline ──────────── */
+/* ──────────── fila offline (só no computador autorizado) ──────────── */
 function salvarFila(){ LS.set('lv_fila', S.fila); }
 async function enviarFila(){
   if(!S.fila.length || !navigator.onLine) return;
   const resta = [];
   for(const f of S.fila){
-    try{ await api('bater', f); }
-    catch(e){ if(erroRede(e)) resta.push(f); else toast('Marcação offline de '+f.nome+' recusada: '+e.message, true); }
+    try{ await api('bater', {...f, token:S.aparelho?.token}); }
+    catch(e){ if(erroRede(e)) resta.push(f); else toast('Marcação sem internet de '+f.nome+' recusada: '+e.message, true); }
   }
   const enviadas = S.fila.length - resta.length;
   S.fila = resta; salvarFila();
@@ -436,116 +467,98 @@ async function enviarFila(){
 window.addEventListener('online', enviarFila);
 setInterval(enviarFila, 60000);
 
-/* ──────────── render principal ──────────── */
+/* ──────────── render / navegação ──────────── */
 function render(){
   clearTimeout(timerVolta);
+  pararCamera();
   const app = $('#app');
   if(S.tela==='config'){ app.innerHTML = telaConfig(); return; }
-  if(!S.boot){ app.innerHTML = `<div class="wrap">${topo()}<div class="note bad"><i class="ti ti-wifi-off"></i><div>Não consegui carregar. Confira a internet e <button class="btn sm" onclick="carregar()">tentar de novo</button></div></div></div>`; return; }
-  if(S.tela==='admin'){ app.innerHTML = telaAdmin(); return; }
-  if(S.tela==='minha'){ app.innerHTML = telaMinha(); return; }
-  if(S.tela==='bater'){ app.innerHTML = telaBater(); return; }
-  if(S.tela==='sucesso'){ app.innerHTML = telaSucesso(); timerVolta = setTimeout(sair, 7000); return; }
-  app.innerHTML = telaInicio();
+  if(!S.boot){ app.innerHTML = `<div class="wrap">${letreiro()}<div class="nota bad"><i class="ti ti-wifi-off"></i><div>Não consegui carregar. Confira a internet e <button class="btn p" onclick="carregar()">tente de novo</button></div></div></div>`; return; }
+  if(S.tela==='admin') app.innerHTML = telaAdmin();
+  else if(S.tela==='portal') app.innerHTML = telaPortal();
+  else if(S.tela==='bater'){ app.innerHTML = telaBater(); iniciarCamera(); }
+  else if(S.tela==='sucesso'){ app.innerHTML = telaSucesso(); timerVolta = setTimeout(sair, 7000); }
+  else app.innerHTML = telaInicio();
   tickRelogio();
-}
-const _render = render;
-render = function(){
-  _render(); tickRelogio();
   try{ if(S.tela!=='inicio' && (!history.state || history.state.lv!==S.tela)) history.pushState({lv:S.tela}, ''); }catch(e){}
-};
+  S.primeiraVez = false;
+}
 function modalAberto(){ return !!$('#modal').innerHTML.trim(); }
-function fecharModal(){ PED=null; ED=null; EC=null; EV=null; S.pin=null; $('#modal').innerHTML=''; }
-/** Volta uma tela (mesmo efeito do botão Voltar e do voltar do navegador). */
+function fecharModal(){ PED=null; ED=null; EC=null; EV=null; AP=null; S.pin=null; $('#modal').innerHTML=''; }
 function voltar(){
   if(modalAberto()){ fecharModal(); return; }
-  if(S.tela==='minha'){ S.tela='bater'; render(); return; }
-  if(S.tela==='bater' || S.tela==='sucesso'){ sair(); return; }
+  if(S.tela==='portal' && modoLoja()){ S.tela='bater'; render(); return; }
+  if(S.tela==='portal' || S.tela==='bater' || S.tela==='sucesso'){ sair(); return; }
   if(S.tela==='admin'){ S.adm=null; S.tela='inicio'; render(); return; }
-  if(S.tela==='config'){ S.tela='inicio'; render(); return; }
-  if(!S.loja && S.lojaAnterior){ S.loja=S.lojaAnterior; LS.set('lv_loja',S.loja); render(); }
+  if(S.tela==='config'){ S.tela='inicio'; render(); }
 }
 window.addEventListener('popstate', ()=>{
   const tinhaModal = modalAberto();
   voltar();
-  // mantém a pessoa dentro do sistema: o voltar do navegador nunca fecha a página no meio do uso
   try{ if(tinhaModal || S.tela!=='inicio') history.pushState({lv:S.tela}, ''); }catch(e){}
 });
 document.addEventListener('keydown', ev=>{ if(ev.key==='Escape' && !S.pin && modalAberto()) fecharModal(); });
 const btnVoltar = (txt='Voltar') => `<button class="voltar" onclick="voltar()"><i class="ti ti-arrow-left"></i> ${txt}</button>`;
 
-function topo(direita=''){
-  return `<div class="top">
+function letreiro(direita=''){
+  const bulbos = []; const n = 34;
+  for(let i=0;i<n;i++){ // ao redor do cartão: topo, direita, base, esquerda
+    const t = i/n; let x, y;
+    if(t<.4){ x = t/.4*100; y = 0; } else if(t<.5){ x=100; y=(t-.4)/.1*100; } else if(t<.9){ x=100-(t-.5)/.4*100; y=100; } else { x=0; y=100-(t-.9)/.1*100; }
+    bulbos.push(`<i style="--i:${i};left:calc(${x}% - 4px);top:calc(${y}% - 4px)"></i>`);
+  }
+  return `<div class="letreiro"><div class="lampadas ${S.primeiraVez?'correndo':''}">${bulbos.join('')}</div>
     <img src="${LOGO}" alt="Las Vegas">
-    <div><h1>Cartão de Ponto</h1><div class="sub">Las Vegas Sex Shop</div></div>
-    ${direita || `<div class="clock"><b id="clk">--:--</b><span id="clkd"></span></div>`}
+    <div><h1>${modoLoja()?'Cartão de Ponto':'Portal da Equipe'}</h1><div class="sub">${modoLoja()?'Loja '+esc(S.boot?.lojas?.[S.aparelho.loja]?.nome||S.aparelho.loja):'Las Vegas Sex Shop'}</div></div>
+    ${direita || `<div class="relogio"><b id="clk" class="num">--:--</b><span id="clkd"></span></div>`}
   </div>`;
 }
-function agoraServidor(){ const d = new Date(Date.now() + S.offset*60000); return d; }
+function agoraServidor(){ return new Date(Date.now() + S.offset*60000); }
 function tickRelogio(){
   const c = $('#clk'); if(!c) return;
   const d = agoraServidor();
   c.textContent = pad(d.getHours())+':'+pad(d.getMinutes());
-  const cd = $('#clkd'); if(cd) cd.textContent = d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'}).replace(/\./g,'');
+  const cd = $('#clkd'); if(cd) cd.textContent = d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
 }
 setInterval(tickRelogio, 10000);
 
-/* ──────────── INÍCIO (computador da loja) ──────────── */
+/* ──────────── INÍCIO ──────────── */
 function telaInicio(){
   const b = S.boot;
-  if(!S.loja || !b.lojas[S.loja]){
-    return `<div class="wrap">${topo()}
-      ${S.lojaAnterior?btnVoltar():''}
-      <div class="h2">Em qual loja fica este computador?</div>
-      <div class="store-grid">${Object.entries(b.lojas).map(([k,l])=>`
-        <button class="store-card" onclick="escolherLoja('${k}')">
-          <i class="ti ti-building-store" style="font-size:28px;color:var(--red)"></i>
-          <b>Loja ${esc(l.nome)}</b><span>${esc(l.abre)} – ${esc(l.fecha)}</span>
-        </button>`).join('')}
-      </div>
-      <p class="faint" style="margin-top:14px;font-size:13px">No celular pessoal, escolha qualquer uma — a loja de cada marcação pode ser ajustada depois.</p>
-      ${rodape()}</div>`;
-  }
-  const loja = b.lojas[S.loja];
   const todas = b.colaboradoras.slice().sort((x,y)=>x.nome.localeCompare(y.nome));
-  const card = c => `<button class="person" onclick="abrirPin('${c.id}')">
+  const card = c => `<button class="pessoa" onclick="abrirPin('${c.id}')">
       <div class="avatar" style="background:${esc(c.cor||'#F5B524')}">${esc(iniciais(c.nome))}</div>
-      <div class="grow"><b>${esc(primeiroNome(c.nome))}</b><small>${c.temPin?'Toque para bater o ponto':'<span style="color:var(--bad)">PIN não cadastrado</span>'}</small></div>
-      <i class="ti ti-chevron-right faint"></i></button>`;
-  return `<div class="wrap">${topo()}
-    ${S.fila.length?`<div class="offline-bar"><i class="ti ti-cloud-upload"></i> ${S.fila.length} marcação(ões) guardada(s) sem internet — envio automático quando a conexão voltar.</div>`:''}
-    <div class="row between wrap-row" style="margin-bottom:6px">
-      <button class="store-switch" onclick="trocarLoja()"><span class="dot" style="background:var(--red)"></span> Loja ${esc(loja.nome)} · ${esc(loja.abre)}–${esc(loja.fecha)} <i class="ti ti-switch-horizontal faint"></i></button>
-    </div>
-    <div class="h2">Quem vai bater o ponto?</div>
-    <div class="people">${todas.map(card).join('') || '<p class="muted">Ninguém cadastrado ainda.</p>'}</div>
-    <div class="h2" style="display:flex;justify-content:space-between;align-items:center">Agenda da equipe <span class="faint" style="font-size:11px;letter-spacing:.05em;text-transform:none;font-weight:600">atualiza sozinha</span></div>
+      <div class="cresce"><b>${esc(primeiroNome(c.nome))}</b><small>${c.temPin ? (modoLoja()?'Toque para bater o ponto':'Toque para entrar') : '<span style="color:var(--bad)">PIN não criado</span>'}</small></div>
+      <i class="ti ti-chevron-right apagado"></i></button>`;
+  return `<div class="wrap">${letreiro()}
+    ${S.fila.length?`<div class="faixa"><i class="ti ti-cloud-upload"></i> ${S.fila.length} marcação(ões) guardada(s) sem internet. Envio automático quando a conexão voltar.</div>`:''}
+    ${!modoLoja() && b.exigirAparelho ? `<div class="nota info" style="margin-bottom:14px"><i class="ti ti-device-desktop"></i><div>O ponto é batido no computador da loja. Aqui você entra no seu portal: vê o mês, o banco de horas, faz pedidos e acompanha a agenda.</div></div>`:''}
+    <h2 class="secao">${modoLoja()?'Quem vai bater o ponto?':'Quem é você?'}</h2>
+    <div class="pessoas">${todas.map(card).join('') || '<p class="suave">Ninguém cadastrado ainda.</p>'}</div>
+    <h2 class="secao">Agenda da equipe <small>atualiza sozinha</small></h2>
     ${calendario(b.calendario, false)}
-    <div class="note info" style="margin-top:22px"><i class="ti ti-info-circle"></i><div>Esqueceu de bater, precisa corrigir um horário, mandar atestado ou pedir folga? Toque no seu nome e digite o PIN — os botões ficam logo abaixo do ponto. Dá para fazer pelo celular também.</div></div>
     ${rodape()}</div>`;
 }
 function rodape(){
-  return `<div class="footer">
-    <button class="btn ghost sm" onclick="abrirPin('__admin')"><i class="ti ti-lock"></i> Administração</button>
-    <button class="btn ghost sm" onclick="carregar()"><i class="ti ti-refresh"></i> Atualizar</button>
+  return `<div class="rodape">
+    <button class="btn fantasma p" onclick="abrirPin('__admin')"><i class="ti ti-lock"></i> Administração</button>
+    ${modoLoja()?`<button class="btn fantasma p" onclick="telaCheia()"><i class="ti ti-maximize"></i> Tela cheia</button>`:`<button class="btn fantasma p" onclick="abrirPin('__aparelho')"><i class="ti ti-device-desktop"></i> Autorizar este computador</button>`}
+    <button class="btn fantasma p" onclick="carregar()"><i class="ti ti-refresh"></i> Atualizar</button>
   </div>`;
 }
-function escolherLoja(k){ S.loja=k; LS.set('lv_loja',k); render(); }
-function trocarLoja(){ S.lojaAnterior=S.loja; S.loja=null; LS.del('lv_loja'); render(); }
+function telaCheia(){ const el = document.documentElement; if(!document.fullscreenElement) (el.requestFullscreen||el.webkitRequestFullscreen||function(){}).call(el); else (document.exitFullscreen||function(){}).call(document); }
 
-/* ──────────── AGENDA DA EQUIPE ──────────── */
-const TIPO_EV = {cha:{n:'Chá de lingerie',e:'💝'}, campanha:{n:'Campanha',e:'📣'}, evento:{n:'Evento',e:'🎉'}, reuniao:{n:'Reunião',e:'👥'}, aviso:{n:'Aviso',e:'📌'}};
-const TIPO_AUS = {folga:{n:'Folga',e:'🌴'}, ausente:{n:'Ausente',e:'•'}, atestado:{n:'Atestado',e:'🩺'}, ferias:{n:'Férias',e:'✈️'}};
+/* ──────────── AGENDA ──────────── */
 function itensDoDia(cal, data, regras){
   const it = [];
   if(regras && regras.feriados.includes(data)) it.push({cls:'feriado', txt:'Feriado', det:'Feriado'});
   (cal?.eventos||[]).filter(e=>data>=e.data && data<=(e.data_fim||e.data)).forEach(e=>{
     const t = TIPO_EV[e.tipo]||TIPO_EV.evento;
-    it.push({cls:e.tipo, txt:t.e+' '+e.titulo, det:`${t.e} <b>${esc(e.titulo)}</b> · ${t.n}${e.loja&&S.boot.lojas[e.loja]?' · Loja '+esc(S.boot.lojas[e.loja].nome):''}${e.obs?'<br><span class="faint">'+esc(e.obs)+'</span>':''}`, ev:e});
+    it.push({cls:e.tipo, txt:t.e+' '+e.titulo, det:`${t.e} <b>${esc(e.titulo)}</b> — ${t.n}${e.loja&&S.boot.lojas[e.loja]?', loja '+esc(S.boot.lojas[e.loja].nome):''}${e.obs?'<br><span class="apagado">'+esc(e.obs)+'</span>':''}`, ev:e});
   });
   (cal?.ausencias||[]).filter(a=>a.data===data).forEach(a=>{
     const t = TIPO_AUS[a.tipo]||TIPO_AUS.ausente;
-    it.push({cls:a.tipo, txt:(a.tipo==='ausente'?'':t.e+' ')+a.nome+(a.tipo==='ausente'?' · ausente':''), det:`${t.e} <b>${esc(a.nome)}</b> · ${t.n}`});
+    it.push({cls:a.tipo, txt:(a.tipo==='ausente'?'':t.e+' ')+a.nome+(a.tipo==='ausente'?' (ausente)':''), det:`${t.e} <b>${esc(a.nome)}</b> — ${t.n}`});
   });
   return it;
 }
@@ -555,37 +568,35 @@ function calendario(cal, admin){
   const primeiro = new Date(y, m-1, 1).getDay();
   const dias = diasDoMes(ym), hoje = hojeISO(), regras = S.boot?.regras;
   const cells = [];
-  for(let i=0;i<primeiro;i++) cells.push('<div class="cal-day fora"></div>');
+  for(let i=0;i<primeiro;i++) cells.push('<div class="cal-dia fora"></div>');
   dias.forEach(d=>{
-    const it = itensDoDia(cal, d, regras);
-    const max = 3;
-    cells.push(`<button class="cal-day ${d===hoje?'hoje':''} ${dow(d)===0?'dom':''}" onclick="verDia('${d}',${admin?'true':'false'})">
+    const it = itensDoDia(cal, d, regras), max = 3;
+    cells.push(`<button class="cal-dia ${d===hoje?'hoje':''}" onclick="verDia('${d}',${admin?'true':'false'})">
       <div class="n"><span>${Number(d.slice(8))}</span></div>
       ${it.slice(0,max).map(x=>`<span class="chip ${x.cls}">${esc(x.txt)}</span>`).join('')}
       ${it.length>max?`<span class="chip mais">+${it.length-max}</span>`:''}</button>`);
   });
-  while(cells.length%7) cells.push('<div class="cal-day fora"></div>');
+  while(cells.length%7) cells.push('<div class="cal-dia fora"></div>');
   return `<div class="cal">
-    <div class="cal-h"><button class="icon-btn" style="border:0" onclick="mudarCal(-1)"><i class="ti ti-chevron-left"></i></button>
+    <div class="cal-t"><button class="icone" style="border:0" onclick="mudarCal(-1)"><i class="ti ti-chevron-left"></i></button>
       <b>${nomeMes(ym)}</b>
-      <button class="icon-btn" style="border:0" onclick="mudarCal(1)"><i class="ti ti-chevron-right"></i></button></div>
-    <div class="cal-grid">${['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map(x=>`<div class="cal-dow">${x}</div>`).join('')}${cells.join('')}</div>
+      <button class="icone" style="border:0" onclick="mudarCal(1)"><i class="ti ti-chevron-right"></i></button></div>
+    <div class="cal-grade">${['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map(x=>`<div class="cal-sem">${x}</div>`).join('')}${cells.join('')}</div>
   </div>
-  <div class="legend"><span class="chip folga">🌴 Folga</span><span class="chip ${admin?'atestado':'ausente'}">${admin?'🩺 Atestado':'Ausente'}</span><span class="chip ferias">✈️ Férias</span><span class="chip cha">💝 Chá de lingerie</span><span class="chip campanha">📣 Campanha</span><span class="chip evento">🎉 Evento</span><span class="chip reuniao">👥 Reunião</span><span class="chip aviso">📌 Aviso</span></div>`;
+  <div class="legenda"><span class="chip folga">🌴 Folga</span><span class="chip ${admin?'atestado':'ausente'}">${admin?'🩺 Atestado':'Ausente'}</span><span class="chip ferias">✈️ Férias</span><span class="chip cha">💝 Chá de lingerie</span><span class="chip campanha">📣 Campanha</span><span class="chip evento">🎉 Evento</span><span class="chip reuniao">👥 Reunião</span><span class="chip aviso">📌 Aviso</span></div>`;
 }
 function mudarCal(n){ S.calMes = mesAdd(S.calMes || mesDe(hojeISO()), n); render(); }
 function verDia(d, admin){
-  const cal = admin ? S.adm.dados.calendario : S.boot.calendario;
+  const cal = admin ? S.adm.dados.calendario : (S.sess?.dados?.calendario || S.boot.calendario);
   const it = itensDoDia(cal, d, S.boot.regras);
-  $('#modal').innerHTML = `<div class="overlay" onclick="if(event.target===this)fecharModal()"><div class="modal">
-    <div class="modal-h"><h3 class="grow">${esc(dataLonga(d))}</h3><button class="icon-btn" onclick="fecharModal()"><i class="ti ti-x"></i></button></div>
-    <div class="modal-b">
-      ${it.length ? it.map(x=>`<div class="req" style="align-items:center">${admin&&x.ev?`<div class="grow">${x.det}</div><button class="btn sm" onclick="editarEvento('${x.ev.id}')"><i class="ti ti-pencil"></i> Editar</button>`:`<div class="grow">${x.det}</div>`}</div>`).join('') : '<p class="muted">Nada marcado neste dia.</p>'}
-      ${admin?`<button class="btn pri" style="width:100%;margin-top:12px" onclick="editarEvento(null,'${d}')"><i class="ti ti-plus"></i> Adicionar evento neste dia</button>`:''}
-      <button class="btn" style="width:100%;margin-top:8px" onclick="fecharModal()"><i class="ti ti-arrow-left"></i> Voltar</button>
+  $('#modal').innerHTML = `<div class="veu" onclick="if(event.target===this)fecharModal()"><div class="modal">
+    <div class="modal-t"><h3 class="cresce">${esc(dataLonga(d))}</h3><button class="icone" onclick="fecharModal()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-c">
+      ${it.length ? it.map(x=>`<div class="pedido" style="align-items:center">${admin&&x.ev?`<div class="cresce">${x.det}</div><button class="btn p" onclick="editarEvento('${x.ev.id}')"><i class="ti ti-pencil"></i> Editar</button>`:`<div class="cresce">${x.det}</div>`}</div>`).join('') : '<p class="suave">Nada marcado neste dia.</p>'}
+      ${admin?`<button class="btn pri largo" style="margin-top:12px" onclick="editarEvento(null,'${d}')"><i class="ti ti-plus"></i> Adicionar evento neste dia</button>`:''}
+      <button class="btn largo" style="margin-top:8px" onclick="fecharModal()"><i class="ti ti-arrow-left"></i> Voltar</button>
     </div></div></div>`;
 }
-// atualização automática da agenda/equipe na tela inicial
 setInterval(async ()=>{
   if(S.tela!=='inicio' || modalAberto() || document.hidden) return;
   try{ S.boot = await api('boot'); LS.set('lv_boot', S.boot); if(S.tela==='inicio' && !modalAberto()) render(); }catch(e){}
@@ -593,26 +604,28 @@ setInterval(async ()=>{
 
 /* ──────────── PIN ──────────── */
 function abrirPin(alvo){
-  if(alvo!=='__admin'){
+  if(alvo==='__admin') S.pin = {alvo, buf:'', erro:'', titulo:'Administração', sub:'PIN da administração'};
+  else if(alvo==='__aparelho') S.pin = {alvo, buf:'', erro:'', titulo:'Autorizar este computador', sub:'PIN da administração'};
+  else {
     const c = S.boot.colaboradoras.find(x=>x.id===alvo);
-    if(!c.temPin){ toast('Peça para a administração cadastrar o seu PIN.', true); return; }
-    S.pin = {alvo, buf:'', erro:'', titulo: primeiroNome(c.nome), cor:c.cor};
-  } else S.pin = {alvo, buf:'', erro:'', titulo:'Administração'};
+    if(!c.temPin){ toast('Peça para a administração criar o seu PIN.', true); return; }
+    S.pin = {alvo, buf:'', erro:'', titulo: primeiroNome(c.nome), sub:'Digite seu PIN de 6 números', cor:c.cor};
+  }
   renderPin();
 }
 function renderPin(){
   const p = S.pin, m = $('#modal');
   if(!p){ m.innerHTML=''; return; }
-  m.innerHTML = `<div class="overlay" onclick="if(event.target===this)fecharPin()"><div class="modal" style="max-width:360px">
-    <div class="modal-h">${p.alvo==='__admin'?'<div class="avatar" style="background:var(--t1);color:#fff"><i class="ti ti-lock"></i></div>':`<div class="avatar" style="background:${esc(p.cor)}">${esc(iniciais(p.titulo))}</div>`}
-      <div class="grow"><h3>${esc(p.titulo)}</h3><div class="faint" style="font-size:13px">Digite seu PIN de 6 números</div></div>
-      <button class="icon-btn" onclick="fecharPin()"><i class="ti ti-x"></i></button></div>
-    <div class="modal-b">
-      <div class="pin-dots ${p.erro?'err':''}">${[0,1,2,3,4,5].map(i=>`<i class="${i<p.buf.length?'on':''}"></i>`).join('')}</div>
-      <div class="pin-err">${p.ocupado?'<span class="spin" style="color:var(--t2)"></span>':esc(p.erro)}</div>
-      <div class="keypad">${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="key" onclick="tecla('${n}')">${n}</button>`).join('')}
-        <button class="key fn" onclick="fecharPin()">Cancelar</button><button class="key" onclick="tecla('0')">0</button>
-        <button class="key fn" onclick="tecla('bk')"><i class="ti ti-backspace" style="font-size:22px"></i></button></div>
+  m.innerHTML = `<div class="veu" onclick="if(event.target===this)fecharPin()"><div class="modal" style="max-width:380px">
+    <div class="modal-t">${p.cor?`<div class="avatar" style="background:${esc(p.cor)}">${esc(iniciais(p.titulo))}</div>`:'<div class="avatar" style="background:var(--dourado)"><i class="ti ti-lock"></i></div>'}
+      <div class="cresce"><h3>${esc(p.titulo)}</h3><div class="apagado" style="font-size:13.5px">${esc(p.sub)}</div></div>
+      <button class="icone" onclick="fecharPin()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-c">
+      <div class="pin-pontos ${p.erro?'err':''}">${[0,1,2,3,4,5].map(i=>`<i class="${i<p.buf.length?'on':''}"></i>`).join('')}</div>
+      <div class="pin-erro">${p.ocupado?'<span class="gira" style="color:var(--creme2)"></span>':esc(p.erro)}</div>
+      <div class="teclado">${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="tecla" onclick="tecla('${n}')">${n}</button>`).join('')}
+        <button class="tecla fn" onclick="fecharPin()">Cancelar</button><button class="tecla" onclick="tecla('0')">0</button>
+        <button class="tecla fn" onclick="tecla('bk')"><i class="ti ti-backspace" style="font-size:22px"></i></button></div>
     </div></div></div>`;
 }
 function fecharPin(){ S.pin=null; renderPin(); }
@@ -624,20 +637,25 @@ async function tecla(k){
   if(p.buf.length<6) return;
   p.ocupado = true; renderPin();
   try{
-    if(p.alvo==='__admin'){
-      const d = await api('admDados', {adminPin:p.buf});
-      S.adm = {pin:p.buf, dados:d, tab: pendentes(d).length ? 'pedidos' : 'hoje', eid:null, mes:mesDe(d.hoje)};
-      S.pin=null; renderPin(); S.tela='admin'; render();
+    if(p.alvo==='__admin' || p.alvo==='__aparelho'){
+      const cred = await credencial('adminPin', p.buf);
+      const d = await api('admDados', cred);
+      S.pin=null; renderPin();
+      if(p.alvo==='__aparelho'){ S.admCred = cred; abrirAutorizarAparelho(d); return; }
+      S.adm = {cred, dados:d, tab: pendentes(d).length ? 'pedidos' : 'hoje', eid:null, mes:mesDe(d.hoje)};
+      S.tela='admin'; render();
     } else {
-      const d = await api('entrar', {eid:p.alvo, pin:p.buf});
-      S.sess = {eid:p.alvo, pin:p.buf, dados:d};
-      S.pin=null; renderPin(); S.minhaTab='mes'; S.minhaMes=mesDe(d.hoje); S.tela='bater'; render();
+      const cred = await credencial('pin', p.buf);
+      const d = await api('entrar', {eid:p.alvo, ...cred});
+      S.sess = {eid:p.alvo, cred, dados:d};
+      S.pin=null; renderPin(); S.portalTab='inicio'; S.portalMes=mesDe(d.hoje);
+      S.tela = modoLoja() ? 'bater' : 'portal'; render();
     }
   }catch(e){
-    if(erroRede(e) && p.alvo!=='__admin'){
-      // sem internet: deixa bater o ponto offline
+    if(erroRede(e) && p.alvo!=='__admin' && p.alvo!=='__aparelho' && modoLoja()){
       const c = S.boot.colaboradoras.find(x=>x.id===p.alvo);
-      S.sess = {eid:p.alvo, pin:p.buf, dados:null, offline:true, nome:c.nome};
+      const cred = await credencial('pin', p.buf);
+      S.sess = {eid:p.alvo, cred, dados:null, offline:true, nome:c.nome};
       S.pin=null; renderPin(); S.tela='bater'; render(); return;
     }
     p.ocupado=false; p.buf=''; p.erro=e.message; renderPin();
@@ -651,7 +669,49 @@ document.addEventListener('keydown', ev=>{
   else if(ev.key==='Escape') fecharPin();
 });
 
-/* ──────────── BATER PONTO ──────────── */
+/* ──────────── AUTORIZAR COMPUTADOR ──────────── */
+let AP = null;
+function abrirAutorizarAparelho(d){
+  AP = {loja: Object.keys(d.lojas)[0], nome:''};
+  $('#modal').innerHTML = `<div class="veu" onclick="if(event.target===this)fecharModal()"><div class="modal">
+    <div class="modal-t"><h3 class="cresce">Autorizar este computador</h3><button class="icone" onclick="fecharModal()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-c">
+      <div class="nota info" style="margin-bottom:12px"><i class="ti ti-device-desktop"></i><div>Só computadores autorizados batem ponto. A autorização fica guardada neste navegador; você pode revogar depois em Administração › Aparelhos.</div></div>
+      <div class="campo"><label>Este computador fica em qual loja?</label><select class="inp" onchange="AP.loja=this.value">${Object.entries(d.lojas).map(([k,l])=>`<option value="${k}">${esc(l.nome)}</option>`).join('')}</select></div>
+      <div class="campo"><label>Nome para identificar (opcional)</label><input class="inp" placeholder="Ex.: Caixa do Bosque" oninput="AP.nome=this.value"></div>
+      <button class="btn pri largo" id="btn-ap" onclick="autorizarAparelho()"><i class="ti ti-check"></i> Autorizar e começar a bater ponto aqui</button>
+    </div></div></div>`;
+}
+async function autorizarAparelho(){
+  const b = $('#btn-ap'); b.disabled = true;
+  try{
+    const r = await api('admAutorizarAparelho', {...S.admCred, loja:AP.loja, nome:AP.nome});
+    S.aparelho = {token:r.token, ...r.aparelho}; LS.set('lv_aparelho', S.aparelho); S.admCred=null;
+    const nomeLoja = S.boot.lojas[AP.loja]?.nome||'';
+    fecharModal(); render(); toast('Computador autorizado ✔ Agora ele bate ponto da loja '+nomeLoja);
+  }catch(e){ toast(e.message, true); b.disabled=false; }
+}
+
+/* ──────────── BATER PONTO (modo loja) ──────────── */
+let camStream = null, camPronta = false;
+async function iniciarCamera(){
+  camPronta = false;
+  const v = $('#cam'); if(!v || !S.boot?.fotoPonto) return;
+  try{
+    camStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user', width:{ideal:480}, height:{ideal:360}}, audio:false});
+    v.srcObject = camStream; await v.play(); camPronta = true;
+    const s = $('#cam-sem'); if(s) s.remove();
+  }catch(e){ const s = $('#cam-sem'); if(s) s.innerHTML = '<i class="ti ti-camera-off"></i>sem câmera'; }
+}
+function pararCamera(){ if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; } camPronta=false; }
+function fotoAgora(){
+  if(!camPronta) return null;
+  try{
+    const v = $('#cam'), cv = document.createElement('canvas'); cv.width = 320; cv.height = 240;
+    cv.getContext('2d').drawImage(v, 0, 0, 320, 240);
+    return {base64: cv.toDataURL('image/jpeg', .6).split(',')[1]};
+  }catch(e){ return null; }
+}
 function proximoCampo(r){
   r = r || {};
   if(r.saida) return null;
@@ -673,60 +733,61 @@ function registroHoje(){
 function telaBater(){
   const s = S.sess;
   const nome = s.dados ? s.dados.colaboradora.nome : s.nome;
-  const r = registroHoje();
-  const prox = proximoCampo(r);
+  const r = registroHoje(), prox = proximoCampo(r);
   const bloqueado = r.tipo && r.tipo!=='normal';
-  const lojaNome = S.loja ? S.boot.lojas[S.loja]?.nome : '';
-  const podeSaidaDireta = prox && ['saida_almoco','inicio_pausa','fim_pausa'].includes(prox) && r.entrada;
-  return `<div class="wrap" style="max-width:640px">${topo()}
+  const podeSaida = prox && ['saida_almoco','inicio_pausa','fim_pausa'].includes(prox) && r.entrada;
+  const d = agoraServidor();
+  return `<div class="wrap" style="max-width:680px">${letreiro()}
     ${btnVoltar('Sair')}
-    ${s.offline?`<div class="offline-bar"><i class="ti ti-wifi-off"></i> Sem internet: a marcação fica guardada neste computador e é enviada sozinha depois.</div>`:''}
-    <div class="card pad">
-      <div class="row between">
-        <div><div class="faint" style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">${esc(dataLonga(hojeISO()))}</div>
-        <div class="hello">Oi, ${esc(primeiroNome(nome))}!</div></div>
-        ${lojaNome?`<span class="pill"><i class="ti ti-building-store"></i> ${esc(lojaNome)}</span>`:''}
+    ${s.offline?`<div class="faixa"><i class="ti ti-wifi-off"></i> Sem internet: a marcação fica guardada neste computador e é enviada sozinha depois.</div>`:''}
+    <div class="cartao pad">
+      <div class="linha" style="gap:16px">
+        ${S.boot.fotoPonto?`<div class="camera"><video id="cam" muted playsinline></video><div class="sem" id="cam-sem"><i class="ti ti-camera"></i>ligando…</div></div>`:''}
+        <div class="cresce"><div class="apagado" style="font-size:13.5px;font-weight:600;text-transform:capitalize">${esc(dataLonga(hojeISO()))}</div>
+        <div class="ola">Oi, ${esc(primeiroNome(nome))}!</div>
+        ${S.boot.fotoPonto?`<div class="apagado" style="font-size:12.5px">Olhe para a câmera: a foto confirma que foi você.</div>`:''}</div>
       </div>
-      <div class="punch-grid" style="margin-top:16px">
-        ${CAMPOS.map(k=>`<div class="slot ${r[k]?'done':''} ${k===prox&&!bloqueado?'next':''}"><small>${CURTO[k]}</small><b>${r[k]||'--:--'}</b></div>`).join('')}
+      <div class="hoje-grade" style="margin-top:16px">
+        ${CAMPOS.map(k=>`<div class="vaga ${r[k]?'feita':''} ${k===prox&&!bloqueado?'proxima':''}"><small>${CURTO[k]}</small><b class="num">${r[k]||'--:--'}</b></div>`).join('')}
       </div>
       <div style="margin-top:16px">
-      ${bloqueado ? `<div class="note info"><i class="ti ti-calendar-off"></i><div>Hoje está lançado como <b>${esc(TIPO_NOME[r.tipo])}</b>. Se estiver errado, avise a administração.</div></div>`
-        : prox ? `<button class="btn pri big" id="btn-bater" onclick="bater('${prox}')"><i class="ti ${ICO[prox]}"></i> Registrar ${NOME[prox].toLowerCase()}</button>
-          ${podeSaidaDireta?`<button class="btn" style="width:100%;margin-top:8px" onclick="bater('saida')"><i class="ti ti-logout"></i> Registrar saída (encerrar o dia agora)</button>`:''}
-          <p class="faint" style="font-size:12.5px;text-align:center;margin-top:10px">O horário é o do servidor — não depende do relógio deste computador.</p>`
-        : `<div class="note ok"><i class="ti ti-circle-check"></i><div>Dia encerrado. Trabalhado hoje: <b class="mono">${hm(trab(r))}</b>. Bom descanso! ✨</div></div>`}
+      ${bloqueado ? `<div class="nota info"><i class="ti ti-calendar-off"></i><div>Hoje está lançado como <b>${esc(TIPO_NOME[r.tipo])}</b>. Se estiver errado, avise a administração.</div></div>`
+        : prox ? `<button class="botao-ponto" id="btn-bater" onclick="bater('${prox}')"><i class="ti ${ICO[prox]}"></i> Registrar ${NOME[prox].toLowerCase()} · <span class="num">${pad(d.getHours())}:${pad(d.getMinutes())}</span></button>
+          ${podeSaida?`<button class="btn largo" style="margin-top:10px" onclick="bater('saida')"><i class="ti ti-logout-2"></i> Registrar saída e encerrar o dia</button>`:''}
+          <p class="apagado" style="font-size:13px;text-align:center;margin-top:10px">A hora é a do servidor, não a deste computador.</p>`
+        : `<div class="nota ok"><i class="ti ti-circle-check"></i><div>Dia encerrado. Você trabalhou <b class="num">${hm(trab(r))}</b> hoje. Bom descanso! ✨</div></div>`}
       </div>
     </div>
-    ${s.dados?blocoPedidos():''}
-    <button class="btn" style="width:100%;margin-top:14px" onclick="sair()"><i class="ti ti-arrow-left"></i> Sair</button>
+    ${s.dados?blocoAtalhos():''}
+    <button class="btn largo" style="margin-top:14px" onclick="sair()"><i class="ti ti-arrow-left"></i> Sair</button>
   </div>`;
 }
-function blocoPedidos(){
+function blocoAtalhos(){
   const sol = S.sess.dados.solicitacoes;
   const pend = sol.filter(x=>x.status==='pendente').length;
   const novas = sol.filter(x=>x.status!=='pendente' && x.decidido_em && x.decidido_em.slice(0,10) >= addDays(hojeISO(),-3));
-  return `<div class="h2">Precisa de algo?</div>
-    <div class="quick">
-      <button onclick="novoPedido({tipo:'correcao'})"><i class="ti ti-clock-edit"></i>Esqueci de bater /<br>corrigir horário</button>
-      <button onclick="novoPedido({tipo:'atestado'})"><i class="ti ti-file-certificate"></i>Enviar<br>atestado</button>
-      <button onclick="novoPedido({tipo:'folga'})"><i class="ti ti-beach"></i>Pedir<br>folga</button>
-      <button onclick="S.minhaTab='mes';irMinha()"><i class="ti ti-calendar-stats"></i>Meu mês e<br>banco de horas</button>
+  return `<h2 class="secao">Precisa de algo?</h2>
+    <div class="atalhos">
+      <button onclick="novoPedido({tipo:'correcao'})"><i class="ti ti-clock-edit"></i>Esqueci de bater ou corrigir horário</button>
+      <button onclick="novoPedido({tipo:'atestado'})"><i class="ti ti-file-certificate"></i>Enviar atestado</button>
+      <button onclick="novoPedido({tipo:'folga'})"><i class="ti ti-beach"></i>Pedir folga</button>
+      <button onclick="S.portalTab='inicio';irPortal()"><i class="ti ti-layout-dashboard"></i>Meu portal</button>
     </div>
-    ${pend||novas.length?`<button class="note ${pend?'warn':'info'}" style="width:100%;margin-top:10px;text-align:left" onclick="S.minhaTab='pedidos';irMinha()"><i class="ti ti-inbox"></i><div>${pend?`<b>${pend} pedido(s) aguardando</b> a administração.`:''} ${novas.length?`${novas.length} pedido(s) respondido(s) recentemente.`:''} Toque para ver.</div></button>`:''}`;
+    ${pend||novas.length?`<button class="nota ${pend?'warn':'info'}" style="width:100%;margin-top:10px;text-align:left" onclick="S.portalTab='pedidos';irPortal()"><i class="ti ti-inbox"></i><div>${pend?`<b>${pend} pedido(s) aguardando</b> a administração.`:''} ${novas.length?`${novas.length} pedido(s) respondido(s) nos últimos dias.`:''} Toque para ver.</div></button>`:''}`;
 }
 async function bater(campo){
   const s = S.sess; if(S.ocupado) return;
   S.ocupado = true;
-  const b = $('#btn-bater'); if(b){ b.disabled=true; b.innerHTML='<span class="spin"></span> Registrando…'; }
+  const b = $('#btn-bater'); if(b){ b.disabled=true; b.innerHTML='<span class="gira"></span> Registrando…'; }
   const d = agoraServidor();
-  const pedido = {eid:s.eid, pin:s.pin, campo, loja:S.loja||undefined};
+  const foto = fotoAgora();
+  const pedido = {eid:s.eid, ...s.cred, campo, token:S.aparelho?.token};
   try{
     if(s.offline) throw new TypeError('offline');
-    const j = await api('bater', pedido);
+    const j = await api('bater', {...pedido, foto});
     const i = s.dados.pontos.findIndex(p=>p.data===j.ponto.data);
     if(i>=0) s.dados.pontos[i]=j.ponto; else s.dados.pontos.push(j.ponto);
-    S.ultimo = {campo, hora:j.hora, nome:s.dados.colaboradora.nome, offline:false};
+    S.ultimo = {campo, hora:j.hora, nome:s.dados.colaboradora.nome, offline:false, foto:!!(j.ponto.fotos && JSON.parse(j.ponto.fotos||'{}')[campo])};
     S.tela='sucesso';
   }catch(e){
     if(erroRede(e)){
@@ -741,114 +802,163 @@ async function bater(campo){
 }
 function telaSucesso(){
   const u = S.ultimo;
-  return `<div class="wrap" style="max-width:520px">${topo()}<div class="card success">
-    <div class="big-ico"><i class="ti ti-check"></i></div>
-    <div style="margin-top:14px;font-weight:800;font-size:18px">${esc(NOME[u.campo])} registrada</div>
-    <b class="time">${esc(u.hora)}</b>
-    <div class="muted">${esc(primeiroNome(u.nome))}${u.offline?' · guardado sem internet, envia sozinho':''}</div>
-    <div class="row" style="justify-content:center;margin-top:20px;gap:8px">
+  const confete = Array.from({length:26},(_,i)=>`<i class="confete" style="--d:${(i%7)*.05}s;--x:${(Math.random()*2-1)*220}px;--y:${-80-Math.random()*220}px;background:${i%3?'var(--dourado)':'var(--vermelho)'};left:${45+Math.random()*10}%"></i>`).join('');
+  return `<div class="wrap" style="max-width:560px">${letreiro()}<div class="cartao sucesso">${confete}
+    <svg class="check" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46"/><path d="M30 52 L45 66 L72 36"/></svg>
+    <div style="margin-top:14px;font-weight:800;font-size:20px">${esc(NOME[u.campo])} registrada</div>
+    <b class="hora num">${esc(u.hora)}</b>
+    <div class="suave">${esc(primeiroNome(u.nome))}${u.offline?' · guardado sem internet, envia sozinho':u.foto?' · foto registrada':''}</div>
+    <div class="linha" style="justify-content:center;margin-top:20px;gap:8px">
       ${S.sess?.dados?`<button class="btn" onclick="S.tela='bater';render()"><i class="ti ti-send"></i> Fazer um pedido</button>`:''}
       <button class="btn pri" onclick="sair()">Concluir</button>
     </div></div></div>`;
 }
 function sair(){ S.sess=null; S.tela='inicio'; render(); }
-function irMinha(){ S.tela='minha'; render(); }
+function irPortal(){ S.tela='portal'; render(); }
 
-/* ──────────── MINHA ÁREA (colaboradora) ──────────── */
-function telaMinha(){
+/* ──────────── PORTAL DA EQUIPE ──────────── */
+function telaPortal(){
+  const d = S.sess.dados;
+  const pend = d.solicitacoes.filter(s=>s.status==='pendente').length;
+  const abas = [['inicio','ti-home','Início'],['mes','ti-calendar-stats','Meu mês'],['pedidos','ti-send','Pedidos',pend],['agenda','ti-calendar-event','Agenda'],['eu','ti-user-circle','Eu']];
+  const corpo = ({inicio:portalInicio, mes:portalMes, pedidos:portalPedidos, agenda:portalAgenda, eu:portalEu})[S.portalTab]();
+  return `<div class="wrap" style="max-width:800px">${letreiro(`<button class="btn p" style="margin-left:auto" onclick="sair()"><i class="ti ti-logout-2"></i> Sair</button>`)}
+    ${modoLoja()?btnVoltar('Voltar ao ponto'):''}
+    <div class="abas esconde-p" style="margin-bottom:14px">${abas.map(([k,i,n,b])=>`<button class="aba ${S.portalTab===k?'on':''}" onclick="S.portalTab='${k}';render()"><i class="ti ${i}"></i> ${n} ${b?`<span class="contador">${b}</span>`:''}</button>`).join('')}</div>
+    ${corpo}
+    <div class="barra" style="display:none" id="barra">${abas.map(([k,i,n,b])=>`<button class="${S.portalTab===k?'on':''}" onclick="S.portalTab='${k}';render()"><i class="ti ${i}"></i>${n}${b?`<span class="contador">${b}</span>`:''}</button>`).join('')}</div>
+    <style>@media (max-width:640px){#barra{display:flex!important}}</style>
+  </div>`;
+}
+function portalInicio(){
   const d = S.sess.dados, c = d.colaboradora, regras = d.regras;
   const mapa = mapaPontos(d.pontos, c.id);
-  const ym = S.minhaMes || mesDe(d.hoje);
-  const res = resumoMes(c, ym, mapa, regras);
-  const banco = bancoTotal(c, mapa, regras);
-  const pend = d.solicitacoes.filter(s=>s.status==='pendente').length;
-  let corpo = '';
-  if(S.minhaTab==='mes'){
-    corpo = `${seletorMes(ym,'mudarMesMinha')}
-      <div class="stats" style="margin:12px 0">
-        ${stat('Trabalhado', hm(res.trabalhado), 'previsto '+hm(res.previsto))}
-        ${stat('Saldo do mês', hm(res.saldo,true), res.pend? res.pend+' pendência(s)':'sem pendências', res.saldo)}
-        ${stat('Banco total', hm(banco.saldo,true), banco.folgasDisp? banco.folgasDisp+' folga(s) disponível(is)':'acumulado', banco.saldo)}
-      </div>
-      <div class="days">${res.dias.filter(x=>x.data<=hojeISO() || x.tipo!=='normal').reverse().map(x=>linhaDia(x, 'pedirParaDia')).join('') || '<p class="muted" style="text-align:center;padding:20px">Mês ainda não começou.</p>'}</div>`;
-  } else if(S.minhaTab==='pedidos'){
-    corpo = `<button class="btn pri" style="width:100%;margin-bottom:12px" onclick="novoPedido()"><i class="ti ti-plus"></i> Novo pedido</button>
-      ${d.solicitacoes.length ? d.solicitacoes.slice().reverse().map(s=>cardPedido(s,false)).join('') : '<p class="muted" style="text-align:center;padding:20px">Nenhum pedido ainda.</p>'}`;
-  } else if(S.minhaTab==='banco'){
-    corpo = `<div class="stats">
-        ${stat('Banco de horas', hm(banco.saldo,true), 'desde '+ddmm(regras.inicio_banco)+'/'+regras.inicio_banco.slice(0,4), banco.saldo)}
-        ${stat('Folgas disponíveis', String(banco.folgasDisp), 'cada folga usa '+hm(regras.folga_min))}
-        ${stat('Próxima folga', banco.proximas[0]?ddmm(banco.proximas[0]):'—', banco.proximas[0]?semana(banco.proximas[0]):'nenhuma marcada')}
-      </div>
-      <div class="note info" style="margin-top:14px"><i class="ti ti-info-circle"></i><div>A jornada é de <b>7h20 por dia</b>, de segunda a sábado (44h na semana). O que passar disso vira crédito; cada folga de compensação usa <b>8h</b> e só pode ser de <b>terça a sexta</b>. Para pedir uma folga, vá em <b>Pedidos</b>.</div></div>
-      <div class="h2">Trocar meu PIN</div>
-      <div class="card pad"><div class="grid2"><input class="inp mono" id="novo-pin" inputmode="numeric" maxlength="6" placeholder="Novo PIN (6 números)"><button class="btn" onclick="trocarMeuPin()">Salvar novo PIN</button></div></div>`;
-  }
-  return `<div class="wrap" style="max-width:760px">${topo(`<button class="btn sm" style="margin-left:auto" onclick="sair()"><i class="ti ti-logout"></i> Sair</button>`)}
-    ${btnVoltar()}
-    <div class="row" style="margin-bottom:14px"><div class="avatar" style="background:${esc(c.cor)}">${esc(iniciais(c.nome))}</div>
-      <div class="grow"><div style="font-weight:800;font-size:18px">${esc(c.nome)}</div><div class="faint" style="font-size:13px">Las Vegas Sex Shop</div></div>
-      <button class="btn sm" onclick="S.tela='bater';render()"><i class="ti ti-fingerprint"></i> Bater ponto</button></div>
-    <div class="tabs" style="margin-bottom:14px">
-      <button class="tab ${S.minhaTab==='mes'?'on':''}" onclick="S.minhaTab='mes';render()"><i class="ti ti-calendar"></i> Meu mês</button>
-      <button class="tab ${S.minhaTab==='pedidos'?'on':''}" onclick="S.minhaTab='pedidos';render()"><i class="ti ti-send"></i> Pedidos ${pend?`<span class="badge">${pend}</span>`:''}</button>
-      <button class="tab ${S.minhaTab==='banco'?'on':''}" onclick="S.minhaTab='banco';render()"><i class="ti ti-pig-money"></i> Banco</button>
+  const hoje = hojeISO(), r = mapa[hoje] || {};
+  const res = resumoMes(c, mesDe(hoje), mapa, regras), banco = bancoTotal(c, mapa, regras);
+  const prox = proximoCampo(r);
+  const h = agoraServidor().getHours();
+  const saud = h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';
+  const avisos = (d.calendario?.eventos||[]).filter(e=>e.tipo==='aviso' && (e.data_fim||e.data) >= addDays(hoje,-7)).slice(-5).reverse();
+  const proximos = (d.calendario?.eventos||[]).filter(e=>e.tipo!=='aviso' && (e.data_fim||e.data) >= hoje).sort((a,b)=>a.data.localeCompare(b.data)).slice(0,4);
+  const pct = Math.max(0, Math.min(100, Math.round(res.trabalhado / Math.max(1,res.previsto) * 100)));
+  const marcas = CAMPOS.filter(k=>r[k]).map(k=>`<span class="selo">${CURTO[k]} <b class="num">${r[k]}</b></span>`).join('');
+  return `<div class="ola" style="margin-bottom:4px">${saud}, ${esc(primeiroNome(c.nome))}!</div>
+    <div class="suave" style="margin-bottom:14px">${esc(dataLonga(hoje))}</div>
+    <div class="cartao pad">
+      <div class="linha entre quebra"><b style="font-size:16px">Hoje</b>${r.tipo&&r.tipo!=='normal'?`<span class="selo info">${TIPO_NOME[r.tipo]}</span>`:prox?(r.entrada?`<span class="selo ok">Trabalhando</span>`:`<span class="selo">Ainda sem marcação</span>`):`<span class="selo ok">Dia encerrado · ${hm(trab(r))}</span>`}</div>
+      <div class="linha quebra" style="gap:6px;margin-top:10px">${marcas || '<span class="apagado" style="font-size:14px">Nenhuma marcação hoje. O ponto é batido no computador da loja.</span>'}</div>
     </div>
-    ${corpo}</div>`;
+    <div class="numeros" style="margin-top:12px">
+      <div class="numero"><small>Banco de horas</small><b class="num ${banco.saldo>0?'pos':banco.saldo<0?'neg':''}">${hm(banco.saldo,true)}</b><span>${banco.folgasDisp?banco.folgasDisp+' folga(s) disponível(is)':'ainda sem folga disponível'}</span></div>
+      <div class="numero"><small>Este mês</small><b class="num">${hm(res.trabalhado)}</b><span>de ${hm(res.previsto)} previstas</span><div class="medidor"><i style="width:${pct}%"></i></div></div>
+      <div class="numero"><small>Pendências</small><b class="${res.pend?'neg':'pos'}">${res.pend}</b><span>${res.pend?'dias para corrigir':'tudo em dia'}</span></div>
+    </div>
+    <h2 class="secao">O que você precisa?</h2>
+    <div class="atalhos">
+      <button onclick="novoPedido({tipo:'correcao'})"><i class="ti ti-clock-edit"></i>Esqueci de bater ou corrigir horário</button>
+      <button onclick="novoPedido({tipo:'atestado'})"><i class="ti ti-file-certificate"></i>Enviar atestado</button>
+      <button onclick="novoPedido({tipo:'folga'})"><i class="ti ti-beach"></i>Pedir folga</button>
+      <button onclick="S.portalTab='mes';render()"><i class="ti ti-calendar-stats"></i>Ver meu mês</button>
+    </div>
+    ${avisos.length?`<h2 class="secao">Mural</h2><div class="mural">${avisos.map(e=>`<div class="item"><b>📌 ${esc(e.titulo)}</b>${e.obs?esc(e.obs):''}<div class="apagado" style="font-size:12px;margin-top:2px">${ddmm(e.data)}</div></div>`).join('')}</div>`:''}
+    ${proximos.length?`<h2 class="secao">Próximos eventos</h2>${proximos.map(e=>{ const t=TIPO_EV[e.tipo]||TIPO_EV.evento; return `<div class="pedido" style="align-items:center"><div class="ico">${t.e}</div><div class="cresce"><b>${esc(e.titulo)}</b><p>${t.n}, ${ddmm(e.data)}${e.data_fim&&e.data_fim!==e.data?' a '+ddmm(e.data_fim):''}${e.loja&&d.lojas[e.loja]?', loja '+esc(d.lojas[e.loja].nome):''}${e.obs?' — '+esc(e.obs):''}</p></div></div>`; }).join('')}`:''}
+    ${(d.links||[]).length?`<h2 class="secao">Links úteis</h2><div class="links">${d.links.map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener"><i class="ti ti-${esc(l.icone||'link')}"></i>${esc(l.titulo)}</a>`).join('')}</div>`:''}`;
 }
-function mudarMesMinha(n){ S.minhaMes = mesAdd(S.minhaMes, n); render(); }
+function portalMes(){
+  const d = S.sess.dados, c = d.colaboradora, regras = d.regras;
+  const mapa = mapaPontos(d.pontos, c.id);
+  const ym = S.portalMes || mesDe(d.hoje);
+  const res = resumoMes(c, ym, mapa, regras), banco = bancoTotal(c, mapa, regras);
+  return `${seletorMes(ym,'mudarMesPortal')}
+    <div class="numeros" style="margin:12px 0">
+      ${num('Trabalhado', hm(res.trabalhado), 'previsto '+hm(res.previsto))}
+      ${num('Saldo do mês', hm(res.saldo,true), res.pend? res.pend+' pendência(s)':'sem pendências', res.saldo)}
+      ${num('Banco total', hm(banco.saldo,true), banco.folgasDisp? banco.folgasDisp+' folga(s) disponível(is)':'acumulado', banco.saldo)}
+    </div>
+    <div class="nota info" style="margin-bottom:12px"><i class="ti ti-info-circle"></i><div>Jornada de <b>7h20 por dia</b>, de segunda a sábado. O que passar vira crédito; cada folga usa <b>8h</b> e só pode ser de terça a sexta. Toque num dia para pedir correção.</div></div>
+    <div class="dias">${res.dias.filter(x=>x.data<=hojeISO() || x.tipo!=='normal').reverse().map(x=>linhaDia(x, 'pedirParaDia')).join('') || '<p class="suave" style="text-align:center;padding:20px">Mês ainda não começou.</p>'}</div>`;
+}
+function portalPedidos(){
+  const d = S.sess.dados;
+  return `<button class="btn pri largo" style="margin-bottom:12px" onclick="novoPedido()"><i class="ti ti-plus"></i> Novo pedido</button>
+    ${d.solicitacoes.length ? d.solicitacoes.slice().reverse().map(s=>cardPedido(s,false)).join('') : '<p class="suave" style="text-align:center;padding:20px">Nenhum pedido ainda. Correções, atestados e folgas aparecem aqui.</p>'}`;
+}
+function portalAgenda(){ return calendario(S.sess.dados.calendario, false); }
+function portalEu(){
+  const c = S.sess.dados.colaboradora;
+  return `<div class="cartao pad"><div class="linha" style="gap:14px"><div class="avatar" style="background:${esc(c.cor)};width:64px;height:64px;font-size:22px">${esc(iniciais(c.nome))}</div>
+      <div><div style="font-weight:800;font-size:19px">${esc(c.nome)}</div><div class="apagado">${esc(c.cargo||'Equipe Las Vegas')}${c.admissao?' · desde '+ddmm(c.admissao)+'/'+c.admissao.slice(0,4):''}</div></div></div></div>
+    <h2 class="secao">Meu WhatsApp</h2>
+    <div class="cartao pad"><p class="suave" style="font-size:14px;margin-bottom:10px">A administração usa este número para avisar quando um pedido for respondido.</p>
+      <div class="g2"><input class="inp" id="meu-tel" inputmode="tel" placeholder="(68) 9 9999-9999" value="${esc(fmtTel(c.telefone))}"><button class="btn" onclick="salvarMeuTel()">Salvar número</button></div></div>
+    <h2 class="secao">Meu PIN</h2>
+    <div class="cartao pad"><div class="g2"><input class="inp num" id="novo-pin" inputmode="numeric" maxlength="6" placeholder="Novo PIN (6 números)"><button class="btn" onclick="trocarMeuPin()">Salvar novo PIN</button></div></div>`;
+}
+function mudarMesPortal(n){ S.portalMes = mesAdd(S.portalMes || mesDe(hojeISO()), n); render(); }
 function seletorMes(ym, fn){
-  return `<div class="row between card" style="padding:6px 8px">
-    <button class="icon-btn" style="border:0" onclick="${fn}(-1)"><i class="ti ti-chevron-left"></i></button>
-    <b style="font-size:15px">${nomeMes(ym)}</b>
-    <button class="icon-btn" style="border:0" onclick="${fn}(1)"><i class="ti ti-chevron-right"></i></button></div>`;
+  return `<div class="linha entre cartao" style="padding:6px 8px">
+    <button class="icone" style="border:0" onclick="${fn}(-1)"><i class="ti ti-chevron-left"></i></button>
+    <b style="font-size:16px">${nomeMes(ym)}</b>
+    <button class="icone" style="border:0" onclick="${fn}(1)"><i class="ti ti-chevron-right"></i></button></div>`;
 }
-function stat(t, v, sub, sinal){
+function num(t, v, sub, sinal){
   const cls = sinal==null ? '' : (sinal>0?'pos':sinal<0?'neg':'');
-  return `<div class="stat"><small>${t}</small><b class="${cls}">${v}</b><span>${sub||''}</span></div>`;
+  return `<div class="numero"><small>${t}</small><b class="num ${cls}">${v}</b><span>${sub||''}</span></div>`;
 }
 function linhaDia(x, onclick){
   const r = x.r || {};
   const hist = (()=>{ try{ return JSON.parse(r.historico||'[]'); }catch(e){ return []; } })();
   const editados = new Set(hist.map(h=>h.campo));
-  const marks = CAMPOS.filter(k=>r[k]).map(k=>`<span class="${editados.has(k)?'ed':''}" title="${NOME[k]}">${r[k]}</span>`).join('');
-  const dd = x.data.slice(8,10)+'/'+x.data.slice(5,7);
+  const marks = CAMPOS.filter(k=>r[k]).map(k=>`<span class="num ${editados.has(k)?'ed':''}" title="${NOME[k]}">${r[k]}</span>`).join('');
   let dir = '';
-  if(x.trabalhado || x.saldo) dir = `${x.trabalhado?hm(x.trabalhado):''}<small class="${x.saldo>0?'pos':x.saldo<0?'neg':'faint'}">${x.saldo?hm(x.saldo,true):'em dia'}</small>`;
-  const cls = x.domingo && !marks ? 'sun' : (x.futuro && x.tipo==='normal' ? 'future' : '');
-  const body = marks ? `<div class="marks">${marks}</div>` : `<div class="faint" style="font-size:13px">${x.domingo?'Domingo · descanso':x.feriado?'Feriado':x.futuro?'—':x.tipo!=='normal'?'':'Sem marcação'}</div>`;
-  return `<button class="day ${cls}" onclick="${onclick}('${x.data}')">
-    <div><div class="d1">${dd}</div><div class="d2">${semana(x.data)}${r.loja&&marks?' · '+esc((S.boot.lojas[r.loja]||{}).nome||r.loja):''}</div></div>
-    <div>${body}${x.flags.length?`<div class="flags">${x.flags.map(f=>`<span class="pill ${f.c}">${esc(f.n)}</span>`).join('')}</div>`:''}</div>
-    <div class="right">${dir}</div></button>`;
+  if(x.trabalhado || x.saldo) dir = `<span class="num">${x.trabalhado?hm(x.trabalhado):''}</span><small class="num ${x.saldo>0?'pos':x.saldo<0?'neg':'apagado'}">${x.saldo?hm(x.saldo,true):'em dia'}</small>`;
+  const cls = x.domingo && !marks ? 'dom' : (x.futuro && x.tipo==='normal' ? 'futuro' : '');
+  const body = marks ? `<div class="marcas">${marks}</div>` : `<div class="apagado" style="font-size:13.5px">${x.domingo?'Domingo, descanso':x.feriado?'Feriado':x.futuro?'—':x.tipo!=='normal'?'':'Sem marcação'}</div>`;
+  return `<button class="dia ${cls}" onclick="${onclick}('${x.data}')">
+    <div><div class="d1">${ddmm(x.data)}</div><div class="d2">${semana(x.data)}${r.loja&&marks?' · '+esc((S.boot.lojas[r.loja]||{}).nome||r.loja):''}</div></div>
+    <div>${body}${x.flags.length?`<div class="avisos">${x.flags.map(f=>`<span class="selo ${f.c}">${esc(f.n)}</span>`).join('')}</div>`:''}</div>
+    <div class="dir">${dir}</div></button>`;
+}
+function saldoDe(eid){ // banco atual (admin ou própria)
+  const d = S.adm ? S.adm.dados : S.sess.dados;
+  const c = (d.colaboradoras||[d.colaboradora]).find(x=>x.id===eid); if(!c) return null;
+  return bancoTotal(c, mapaPontos(d.pontos, eid), d.regras);
 }
 function cardPedido(s, admin){
   const ico = {correcao:'ti-clock-edit', atestado:'ti-file-certificate', folga:'ti-beach', outro:'ti-message-dots'}[s.tipo];
-  const tit = {correcao:'Correção de ponto', atestado:'Atestado', folga:'Folga de banco de horas', outro:'Outro pedido'}[s.tipo];
-  const st = {pendente:'<span class="pill warn">Aguardando</span>', aprovada:'<span class="pill ok">Aprovado</span>', recusada:'<span class="pill bad">Recusado</span>', cancelada:'<span class="pill">Cancelado</span>'}[s.status];
+  const tit = {correcao:'Correção de ponto', atestado:'Atestado', folga:'Folga do banco de horas', outro:'Outro pedido'}[s.tipo];
+  const st = {pendente:'<span class="selo warn">Aguardando</span>', aprovada:'<span class="selo ok">Aprovado</span>', recusada:'<span class="selo bad">Recusado</span>', cancelada:'<span class="selo">Cancelado</span>'}[s.status];
   const periodo = s.data_fim && s.data_fim!==s.data ? ddmm(s.data)+' a '+ddmm(s.data_fim) : dataLonga(s.data);
   let det = periodo;
-  if(s.tipo==='correcao') det += ` · ${NOME[s.campo]} → <b class="mono">${esc(s.horario)}</b>`;
-  let atual = '';
+  if(s.tipo==='correcao') det += ` — ${NOME[s.campo]} para <b class="num">${esc(s.horario)}</b>`;
+  let extra = '';
   if(admin && s.tipo==='correcao'){
     const p = S.adm.dados.pontos.find(p=>p.colaboradora_id===s.colaboradora_id && p.data===s.data);
-    atual = `<p>Hoje está: <span class="mono">${p && p[s.campo] ? esc(p[s.campo]) : 'sem marcação'}</span></p>`;
+    extra += `<p>Hoje está: <span class="num">${p && p[s.campo] ? esc(p[s.campo]) : 'sem marcação'}</span></p>`;
   }
-  return `<div class="req"><div class="ico"><i class="ti ${ico}"></i></div><div class="grow">
-    <div class="row between wrap-row"><b>${admin?esc(primeiroNome(s.colaboradora))+' · ':''}${tit}</b>${st}</div>
-    <p>${det}</p>${atual}
+  if(admin && s.tipo==='folga' && s.status==='pendente'){
+    const b = saldoDe(s.colaboradora_id), falta = b ? S.adm.dados.regras.folga_min - b.saldo : 0;
+    extra += b && b.saldo < S.adm.dados.regras.folga_min
+      ? `<div class="nota warn" style="margin-top:8px"><i class="ti ti-alert-triangle"></i><div>Banco atual <b class="num">${hm(b.saldo,true)}</b>: não cobre as 8h da folga (faltam ${hm(falta)}). Se aprovar, o banco fica negativo.</div></div>`
+      : `<div class="nota ok" style="margin-top:8px"><i class="ti ti-check"></i><div>Banco atual <b class="num">${hm(b.saldo,true)}</b>: cobre a folga.</div></div>`;
+  }
+  const tel = admin ? (S.adm.dados.colaboradoras.find(c=>c.id===s.colaboradora_id)||{}).telefone : '';
+  return `<div class="pedido"><div class="ico"><i class="ti ${ico}"></i></div><div class="cresce">
+    <div class="linha entre quebra"><b>${admin?esc(primeiroNome(s.colaboradora))+' — ':''}${tit}</b>${st}</div>
+    <p>${det}</p>${extra}
     ${s.motivo?`<p>“${esc(s.motivo)}”</p>`:''}
-    ${s.anexo_url?`<p><a href="${esc(s.anexo_url)}" target="_blank" rel="noopener" style="color:var(--info);font-weight:700"><i class="ti ti-paperclip"></i> Ver anexo</a></p>`:''}
+    ${s.anexo_url?`<p><a href="${esc(s.anexo_url)}" target="_blank" rel="noopener" style="font-weight:700"><i class="ti ti-paperclip"></i> Ver anexo</a></p>`:''}
     ${s.resposta?`<p><i class="ti ti-message-reply"></i> ${esc(s.resposta)}</p>`:''}
-    <p class="faint" style="font-size:12px">Enviado ${esc(s.criada_em.slice(8,10)+'/'+s.criada_em.slice(5,7)+' '+s.criada_em.slice(11,16))}</p>
-    ${!admin && s.status==='pendente'?`<button class="btn sm ghost" style="margin-top:4px;padding:0" onclick="cancelarPedido('${s.id}')">Cancelar pedido</button>`:''}
-    ${admin && s.status==='pendente'?`<div class="row" style="margin-top:10px;gap:8px">
-      <button class="btn sm ok" onclick="decidir('${s.id}',true)"><i class="ti ti-check"></i> Aprovar</button>
-      <button class="btn sm" onclick="decidir('${s.id}',false)"><i class="ti ti-x"></i> Recusar</button></div>`:''}
+    <p class="apagado" style="font-size:12.5px">Enviado ${esc(s.criada_em.slice(8,10)+'/'+s.criada_em.slice(5,7)+' '+s.criada_em.slice(11,16))}${s.decidido_em?' · respondido '+esc(s.decidido_em.slice(8,10)+'/'+s.decidido_em.slice(5,7)):''}</p>
+    ${!admin && s.status==='pendente'?`<button class="btn p fantasma" style="padding:0;margin-top:4px" onclick="cancelarPedido('${s.id}')">Cancelar pedido</button>`:''}
+    ${admin && s.status==='pendente'?`<div class="linha" style="margin-top:10px;gap:8px">
+      <button class="btn p ok" onclick="decidir('${s.id}',true)"><i class="ti ti-check"></i> Aprovar</button>
+      <button class="btn p" onclick="decidir('${s.id}',false)"><i class="ti ti-x"></i> Recusar</button></div>`:''}
+    ${admin && (s.status==='aprovada'||s.status==='recusada')?`<button class="btn p" style="margin-top:8px" onclick="avisarWhats('${s.id}')"><i class="ti ti-brand-whatsapp"></i> Avisar no WhatsApp${tel?'':' (sem número)'}</button>`:''}
   </div></div>`;
 }
 
-/* pedido novo */
+/* pedidos */
 let PED = null;
 function pedirParaDia(data){
   const r = S.sess.dados.pontos.find(p=>p.data===data) || {};
@@ -862,38 +972,40 @@ function novoPedido(pre={}){
 function renderPedido(){
   const p = PED; if(!p){ $('#modal').innerHTML=''; return; }
   const r = S.sess.dados.pontos.find(x=>x.data===p.data) || {};
-  const tipos = [['correcao','ti-clock-edit','Corrigir / esqueci'],['atestado','ti-file-certificate','Atestado'],['folga','ti-beach','Pedir folga'],['outro','ti-message-dots','Outro']];
+  const tipos = [['correcao','ti-clock-edit','Corrigir ou esqueci'],['atestado','ti-file-certificate','Atestado'],['folga','ti-beach','Pedir folga'],['outro','ti-message-dots','Outro']];
   let campos = '';
   if(p.tipo==='correcao') campos = `
-    <div class="field"><label>Qual marcação?</label><select class="inp" onchange="PED.campo=this.value;renderPedido()">${CAMPOS.map(k=>`<option value="${k}" ${p.campo===k?'selected':''}>${NOME[k]}${r[k]?' (está '+r[k]+')':' (vazia)'}</option>`).join('')}</select></div>
-    <div class="field"><label>Horário certo</label><input class="inp mono" type="time" value="${esc(p.horario)}" oninput="PED.horario=this.value"></div>
-    <div class="field"><label>O que aconteceu?</label><textarea class="inp" placeholder="Ex.: esqueci de bater a volta do almoço" oninput="PED.motivo=this.value">${esc(p.motivo)}</textarea></div>`;
+    <div class="campo"><label>Qual marcação?</label><select class="inp" onchange="PED.campo=this.value;renderPedido()">${CAMPOS.map(k=>`<option value="${k}" ${p.campo===k?'selected':''}>${NOME[k]}${r[k]?' (está '+r[k]+')':' (vazia)'}</option>`).join('')}</select></div>
+    <div class="campo"><label>Horário certo</label><input class="inp num" type="time" value="${esc(p.horario)}" oninput="PED.horario=this.value"></div>
+    <div class="campo"><label>O que aconteceu?</label><textarea class="inp" placeholder="Ex.: esqueci de bater a volta do almoço" oninput="PED.motivo=this.value">${esc(p.motivo)}</textarea></div>`;
   if(p.tipo==='atestado') campos = `
-    <div class="grid2"><div class="field"><label>Primeiro dia</label><input class="inp" type="date" value="${p.data}" onchange="PED.data=this.value"></div>
-    <div class="field"><label>Último dia</label><input class="inp" type="date" value="${p.data_fim||p.data}" onchange="PED.data_fim=this.value"></div></div>
-    <div class="field"><label>Foto ou PDF do atestado</label><input class="inp" style="padding-top:9px" type="file" accept="image/*,application/pdf" onchange="lerArquivo(this)">
-      ${p.arquivo?`<span class="pill ok" style="margin-top:6px"><i class="ti ti-check"></i> ${esc(p.arquivo.nome)}</span>`:''}</div>
-    <div class="field"><label>Observação (opcional)</label><textarea class="inp" oninput="PED.motivo=this.value">${esc(p.motivo)}</textarea></div>`;
+    <div class="g2"><div class="campo"><label>Primeiro dia</label><input class="inp" type="date" value="${p.data}" onchange="PED.data=this.value"></div>
+    <div class="campo"><label>Último dia</label><input class="inp" type="date" value="${p.data_fim||p.data}" onchange="PED.data_fim=this.value"></div></div>
+    <div class="campo"><label>Foto ou PDF do atestado</label><input class="inp" style="padding-top:10px" type="file" accept="image/*,application/pdf" onchange="lerArquivo(this)">
+      ${p.arquivo?`<span class="selo ok" style="margin-top:6px"><i class="ti ti-check"></i> ${esc(p.arquivo.nome)}</span>`:''}</div>
+    <div class="campo"><label>Observação (opcional)</label><textarea class="inp" oninput="PED.motivo=this.value">${esc(p.motivo)}</textarea></div>`;
   if(p.tipo==='folga'){
     const dw = dow(p.data);
-    const jaFora = (S.boot.calendario?.ausencias||[]).filter(a=>a.data===p.data && a.eid!==S.sess.eid);
-    campos = `<div class="field"><label>Dia da folga</label><input class="inp" type="date" value="${p.data}" min="${hojeISO()}" onchange="PED.data=this.value;renderPedido()"></div>
-    ${[0,1,6].includes(dw)?'<div class="note bad" style="margin-bottom:12px"><i class="ti ti-alert-triangle"></i><div>Folga de banco de horas só pode ser de <b>terça a sexta</b>.</div></div>':''}
-    ${jaFora.length?`<div class="note warn" style="margin-bottom:12px"><i class="ti ti-users"></i><div>Nesse dia já ${jaFora.length>1?'estão':'está'} fora: <b>${jaFora.map(a=>esc(a.nome)).join(', ')}</b>.</div></div>`:''}
-    <div class="field"><label>Observação (opcional)</label><textarea class="inp" oninput="PED.motivo=this.value">${esc(p.motivo)}</textarea></div>`;
+    const jaFora = (S.sess.dados.calendario?.ausencias||[]).filter(a=>a.data===p.data && a.eid!==S.sess.eid);
+    const b = saldoDe(S.sess.eid), fm = S.sess.dados.regras.folga_min;
+    campos = `<div class="campo"><label>Dia da folga</label><input class="inp" type="date" value="${p.data}" min="${hojeISO()}" onchange="PED.data=this.value;renderPedido()"></div>
+    ${b ? (b.saldo >= fm ? `<div class="nota ok" style="margin-bottom:12px"><i class="ti ti-pig-money"></i><div>Seu banco tem <b class="num">${hm(b.saldo,true)}</b>: dá para ${b.folgasDisp} folga(s) de 8h.</div></div>` : `<div class="nota warn" style="margin-bottom:12px"><i class="ti ti-alert-triangle"></i><div>Seu banco tem <b class="num">${hm(b.saldo,true)}</b> e a folga usa 8h. Faltam <b>${hm(fm-b.saldo)}</b>. Você pode pedir mesmo assim, mas a administração vai avaliar.</div></div>`) : ''}
+    ${[0,1,6].includes(dw)?'<div class="nota bad" style="margin-bottom:12px"><i class="ti ti-alert-triangle"></i><div>Folga do banco só pode ser de <b>terça a sexta</b>.</div></div>':''}
+    ${jaFora.length?`<div class="nota warn" style="margin-bottom:12px"><i class="ti ti-users"></i><div>Nesse dia já ${jaFora.length>1?'estão':'está'} fora: <b>${jaFora.map(a=>esc(a.nome)).join(', ')}</b>.</div></div>`:''}
+    <div class="campo"><label>Observação (opcional)</label><textarea class="inp" oninput="PED.motivo=this.value">${esc(p.motivo)}</textarea></div>`;
   }
   if(p.tipo==='outro') campos = `
-    <div class="field"><label>Data</label><input class="inp" type="date" value="${p.data}" onchange="PED.data=this.value"></div>
-    <div class="field"><label>Explique o pedido</label><textarea class="inp" oninput="PED.motivo=this.value">${esc(p.motivo)}</textarea></div>
-    <div class="field"><label>Anexo (opcional)</label><input class="inp" style="padding-top:9px" type="file" accept="image/*,application/pdf" onchange="lerArquivo(this)">
-      ${p.arquivo?`<span class="pill ok" style="margin-top:6px"><i class="ti ti-check"></i> ${esc(p.arquivo.nome)}</span>`:''}</div>`;
-  $('#modal').innerHTML = `<div class="overlay" onclick="if(event.target===this)fecharPedido()"><div class="modal">
-    <div class="modal-h"><h3 class="grow">Novo pedido</h3><button class="icon-btn" onclick="fecharPedido()"><i class="ti ti-x"></i></button></div>
-    <div class="modal-b">
-      <div class="seg">${tipos.map(([k,i,n])=>`<button class="${p.tipo===k?'on':''}" onclick="PED.tipo='${k}';renderPedido()"><i class="ti ${i}"></i>${n}</button>`).join('')}</div>
-      ${p.tipo==='correcao'?`<div class="field"><label>Dia</label><input class="inp" type="date" value="${p.data}" max="${hojeISO()}" onchange="PED.data=this.value;renderPedido()"></div>`:''}
+    <div class="campo"><label>Data</label><input class="inp" type="date" value="${p.data}" onchange="PED.data=this.value"></div>
+    <div class="campo"><label>Explique o pedido</label><textarea class="inp" oninput="PED.motivo=this.value">${esc(p.motivo)}</textarea></div>
+    <div class="campo"><label>Anexo (opcional)</label><input class="inp" style="padding-top:10px" type="file" accept="image/*,application/pdf" onchange="lerArquivo(this)">
+      ${p.arquivo?`<span class="selo ok" style="margin-top:6px"><i class="ti ti-check"></i> ${esc(p.arquivo.nome)}</span>`:''}</div>`;
+  $('#modal').innerHTML = `<div class="veu" onclick="if(event.target===this)fecharPedido()"><div class="modal">
+    <div class="modal-t"><h3 class="cresce">Novo pedido</h3><button class="icone" onclick="fecharPedido()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-c">
+      <div class="opcoes">${tipos.map(([k,i,n])=>`<button class="${p.tipo===k?'on':''}" onclick="PED.tipo='${k}';renderPedido()"><i class="ti ${i}"></i>${n}</button>`).join('')}</div>
+      ${p.tipo==='correcao'?`<div class="campo"><label>Dia</label><input class="inp" type="date" value="${p.data}" max="${hojeISO()}" onchange="PED.data=this.value;renderPedido()"></div>`:''}
       ${campos}
-      <button class="btn pri" style="width:100%" id="btn-enviar" onclick="enviarPedido()"><i class="ti ti-send"></i> Enviar para a administração</button>
+      <button class="btn pri largo" id="btn-enviar" onclick="enviarPedido()"><i class="ti ti-send"></i> Enviar para a administração</button>
     </div></div></div>`;
 }
 function fecharPedido(){ PED=null; renderPedido(); }
@@ -907,7 +1019,7 @@ async function lerArquivo(inp){
       cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
       PED.arquivo = {nome:f.name.replace(/\.\w+$/,'')+'.jpg', mime:'image/jpeg', base64: cv.toDataURL('image/jpeg',.82).split(',')[1]};
     } else {
-      if(f.size > 10*1024*1024){ toast('Arquivo muito grande (máx. 10 MB)', true); return; }
+      if(f.size > 10*1024*1024){ toast('Arquivo muito grande (máximo 10 MB)', true); return; }
       const b64 = await new Promise((ok,er)=>{ const r = new FileReader(); r.onload=()=>ok(String(r.result).split(',')[1]); r.onerror=er; r.readAsDataURL(f); });
       PED.arquivo = {nome:f.name, mime:f.type||'application/pdf', base64:b64};
     }
@@ -915,186 +1027,210 @@ async function lerArquivo(inp){
   }catch(e){ toast('Não consegui ler o arquivo', true); }
 }
 async function enviarPedido(){
-  const b = $('#btn-enviar'); b.disabled=true; b.innerHTML='<span class="spin"></span> Enviando…';
+  const b = $('#btn-enviar'); b.disabled=true; b.innerHTML='<span class="gira"></span> Enviando…';
   try{
     const s = S.sess;
-    s.dados = await api('solicitar', {eid:s.eid, pin:s.pin, ...PED, data_fim: PED.data_fim || PED.data});
-    PED=null; renderPedido(); if(S.tela==='minha') S.minhaTab='pedidos'; render(); toast('Pedido enviado ✔ A administração vai analisar.');
+    s.dados = await api('solicitar', {eid:s.eid, ...s.cred, ...PED, data_fim: PED.data_fim || PED.data});
+    PED=null; renderPedido(); S.portalTab='pedidos'; S.tela='portal'; render(); toast('Pedido enviado ✔ A administração vai analisar.');
   }catch(e){ toast(e.message, true); b.disabled=false; b.innerHTML='<i class="ti ti-send"></i> Enviar para a administração'; }
 }
 async function cancelarPedido(id){
-  try{ const s=S.sess; s.dados = await api('cancelar', {eid:s.eid, pin:s.pin, id}); render(); toast('Pedido cancelado'); }
+  try{ const s=S.sess; s.dados = await api('cancelar', {eid:s.eid, ...s.cred, id}); render(); toast('Pedido cancelado'); }
   catch(e){ toast(e.message, true); }
 }
 async function trocarMeuPin(){
   const v = $('#novo-pin').value.trim();
   if(!/^\d{6}$/.test(v)){ toast('O PIN precisa ter 6 números', true); return; }
-  try{ await api('trocarPin', {eid:S.sess.eid, pin:S.sess.pin, novo:v}); S.sess.pin=v; $('#novo-pin').value=''; toast('PIN trocado ✔ Use o novo da próxima vez.'); }
+  try{ await api('trocarPin', {eid:S.sess.eid, ...S.sess.cred, novo:v}); S.sess.cred = await credencial('pin', v); $('#novo-pin').value=''; toast('PIN trocado ✔ Use o novo da próxima vez.'); }
+  catch(e){ toast(e.message, true); }
+}
+async function salvarMeuTel(){
+  try{ S.sess.dados = await api('perfil', {eid:S.sess.eid, ...S.sess.cred, telefone:$('#meu-tel').value}); render(); toast('Número salvo ✔'); }
   catch(e){ toast(e.message, true); }
 }
 
 /* ──────────── ADMINISTRAÇÃO ──────────── */
 const pendentes = d => d.solicitacoes.filter(s=>s.status==='pendente');
 async function admRecarregar(){
-  try{ S.adm.dados = await api('admDados', {adminPin:S.adm.pin}); render(); toast('Atualizado'); }
+  try{ S.adm.dados = await api('admDados', S.adm.cred); render(); toast('Atualizado'); }
   catch(e){ toast(e.message, true); }
 }
 function telaAdmin(){
   const A = S.adm, d = A.dados;
   const np = pendentes(d).length;
-  const tabs = [['pedidos','ti-inbox','Pedidos',np],['hoje','ti-clock','Hoje'],['mes','ti-calendar','Espelho'],['banco','ti-pig-money','Banco de horas'],['agenda','ti-calendar-event','Agenda'],['equipe','ti-users','Equipe'],['regras','ti-settings','Regras']];
-  let corpo = ({pedidos:admPedidos, hoje:admHoje, mes:admMes, banco:admBanco, agenda:admAgenda, equipe:admEquipe, regras:admRegras})[A.tab]();
-  return `<div class="wrap">${topo(`<div class="row" style="margin-left:auto;gap:6px">
-      <button class="icon-btn" title="Atualizar" onclick="admRecarregar()"><i class="ti ti-refresh"></i></button>
-      <button class="btn sm" onclick="S.adm=null;S.tela='inicio';render()"><i class="ti ti-logout"></i> Sair</button></div>`)}
+  const tabs = [['pedidos','ti-inbox','Pedidos',np],['hoje','ti-clock','Hoje'],['mes','ti-calendar','Espelho'],['banco','ti-pig-money','Banco de horas'],['agenda','ti-calendar-event','Agenda'],['equipe','ti-users','Equipe'],['aparelhos','ti-device-desktop','Aparelhos'],['regras','ti-settings','Regras']];
+  const corpo = ({pedidos:admPedidos, hoje:admHoje, mes:admMes, banco:admBanco, agenda:admAgenda, equipe:admEquipe, aparelhos:admAparelhos, regras:admRegras})[A.tab]();
+  return `<div class="wrap">${letreiro(`<div class="linha" style="margin-left:auto;gap:6px">
+      <button class="icone" title="Atualizar" onclick="admRecarregar()"><i class="ti ti-refresh"></i></button>
+      <button class="btn p" onclick="S.adm=null;S.tela='inicio';render()"><i class="ti ti-logout-2"></i> Sair</button></div>`)}
     ${btnVoltar('Sair da administração')}
-    <div class="tabs" style="margin-bottom:16px">${tabs.map(([k,i,n,b])=>`<button class="tab ${A.tab===k?'on':''}" onclick="S.adm.tab='${k}';render()"><i class="ti ${i}"></i> ${n} ${b?`<span class="badge">${b}</span>`:''}</button>`).join('')}</div>
+    <div class="abas" style="margin-bottom:16px">${tabs.map(([k,i,n,b])=>`<button class="aba ${A.tab===k?'on':''}" onclick="S.adm.tab='${k}';render()"><i class="ti ${i}"></i> ${n} ${b?`<span class="contador">${b}</span>`:''}</button>`).join('')}</div>
     ${corpo}</div>`;
 }
 function admPedidos(){
   const d = S.adm.dados, p = pendentes(d);
   const outros = d.solicitacoes.filter(s=>s.status!=='pendente').slice(-30).reverse();
-  return `${p.length ? p.map(s=>cardPedido(s,true)).join('') : `<div class="note ok"><i class="ti ti-circle-check"></i><div>Nenhum pedido aguardando. 🎉</div></div>`}
-    ${outros.length?`<div class="h2">Últimos decididos</div>${outros.map(s=>cardPedido(s,true)).join('')}`:''}`;
+  return `${p.length ? p.map(s=>cardPedido(s,true)).join('') : `<div class="nota ok"><i class="ti ti-circle-check"></i><div>Nenhum pedido aguardando. 🎉</div></div>`}
+    ${outros.length?`<h2 class="secao">Últimos respondidos</h2>${outros.map(s=>cardPedido(s,true)).join('')}`:''}`;
 }
 async function decidir(id, aprovar){
   const resposta = aprovar ? '' : (prompt('Motivo da recusa (a colaboradora vai ver):') ?? null);
   if(resposta===null) return;
-  try{ S.adm.dados = await api('admDecidir', {adminPin:S.adm.pin, id, aprovar, resposta}); render(); carregarBootSilencioso(); toast(aprovar?'Aprovado e lançado no ponto e na agenda ✔':'Pedido recusado'); }
-  catch(e){ toast(e.message, true); }
+  try{
+    S.adm.dados = await api('admDecidir', {...S.adm.cred, id, aprovar, resposta}); render(); carregarBootSilencioso();
+    toast(aprovar?'Aprovado e lançado no ponto e na agenda ✔':'Pedido recusado');
+    avisarWhats(id);
+  }catch(e){ toast(e.message, true); }
+}
+function msgWhats(s, c){
+  const nome = primeiroNome(c.nome), tit = {correcao:'correção de ponto', atestado:'atestado', folga:'folga', outro:'pedido'}[s.tipo];
+  const quando = s.data_fim && s.data_fim!==s.data ? `${ddmm(s.data)} a ${ddmm(s.data_fim)}` : ddmm(s.data);
+  if(s.status==='aprovada') return `✅ *Pedido aprovado*\n\nOi, ${nome}! Seu pedido de *${tit}* (${quando}) foi *aprovado* e já está lançado no seu ponto.${s.tipo==='folga'?'\n\n🌴 _Aproveite a folga!_':''}\n\n_Qualquer dúvida é só chamar_ 💛`;
+  return `❌ *Pedido não aprovado*\n\nOi, ${nome}. Seu pedido de *${tit}* (${quando}) *não foi aprovado*.${s.resposta?`\n\n📝 _Motivo:_ ${s.resposta}`:''}\n\n_Se quiser conversar, me chama_ 💛`;
+}
+function avisarWhats(id){
+  const d = S.adm.dados, s = d.solicitacoes.find(x=>x.id===id); if(!s || s.status==='pendente') return;
+  const c = d.colaboradoras.find(x=>x.id===s.colaboradora_id) || {nome:s.colaboradora};
+  const msg = msgWhats(s, c), tel = telWa(c.telefone);
+  $('#modal').innerHTML = `<div class="veu" onclick="if(event.target===this)fecharModal()"><div class="modal">
+    <div class="modal-t"><h3 class="cresce">Avisar ${esc(primeiroNome(c.nome))} no WhatsApp</h3><button class="icone" onclick="fecharModal()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-c">
+      <textarea class="inp" id="wa-msg" style="min-height:170px">${esc(msg)}</textarea>
+      ${tel?`<a class="btn ok largo" style="margin-top:10px;text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/${tel}?text=${encodeURIComponent(msg)}" onclick="this.href='https://wa.me/${tel}?text='+encodeURIComponent(document.getElementById('wa-msg').value);setTimeout(fecharModal,300)"><i class="ti ti-brand-whatsapp"></i> Abrir WhatsApp de ${esc(fmtTel(c.telefone))}</a>`
+        :`<div class="nota warn" style="margin-top:10px"><i class="ti ti-phone-off"></i><div>${esc(primeiroNome(c.nome))} ainda não tem WhatsApp cadastrado. Cadastre em Equipe, ou copie a mensagem.</div></div>`}
+      <button class="btn largo" style="margin-top:8px" onclick="navigator.clipboard.writeText(document.getElementById('wa-msg').value).then(()=>toast('Mensagem copiada ✔'))"><i class="ti ti-copy"></i> Copiar mensagem</button>
+    </div></div></div>`;
 }
 function admHoje(){
   const d = S.adm.dados, hoje = d.hoje;
   const ativas = d.colaboradoras.filter(c=>c.ativa==='SIM');
+  const temMarca = r => r && (CAMPOS.some(f=>r[f]) || (r.tipo && r.tipo!=='normal'));
   const blocos = Object.entries(d.lojas).map(([k,l])=>{
     const linhas = ativas.map(c=>{
       const r = d.pontos.find(p=>p.colaboradora_id===c.id && p.data===hoje);
-      if(!r || !CAMPOS.some(f=>r[f]) && (!r.tipo || r.tipo==='normal')) return '';
-      if((r.loja||'')!==k) return '';
-      let st = '<span class="pill">Ainda não chegou</span>';
-      if(r && r.tipo && r.tipo!=='normal') st = `<span class="pill info">${TIPO_NOME[r.tipo]}</span>`;
-      else if(r && r.saida) st = `<span class="pill">Saiu ${r.saida}</span>`;
-      else if(r && r.saida_almoco && !r.volta_almoco) st = `<span class="pill warn">No almoço desde ${r.saida_almoco}</span>`;
-      else if(r && r.inicio_pausa && !r.fim_pausa) st = `<span class="pill warn">Em pausa desde ${r.inicio_pausa}</span>`;
-      else if(r && r.entrada) st = `<span class="pill ok">Trabalhando desde ${r.entrada}</span>`;
-      return `<tr class="click" onclick="abrirEditor('${c.id}','${hoje}')"><td><span class="dot" style="background:${esc(c.cor)}"></span> ${esc(primeiroNome(c.nome))}</td><td>${st}</td>
-        ${CAMPOS.map(f=>`<td class="num hide-sm">${r&&r[f]||''}</td>`).join('')}</tr>`;
+      if(!temMarca(r) || (r.loja||'')!==k) return '';
+      let st = '';
+      if(r.tipo && r.tipo!=='normal') st = `<span class="selo info">${TIPO_NOME[r.tipo]}</span>`;
+      else if(r.saida) st = `<span class="selo">Saiu às ${r.saida}</span>`;
+      else if(r.saida_almoco && !r.volta_almoco) st = `<span class="selo warn">No almoço desde ${r.saida_almoco}</span>`;
+      else if(r.inicio_pausa && !r.fim_pausa) st = `<span class="selo warn">Em pausa desde ${r.inicio_pausa}</span>`;
+      else if(r.entrada) st = `<span class="selo ok">Trabalhando desde ${r.entrada}</span>`;
+      const fotos = (()=>{ try{ return JSON.parse(r.fotos||'{}'); }catch(e){ return {}; } })();
+      return `<tr class="clica" onclick="abrirEditor('${c.id}','${hoje}')"><td><span class="ponto" style="background:${esc(c.cor)}"></span> ${esc(primeiroNome(c.nome))}</td><td>${st}</td>
+        ${CAMPOS.map(f=>`<td class="n esconde-p num">${r[f]?(fotos[f]?`<a href="${esc(fotos[f])}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="ver foto">${r[f]} 📷</a>`:r[f]):''}</td>`).join('')}</tr>`;
     }).join('');
-    return `<div class="h2">Loja ${esc(l.nome)} · ${esc(l.abre)}–${esc(l.fecha)}</div>
-      <div class="table-wrap"><table><thead><tr><th>Colaboradora</th><th>Agora</th>${CAMPOS.map(f=>`<th class="hide-sm">${CURTO[f]}</th>`).join('')}</tr></thead><tbody>${linhas||'<tr><td colspan="8" class="muted">Ninguém bateu ponto aqui hoje</td></tr>'}</tbody></table></div>`;
+    return `<h2 class="secao">Loja ${esc(l.nome)} <small>${esc(l.abre)} às ${esc(l.fecha)}</small></h2>
+      <div class="tabela"><table><thead><tr><th>Colaboradora</th><th>Agora</th>${CAMPOS.map(f=>`<th class="esconde-p">${CURTO[f]}</th>`).join('')}</tr></thead><tbody>${linhas||'<tr><td colspan="8" class="suave">Ninguém bateu ponto aqui hoje</td></tr>'}</tbody></table></div>`;
   }).join('');
-  const faltam = ativas.filter(c=>{ const r = d.pontos.find(p=>p.colaboradora_id===c.id && p.data===hoje); return !r || (!CAMPOS.some(f=>r[f]) && (!r.tipo || r.tipo==='normal')); });
-  const blocoFaltam = faltam.length ? `<div class="h2">Ainda não bateram hoje</div><div class="row wrap-row" style="gap:8px">${faltam.map(c=>`<button class="pill" style="height:32px;cursor:pointer" onclick="abrirEditor('${c.id}','${hoje}')"><span class="dot" style="background:${esc(c.cor)}"></span> ${esc(primeiroNome(c.nome))}</button>`).join('')}</div>` : '';
-  return `<div class="faint" style="font-weight:700">${dataLonga(hoje)} · toque numa linha para corrigir</div>${blocos}${blocoFaltam}`;
+  const faltam = ativas.filter(c=>!temMarca(d.pontos.find(p=>p.colaboradora_id===c.id && p.data===hoje)));
+  return `<div class="suave" style="font-weight:600;text-transform:capitalize">${dataLonga(hoje)} <span class="apagado" style="text-transform:none">— toque numa linha para corrigir; 📷 abre a foto</span></div>${blocos}
+    ${faltam.length?`<h2 class="secao">Ainda não bateram hoje</h2><div class="linha quebra" style="gap:8px">${faltam.map(c=>`<button class="selo" style="height:34px;cursor:pointer" onclick="abrirEditor('${c.id}','${hoje}')"><span class="ponto" style="background:${esc(c.cor)}"></span> ${esc(primeiroNome(c.nome))}</button>`).join('')}</div>`:''}`;
 }
 function admColabAtual(){
-  const d = S.adm.dados;
-  const lista = d.colaboradoras.filter(c=>c.ativa==='SIM');
+  const d = S.adm.dados, lista = d.colaboradoras.filter(c=>c.ativa==='SIM');
   if(!S.adm.eid || !d.colaboradoras.some(c=>c.id===S.adm.eid)) S.adm.eid = (lista[0]||d.colaboradoras[0]||{}).id;
   return d.colaboradoras.find(c=>c.id===S.adm.eid);
 }
 function seletorColab(){
   const d = S.adm.dados;
-  return `<select class="inp" style="max-width:280px" onchange="S.adm.eid=this.value;render()">
+  return `<select class="inp" style="max-width:300px" onchange="S.adm.eid=this.value;render()">
     ${d.colaboradoras.map(c=>`<option value="${c.id}" ${c.id===S.adm.eid?'selected':''}>${esc(c.nome)}${c.ativa==='SIM'?'':' (inativa)'}</option>`).join('')}</select>`;
 }
 function admMes(){
-  const d = S.adm.dados, c = admColabAtual(); if(!c) return '<p class="muted">Cadastre alguém na aba Equipe.</p>';
+  const d = S.adm.dados, c = admColabAtual(); if(!c) return '<p class="suave">Cadastre alguém na aba Equipe.</p>';
   const mapa = mapaPontos(d.pontos, c.id), res = resumoMes(c, S.adm.mes, mapa, d.regras), banco = bancoTotal(c, mapa, d.regras);
-  return `<div class="row wrap-row" style="gap:10px;margin-bottom:12px">${seletorColab()}<div class="grow" style="min-width:240px">${seletorMes(S.adm.mes,'admMudarMes')}</div></div>
-    <div class="stats" style="margin-bottom:12px">
-      ${stat('Trabalhado', hm(res.trabalhado), 'previsto '+hm(res.previsto))}
-      ${stat('Saldo do mês', hm(res.saldo,true), res.pend?res.pend+' pendência(s) para resolver':'sem pendências', res.saldo)}
-      ${stat('Banco total', hm(banco.saldo,true), banco.folgasDisp+' folga(s) disponível(is)', banco.saldo)}
-      ${stat('Ocorrências', String(res.faltas+res.atestados+res.folgas), `${res.faltas} falta · ${res.atestados} atest. · ${res.folgas} folga`)}
+  return `<div class="linha quebra" style="gap:10px;margin-bottom:12px">${seletorColab()}<div class="cresce" style="min-width:240px">${seletorMes(S.adm.mes,'admMudarMes')}</div></div>
+    <div class="numeros" style="margin-bottom:12px">
+      ${num('Trabalhado', hm(res.trabalhado), 'previsto '+hm(res.previsto))}
+      ${num('Saldo do mês', hm(res.saldo,true), res.pend?res.pend+' pendência(s) para resolver':'sem pendências', res.saldo)}
+      ${num('Banco total', hm(banco.saldo,true), banco.folgasDisp+' folga(s) disponível(is)', banco.saldo)}
+      ${num('Ocorrências', String(res.faltas+res.atestados+res.folgas), `${res.faltas} falta, ${res.atestados} atestado, ${res.folgas} folga`)}
     </div>
-    <div class="row wrap-row" style="gap:8px;margin-bottom:12px">
-      <button class="btn sm" onclick="imprimirEspelho()"><i class="ti ti-printer"></i> Espelho para assinatura</button>
-      <button class="btn sm" onclick="copiarResumo()"><i class="ti ti-brand-whatsapp"></i> Copiar resumo p/ WhatsApp</button>
-      <button class="btn sm" onclick="exportarCSV()"><i class="ti ti-file-spreadsheet"></i> Baixar CSV do mês</button>
+    <div class="linha quebra" style="gap:8px;margin-bottom:12px">
+      <button class="btn p" onclick="imprimirEspelho([admColabAtual()])"><i class="ti ti-printer"></i> Espelho para assinatura</button>
+      <button class="btn p" onclick="copiarResumo()"><i class="ti ti-brand-whatsapp"></i> Resumo para o WhatsApp</button>
+      <button class="btn p" onclick="exportarCSV()"><i class="ti ti-file-spreadsheet"></i> Baixar CSV do mês</button>
     </div>
-    ${res.pend?`<div class="note warn" style="margin-bottom:12px"><i class="ti ti-alert-triangle"></i><div>Resolva as pendências (sem marcação / marcação faltando) antes de fechar o mês — número errado no espelho vira prova contra a loja.</div></div>`:''}
-    <div class="days">${res.dias.map(x=>linhaDia(x, 'admEditarDia')).join('')}</div>`;
+    ${res.pend?`<div class="nota warn" style="margin-bottom:12px"><i class="ti ti-alert-triangle"></i><div>Resolva as pendências (sem marcação ou marcação faltando) antes de fechar o mês: número errado no espelho vira prova contra a loja.</div></div>`:''}
+    <div class="dias">${res.dias.map(x=>linhaDia(x, 'admEditarDia')).join('')}</div>`;
 }
 function admMudarMes(n){ S.adm.mes = mesAdd(S.adm.mes, n); render(); }
 function admEditarDia(data){ abrirEditor(S.adm.eid, data); }
 
-/* editor de dia (admin) */
 let ED = null;
 function abrirEditor(eid, data){
   const d = S.adm.dados, c = d.colaboradoras.find(x=>x.id===eid);
   const r = d.pontos.find(p=>p.colaboradora_id===eid && p.data===data) || {};
-  ED = {eid, data, nome:c.nome, tipo:r.tipo||'normal', loja:r.loja||c.loja, obs:r.obs||'', motivo:'', existe:!!r.data, hist:(()=>{try{return JSON.parse(r.historico||'[]')}catch(e){return[]}})()};
+  ED = {eid, data, nome:c.nome, tipo:r.tipo||'normal', loja:r.loja||c.loja, obs:r.obs||'', motivo:'', existe:!!r.data, hist:(()=>{try{return JSON.parse(r.historico||'[]')}catch(e){return[]}})(), fotos:(()=>{try{return JSON.parse(r.fotos||'{}')}catch(e){return{}}})()};
   CAMPOS.forEach(k=>ED[k]=r[k]||'');
   renderEditor();
 }
 function renderEditor(){
   const e = ED; if(!e){ $('#modal').innerHTML=''; return; }
   const lojas = S.adm.dados.lojas;
-  $('#modal').innerHTML = `<div class="overlay" onclick="if(event.target===this)fecharEditor()"><div class="modal wide">
-    <div class="modal-h"><div class="grow"><h3>${esc(primeiroNome(e.nome))} · ${esc(dataLonga(e.data))}</h3><div class="faint" style="font-size:13px">Tudo que for alterado fica no histórico</div></div><button class="icon-btn" onclick="fecharEditor()"><i class="ti ti-x"></i></button></div>
-    <div class="modal-b">
-      <div class="grid2">
-        <div class="field"><label>Tipo do dia</label><select class="inp" onchange="ED.tipo=this.value;renderEditor()">${Object.entries(TIPO_NOME).map(([k,n])=>`<option value="${k}" ${e.tipo===k?'selected':''}>${n}</option>`).join('')}</select></div>
-        <div class="field"><label>Loja</label><select class="inp" onchange="ED.loja=this.value">${Object.entries(lojas).map(([k,l])=>`<option value="${k}" ${e.loja===k?'selected':''}>${esc(l.nome)}</option>`).join('')}</select></div>
+  $('#modal').innerHTML = `<div class="veu" onclick="if(event.target===this)fecharEditor()"><div class="modal largo">
+    <div class="modal-t"><div class="cresce"><h3>${esc(primeiroNome(e.nome))} — ${esc(dataLonga(e.data))}</h3><div class="apagado" style="font-size:13.5px">Tudo que for alterado fica no histórico</div></div><button class="icone" onclick="fecharEditor()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-c">
+      <div class="g2">
+        <div class="campo"><label>Tipo do dia</label><select class="inp" onchange="ED.tipo=this.value;renderEditor()">${Object.entries(TIPO_NOME).map(([k,n])=>`<option value="${k}" ${e.tipo===k?'selected':''}>${n}</option>`).join('')}</select></div>
+        <div class="campo"><label>Loja</label><select class="inp" onchange="ED.loja=this.value">${Object.entries(lojas).map(([k,l])=>`<option value="${k}" ${e.loja===k?'selected':''}>${esc(l.nome)}</option>`).join('')}</select></div>
       </div>
-      ${e.tipo==='folga' && [0,1,6].includes(dow(e.data))?'<div class="note bad" style="margin-bottom:12px"><i class="ti ti-alert-triangle"></i><div>Regra da loja: folga de banco só de terça a sexta.</div></div>':''}
-      ${e.tipo==='normal'?`<div class="grid3">${CAMPOS.map(k=>`<div class="field"><label>${NOME[k]}</label><input class="inp mono" type="time" value="${e[k]}" oninput="ED['${k}']=this.value"></div>`).join('')}</div>`:''}
-      <div class="field"><label>Observação</label><input class="inp" value="${esc(e.obs)}" oninput="ED.obs=this.value"></div>
-      <div class="field"><label>Motivo da alteração</label><input class="inp" placeholder="Ex.: combinado com a colaboradora" value="${esc(e.motivo)}" oninput="ED.motivo=this.value"></div>
-      <div class="row" style="gap:8px"><button class="btn pri grow" id="btn-salvar-dia" onclick="salvarEditor()"><i class="ti ti-device-floppy"></i> Salvar</button>
+      ${e.tipo==='folga' && [0,1,6].includes(dow(e.data))?'<div class="nota bad" style="margin-bottom:12px"><i class="ti ti-alert-triangle"></i><div>Regra da loja: folga do banco só de terça a sexta.</div></div>':''}
+      ${e.tipo==='normal'?`<div class="g3">${CAMPOS.map(k=>`<div class="campo"><label>${NOME[k]}${e.fotos[k]?` <a href="${esc(e.fotos[k])}" target="_blank" rel="noopener" title="ver foto">📷</a>`:''}</label><input class="inp num" type="time" value="${e[k]}" oninput="ED['${k}']=this.value"></div>`).join('')}</div>`:''}
+      <div class="campo"><label>Observação</label><input class="inp" value="${esc(e.obs)}" oninput="ED.obs=this.value"></div>
+      <div class="campo"><label>Motivo da alteração</label><input class="inp" placeholder="Ex.: combinado com a colaboradora" value="${esc(e.motivo)}" oninput="ED.motivo=this.value"></div>
+      <div class="linha" style="gap:8px"><button class="btn pri cresce" id="btn-salvar-dia" onclick="salvarEditor()"><i class="ti ti-device-floppy"></i> Salvar</button>
         ${e.existe?`<button class="btn" onclick="apagarDia()"><i class="ti ti-trash"></i></button>`:''}</div>
-      ${e.hist.length?`<div class="h2">Histórico</div><div class="hist">${e.hist.slice().reverse().map(h=>`<div><b>${esc(NOME[h.campo]||h.campo)}</b>: ${esc(h.de||'vazio')} → ${esc(h.para||'vazio')} <span class="faint">· ${esc(h.por)}${h.em?' · '+esc(h.em.slice(8,10)+'/'+h.em.slice(5,7)+' '+h.em.slice(11,16)):''}${h.motivo?' · '+esc(h.motivo):''}</span></div>`).join('')}</div>`:''}
+      ${e.hist.length?`<h2 class="secao">Histórico</h2><div class="historico">${e.hist.slice().reverse().map(h=>`<div><b>${esc(NOME[h.campo]||h.campo)}</b>: ${esc(h.de||'vazio')} → ${esc(h.para||'vazio')} <span class="apagado">(${esc(h.por)}${h.em?', '+esc(h.em.slice(8,10)+'/'+h.em.slice(5,7)+' '+h.em.slice(11,16)):''}${h.motivo?': '+esc(h.motivo):''})</span></div>`).join('')}</div>`:''}
     </div></div></div>`;
 }
 function fecharEditor(){ ED=null; renderEditor(); }
 async function salvarEditor(){
-  const e = ED, b = $('#btn-salvar-dia'); b.disabled=true; b.innerHTML='<span class="spin"></span> Salvando…';
+  const e = ED, b = $('#btn-salvar-dia'); b.disabled=true; b.innerHTML='<span class="gira"></span> Salvando…';
   const campos = {}; if(e.tipo==='normal') CAMPOS.forEach(k=>campos[k]=e[k]); else CAMPOS.forEach(k=>campos[k]='');
   try{
-    const j = await api('admPonto', {adminPin:S.adm.pin, eid:e.eid, data:e.data, campos, tipo:e.tipo, loja:e.loja, obs:e.obs, motivo:e.motivo||'Ajuste da administração'});
+    const j = await api('admPonto', {...S.adm.cred, eid:e.eid, data:e.data, campos, tipo:e.tipo, loja:e.loja, obs:e.obs, motivo:e.motivo||'Ajuste da administração'});
     const L = S.adm.dados.pontos, i = L.findIndex(p=>p.chave===j.ponto.chave);
     if(i>=0) L[i]=j.ponto; else L.push(j.ponto);
     ED=null; renderEditor(); render(); carregarBootSilencioso(); toast('Salvo ✔');
-    api('admDados', {adminPin:S.adm.pin}).then(d=>{ if(S.adm){ S.adm.dados=d; if(S.adm.tab==='agenda') render(); } }).catch(()=>{});
+    api('admDados', S.adm.cred).then(d=>{ if(S.adm){ S.adm.dados=d; if(S.adm.tab==='agenda') render(); } }).catch(()=>{});
   }catch(err){ toast(err.message, true); b.disabled=false; b.innerHTML='<i class="ti ti-device-floppy"></i> Salvar'; }
 }
 async function apagarDia(){
   if(!confirm('Apagar todas as marcações deste dia?')) return;
   try{
-    await api('admApagarPonto', {adminPin:S.adm.pin, eid:ED.eid, data:ED.data});
+    await api('admApagarPonto', {...S.adm.cred, eid:ED.eid, data:ED.data});
     S.adm.dados.pontos = S.adm.dados.pontos.filter(p=>p.chave!==ED.eid+'|'+ED.data);
     ED=null; renderEditor(); render(); toast('Dia apagado');
   }catch(err){ toast(err.message, true); }
 }
-
 function admBanco(){
   const d = S.adm.dados, ym = S.adm.mes;
   const linhas = d.colaboradoras.filter(c=>c.ativa==='SIM').map(c=>{
     const mapa = mapaPontos(d.pontos, c.id), r = resumoMes(c, ym, mapa, d.regras), b = bancoTotal(c, mapa, d.regras);
-    return `<tr class="click" onclick="S.adm.eid='${c.id}';S.adm.tab='mes';render()">
-      <td><span class="dot" style="background:${esc(c.cor)}"></span> ${esc(primeiroNome(c.nome))}</td>
-      <td class="num">${hm(r.trabalhado)}</td><td class="num">${hm(r.previsto)}</td>
-      <td class="num ${r.saldo>0?'pos':r.saldo<0?'neg':''}">${hm(r.saldo,true)}</td>
-      <td class="num ${b.saldo>0?'pos':b.saldo<0?'neg':''}"><b>${hm(b.saldo,true)}</b></td>
-      <td class="num">${b.folgasDisp}</td>
-      <td>${b.proximas.length?b.proximas.slice(0,3).map(x=>ddmm(x)).join(', '):'<span class="faint">—</span>'}</td>
-      <td>${r.pend?`<span class="pill bad">${r.pend} pendência</span>`:''} ${r.alertas?`<span class="pill warn">${r.alertas} alerta</span>`:''}</td></tr>`;
+    return `<tr class="clica" onclick="S.adm.eid='${c.id}';S.adm.tab='mes';render()">
+      <td><span class="ponto" style="background:${esc(c.cor)}"></span> ${esc(primeiroNome(c.nome))}</td>
+      <td class="n num">${hm(r.trabalhado)}</td><td class="n num">${hm(r.previsto)}</td>
+      <td class="n num ${r.saldo>0?'pos':r.saldo<0?'neg':''}">${hm(r.saldo,true)}</td>
+      <td class="n num ${b.saldo>0?'pos':b.saldo<0?'neg':''}"><b>${hm(b.saldo,true)}</b></td>
+      <td class="n">${b.folgasDisp}</td>
+      <td>${b.proximas.length?b.proximas.slice(0,3).map(x=>ddmm(x)).join(', '):'<span class="apagado">—</span>'}</td>
+      <td>${r.pend?`<span class="selo bad">${r.pend} pendência</span>`:''} ${r.alertas?`<span class="selo warn">${r.alertas} alerta</span>`:''}</td></tr>`;
   }).join('');
-  return `<div style="margin-bottom:12px;max-width:420px">${seletorMes(ym,'admMudarMes')}</div>
-    <div class="table-wrap"><table><thead><tr><th>Colaboradora</th><th>Trabalhado</th><th>Previsto</th><th>Saldo mês</th><th>Banco total</th><th>Folgas disp.</th><th>Folgas marcadas</th><th>Atenção</th></tr></thead><tbody>${linhas}</tbody></table></div>
-    <div class="note info" style="margin-top:14px"><i class="ti ti-info-circle"></i><div><b>Como lê:</b> previsto = 7h20 por dia útil (seg–sáb, sem feriados); até ${d.regras.tolerancia_min} min/dia não conta. Cada folga de banco desconta ${hm(d.regras.folga_min)} e só pode ser de terça a sexta. O banco soma desde ${ddmm(d.regras.inicio_banco)}/${d.regras.inicio_banco.slice(0,4)} + saldo inicial de cada uma (aba Equipe). Crédito não compensado até o fim do mês seguinte tem de ser pago como hora extra (+50%).</div></div>
-    <div class="row wrap-row" style="gap:8px;margin-top:12px"><button class="btn sm" onclick="exportarCSV(true)"><i class="ti ti-file-spreadsheet"></i> Baixar CSV do mês (todas)</button></div>`;
+  return `<div class="linha quebra" style="gap:10px;margin-bottom:12px"><div style="max-width:420px;flex:1">${seletorMes(ym,'admMudarMes')}</div>
+      <button class="btn pri" onclick="imprimirEspelho(S.adm.dados.colaboradoras.filter(c=>c.ativa==='SIM'))"><i class="ti ti-printer"></i> Fechar o mês: imprimir espelhos de todas</button>
+      <button class="btn p" onclick="exportarCSV(true)"><i class="ti ti-file-spreadsheet"></i> CSV do mês</button></div>
+    <div class="tabela"><table><thead><tr><th>Colaboradora</th><th>Trabalhado</th><th>Previsto</th><th>Saldo do mês</th><th>Banco total</th><th>Folgas disp.</th><th>Folgas marcadas</th><th>Atenção</th></tr></thead><tbody>${linhas}</tbody></table></div>
+    <div class="nota info" style="margin-top:14px"><i class="ti ti-info-circle"></i><div>Previsto é 7h20 por dia útil de segunda a sábado, sem feriados; até ${d.regras.tolerancia_min} min por dia não contam. Cada folga desconta ${hm(d.regras.folga_min)} e só pode ser de terça a sexta. O banco soma desde ${ddmm(d.regras.inicio_banco)}/${d.regras.inicio_banco.slice(0,4)} mais o saldo inicial de cada uma (aba Equipe). Crédito não compensado até o fim do mês seguinte precisa ser pago como hora extra com 50%.</div></div>`;
 }
-
 function admAgenda(){
   const d = S.adm.dados, ev = (d.calendario?.eventos||[]).slice().sort((a,b)=>a.data.localeCompare(b.data));
   const prox = ev.filter(e=>(e.data_fim||e.data) >= d.hoje);
-  return `<button class="btn pri" style="margin-bottom:12px" onclick="editarEvento()"><i class="ti ti-plus"></i> Novo evento / campanha</button>
+  return `<button class="btn pri" style="margin-bottom:12px" onclick="editarEvento()"><i class="ti ti-plus"></i> Novo evento, campanha ou aviso</button>
     ${calendario(d.calendario, true)}
-    <div class="note info" style="margin-top:12px"><i class="ti ti-info-circle"></i><div>Folgas, atestados e férias entram sozinhos quando você aprova o pedido (ou lança no Espelho). Para a equipe, atestado aparece só como <b>"Ausente"</b> — o motivo fica visível apenas aqui.</div></div>
-    <div class="h2">Próximos eventos</div>
-    ${prox.length ? prox.map(e=>{ const t=TIPO_EV[e.tipo]||TIPO_EV.evento; return `<div class="req" style="align-items:center"><div class="ico">${t.e}</div><div class="grow"><b>${esc(e.titulo)}</b><p>${t.n} · ${ddmm(e.data)}${e.data_fim&&e.data_fim!==e.data?' a '+ddmm(e.data_fim):''}${e.loja&&d.lojas[e.loja]?' · Loja '+esc(d.lojas[e.loja].nome):''}</p></div><button class="btn sm" onclick="editarEvento('${e.id}')"><i class="ti ti-pencil"></i> Editar</button></div>`; }).join('') : '<p class="muted">Nenhum evento marcado.</p>'}`;
+    <div class="nota info" style="margin-top:12px"><i class="ti ti-info-circle"></i><div>Folgas, atestados e férias entram sozinhos quando você aprova o pedido ou lança no espelho. Para a equipe, atestado aparece só como "ausente". Avisos aparecem no mural do portal de cada uma.</div></div>
+    <h2 class="secao">Próximos</h2>
+    ${prox.length ? prox.map(e=>{ const t=TIPO_EV[e.tipo]||TIPO_EV.evento; return `<div class="pedido" style="align-items:center"><div class="ico">${t.e}</div><div class="cresce"><b>${esc(e.titulo)}</b><p>${t.n}, ${ddmm(e.data)}${e.data_fim&&e.data_fim!==e.data?' a '+ddmm(e.data_fim):''}${e.loja&&d.lojas[e.loja]?', loja '+esc(d.lojas[e.loja].nome):''}</p></div><button class="btn p" onclick="editarEvento('${e.id}')"><i class="ti ti-pencil"></i> Editar</button></div>`; }).join('') : '<p class="suave">Nada marcado.</p>'}`;
 }
 let EV = null;
 function editarEvento(id, data){
@@ -1105,62 +1241,61 @@ function editarEvento(id, data){
 function renderEvento(){
   const e = EV; if(!e){ $('#modal').innerHTML=''; return; }
   const lojas = S.adm.dados.lojas;
-  $('#modal').innerHTML = `<div class="overlay" onclick="if(event.target===this)fecharModal()"><div class="modal">
-    <div class="modal-h"><h3 class="grow">${e.id?'Editar evento':'Novo evento'}</h3><button class="icon-btn" onclick="fecharModal()"><i class="ti ti-x"></i></button></div>
-    <div class="modal-b">
-      <div class="seg">${Object.entries(TIPO_EV).map(([k,t])=>`<button class="${e.tipo===k?'on':''}" onclick="EV.tipo='${k}';renderEvento()"><span style="font-size:22px">${t.e}</span>${t.n}</button>`).join('')}</div>
-      <div class="field"><label>Nome</label><input class="inp" value="${esc(e.titulo)}" placeholder="Ex.: Chá de lingerie da Leandra" oninput="EV.titulo=this.value"></div>
-      <div class="grid2"><div class="field"><label>Começa em</label><input class="inp" type="date" value="${e.data}" onchange="EV.data=this.value"></div>
-      <div class="field"><label>Termina em (opcional)</label><input class="inp" type="date" value="${e.data_fim}" onchange="EV.data_fim=this.value"></div></div>
-      <div class="field"><label>Loja</label><select class="inp" onchange="EV.loja=this.value"><option value="">Todas / fora da loja</option>${Object.entries(lojas).map(([k,l])=>`<option value="${k}" ${e.loja===k?'selected':''}>${esc(l.nome)}</option>`).join('')}</select></div>
-      <div class="field"><label>Detalhes (opcional)</label><textarea class="inp" placeholder="Ex.: equipe: Sabrynna e Cibelly · 19h" oninput="EV.obs=this.value">${esc(e.obs)}</textarea></div>
-      <div class="row" style="gap:8px"><button class="btn pri grow" id="btn-ev" onclick="salvarEvento()"><i class="ti ti-device-floppy"></i> Salvar na agenda</button>
+  $('#modal').innerHTML = `<div class="veu" onclick="if(event.target===this)fecharModal()"><div class="modal">
+    <div class="modal-t"><h3 class="cresce">${e.id?'Editar':'Novo'} ${e.tipo==='aviso'?'aviso':'evento'}</h3><button class="icone" onclick="fecharModal()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-c">
+      <div class="opcoes">${Object.entries(TIPO_EV).map(([k,t])=>`<button class="${e.tipo===k?'on':''}" onclick="EV.tipo='${k}';renderEvento()"><span style="font-size:22px">${t.e}</span>${t.n}</button>`).join('')}</div>
+      <div class="campo"><label>${e.tipo==='aviso'?'Título do aviso':'Nome'}</label><input class="inp" value="${esc(e.titulo)}" placeholder="${e.tipo==='aviso'?'Ex.: Reunião mensal dia 30':'Ex.: Chá de lingerie da Leandra'}" oninput="EV.titulo=this.value"></div>
+      <div class="g2"><div class="campo"><label>${e.tipo==='aviso'?'Publicar em':'Começa em'}</label><input class="inp" type="date" value="${e.data}" onchange="EV.data=this.value"></div>
+      <div class="campo"><label>${e.tipo==='aviso'?'Mostrar até (opcional)':'Termina em (opcional)'}</label><input class="inp" type="date" value="${e.data_fim}" onchange="EV.data_fim=this.value"></div></div>
+      <div class="campo"><label>Loja</label><select class="inp" onchange="EV.loja=this.value"><option value="">Todas ou fora da loja</option>${Object.entries(lojas).map(([k,l])=>`<option value="${k}" ${e.loja===k?'selected':''}>${esc(l.nome)}</option>`).join('')}</select></div>
+      <div class="campo"><label>${e.tipo==='aviso'?'Texto do aviso':'Detalhes (opcional)'}</label><textarea class="inp" placeholder="${e.tipo==='aviso'?'O que a equipe precisa saber':'Ex.: equipe Sabrynna e Cibelly, 19h'}" oninput="EV.obs=this.value">${esc(e.obs)}</textarea></div>
+      <div class="linha" style="gap:8px"><button class="btn pri cresce" id="btn-ev" onclick="salvarEvento()"><i class="ti ti-device-floppy"></i> Salvar na agenda</button>
       ${e.id?`<button class="btn" onclick="apagarEvento()"><i class="ti ti-trash"></i></button>`:''}</div>
     </div></div></div>`;
 }
 async function salvarEvento(){
   const b = $('#btn-ev'); b.disabled=true;
-  try{ S.adm.dados = await api('admEvento', {adminPin:S.adm.pin, ...EV}); fecharModal(); render(); carregarBootSilencioso(); toast('Salvo na agenda ✔ A equipe já vê.'); }
+  try{ S.adm.dados = await api('admEvento', {...S.adm.cred, ...EV}); fecharModal(); render(); carregarBootSilencioso(); toast('Salvo ✔ A equipe já vê.'); }
   catch(e){ toast(e.message, true); b.disabled=false; }
 }
 async function apagarEvento(){
-  if(!confirm('Apagar este evento da agenda?')) return;
-  try{ S.adm.dados = await api('admApagarEvento', {adminPin:S.adm.pin, id:EV.id}); fecharModal(); render(); carregarBootSilencioso(); toast('Evento apagado'); }
+  if(!confirm('Apagar da agenda?')) return;
+  try{ S.adm.dados = await api('admApagarEvento', {...S.adm.cred, id:EV.id}); fecharModal(); render(); carregarBootSilencioso(); toast('Apagado'); }
   catch(e){ toast(e.message, true); }
 }
-
 function admEquipe(){
   const d = S.adm.dados;
   return `<button class="btn pri" style="margin-bottom:12px" onclick="editarColab()"><i class="ti ti-user-plus"></i> Nova colaboradora</button>
-    <div class="table-wrap"><table><thead><tr><th>Nome</th><th>Admissão</th><th>Saldo inicial</th><th>PIN</th><th>Situação</th></tr></thead><tbody>
-    ${d.colaboradoras.map(c=>`<tr class="click" onclick="editarColab('${c.id}')"><td><span class="dot" style="background:${esc(c.cor)}"></span> ${esc(c.nome)}</td>
-      <td>${c.admissao?ddmm(c.admissao)+'/'+c.admissao.slice(0,4):'<span class="faint">—</span>'}</td>
-      <td class="num">${hm(c.saldo_inicial_min,true)}</td><td>${c.temPin?'<span class="pill ok">Cadastrado</span>':'<span class="pill bad">Falta criar</span>'}</td>
-      <td>${c.ativa==='SIM'?'<span class="pill ok">Ativa</span>':'<span class="pill">Inativa</span>'}</td></tr>`).join('')}
+    <div class="tabela"><table><thead><tr><th>Nome</th><th>Cargo</th><th>WhatsApp</th><th>Admissão</th><th>Saldo inicial</th><th>PIN</th><th>Situação</th></tr></thead><tbody>
+    ${d.colaboradoras.map(c=>`<tr class="clica" onclick="editarColab('${c.id}')"><td><span class="ponto" style="background:${esc(c.cor)}"></span> ${esc(c.nome)}</td>
+      <td>${esc(c.cargo||'')||'<span class="apagado">—</span>'}</td><td class="num">${c.telefone?esc(fmtTel(c.telefone)):'<span class="selo warn">sem número</span>'}</td><td>${c.admissao?ddmm(c.admissao)+'/'+c.admissao.slice(0,4):'<span class="apagado">—</span>'}</td>
+      <td class="n num">${hm(c.saldo_inicial_min,true)}</td><td>${c.temPin?'<span class="selo ok">Criado</span>':'<span class="selo bad">Falta criar</span>'}</td>
+      <td>${c.ativa==='SIM'?'<span class="selo ok">Ativa</span>':'<span class="selo">Inativa</span>'}</td></tr>`).join('')}
     </tbody></table></div>`;
 }
 let EC = null;
 function editarColab(id){
-  const d = S.adm.dados, c = id ? d.colaboradoras.find(x=>x.id===id) : {nome:'', loja:S.loja||'bosque', cor:'#F5B524', admissao:'', saldo_inicial_min:0, ativa:'SIM'};
-  EC = {id:id||'', nome:c.nome, loja:c.loja, cor:c.cor||'#F5B524', admissao:c.admissao||'', saldo:hm(c.saldo_inicial_min||0), ativa:c.ativa==='SIM', pin:'', temPin:c.temPin};
+  const d = S.adm.dados, c = id ? d.colaboradoras.find(x=>x.id===id) : {nome:'', loja:'bosque', cor:'#F5B524', admissao:'', saldo_inicial_min:0, ativa:'SIM', telefone:'', cargo:''};
+  EC = {id:id||'', nome:c.nome, loja:c.loja, cor:c.cor||'#F5B524', admissao:c.admissao||'', saldo:hm(c.saldo_inicial_min||0), ativa:c.ativa==='SIM', pin:'', temPin:c.temPin, telefone:fmtTel(c.telefone), cargo:c.cargo||''};
   renderColab();
 }
 function renderColab(){
   const e = EC; if(!e){ $('#modal').innerHTML=''; return; }
-  const lojas = S.adm.dados.lojas;
-  $('#modal').innerHTML = `<div class="overlay" onclick="if(event.target===this){EC=null;renderColab()}"><div class="modal">
-    <div class="modal-h"><h3 class="grow">${e.id?'Editar colaboradora':'Nova colaboradora'}</h3><button class="icon-btn" onclick="EC=null;renderColab()"><i class="ti ti-x"></i></button></div>
-    <div class="modal-b">
-      <div class="field"><label>Nome completo</label><input class="inp" value="${esc(e.nome)}" oninput="EC.nome=this.value"></div>
-      <div class="grid2">
-        <div class="field"><label>Admissão</label><input class="inp" type="date" value="${e.admissao}" onchange="EC.admissao=this.value"></div>
-        <div class="field"><label>Saldo inicial do banco (±hh:mm)</label><input class="inp mono" value="${esc(e.saldo)}" oninput="EC.saldo=this.value" placeholder="+00:00"></div>
-        <div class="field"><label>Cor</label><input class="inp" type="color" value="${esc(e.cor)}" oninput="EC.cor=this.value" style="padding:4px"></div>
-        <div></div>
+  $('#modal').innerHTML = `<div class="veu" onclick="if(event.target===this){EC=null;renderColab()}"><div class="modal">
+    <div class="modal-t"><h3 class="cresce">${e.id?'Editar colaboradora':'Nova colaboradora'}</h3><button class="icone" onclick="EC=null;renderColab()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-c">
+      <div class="campo"><label>Nome completo</label><input class="inp" value="${esc(e.nome)}" oninput="EC.nome=this.value"></div>
+      <div class="g2">
+        <div class="campo"><label>Cargo</label><input class="inp" value="${esc(e.cargo)}" placeholder="Ex.: Vendedora" oninput="EC.cargo=this.value"></div>
+        <div class="campo"><label>WhatsApp</label><input class="inp" inputmode="tel" value="${esc(e.telefone)}" placeholder="(68) 9 9999-9999" oninput="EC.telefone=this.value"></div>
+        <div class="campo"><label>Admissão</label><input class="inp" type="date" value="${e.admissao}" onchange="EC.admissao=this.value"></div>
+        <div class="campo"><label>Saldo inicial do banco</label><input class="inp num" value="${esc(e.saldo)}" oninput="EC.saldo=this.value" placeholder="+00:00"></div>
+        <div class="campo"><label>Cor</label><input class="inp" type="color" value="${esc(e.cor)}" oninput="EC.cor=this.value" style="padding:4px"></div>
+        <div class="campo"><label>${e.temPin?'Trocar PIN (vazio mantém)':'Criar PIN de 6 números'}</label><input class="inp num" inputmode="numeric" maxlength="6" value="${esc(e.pin)}" oninput="EC.pin=this.value"></div>
       </div>
-      <div class="field"><label>${e.temPin?'Trocar PIN (deixe vazio para manter)':'Criar PIN de 6 números'}</label><input class="inp mono" inputmode="numeric" maxlength="6" value="${esc(e.pin)}" oninput="EC.pin=this.value"></div>
-      <label class="row" style="margin-bottom:14px;font-weight:700"><input type="checkbox" ${e.ativa?'checked':''} onchange="EC.ativa=this.checked" style="width:18px;height:18px"> Ativa (aparece na tela do ponto)</label>
-      <button class="btn pri" style="width:100%" id="btn-colab" onclick="salvarColab()"><i class="ti ti-device-floppy"></i> Salvar</button>
+      <label class="linha" style="margin-bottom:14px;font-weight:700"><input type="checkbox" ${e.ativa?'checked':''} onchange="EC.ativa=this.checked" style="width:18px;height:18px"> Ativa (aparece na tela do ponto)</label>
+      <button class="btn pri largo" id="btn-colab" onclick="salvarColab()"><i class="ti ti-device-floppy"></i> Salvar</button>
     </div></div></div>`;
 }
 async function salvarColab(){
@@ -1171,86 +1306,115 @@ async function salvarColab(){
   if(e.pin && !/^\d{6}$/.test(e.pin)){ toast('O PIN precisa ter 6 números', true); return; }
   const b = $('#btn-colab'); b.disabled=true;
   try{
-    S.adm.dados = await api('admColab', {adminPin:S.adm.pin, id:e.id||undefined, nome:e.nome, loja:e.loja, cor:e.cor, admissao:e.admissao, saldo_inicial_min:saldo, ativa:e.ativa, pin:e.pin||undefined});
-    EC=null; renderColab(); render(); toast('Salvo ✔'+(e.pin?' PIN: '+e.pin+' — passe para ela':''));
+    S.adm.dados = await api('admColab', {...S.adm.cred, id:e.id||undefined, nome:e.nome, loja:e.loja, cor:e.cor, admissao:e.admissao, cargo:e.cargo, telefone:e.telefone, saldo_inicial_min:saldo, ativa:e.ativa, pin:e.pin||undefined});
+    EC=null; renderColab(); render(); toast('Salvo ✔'+(e.pin?' PIN '+e.pin+' — passe para ela':''));
     carregarBootSilencioso();
   }catch(err){ toast(err.message, true); b.disabled=false; }
 }
 async function carregarBootSilencioso(){ try{ S.boot = await api('boot'); LS.set('lv_boot', S.boot); }catch(e){} }
-
+function admAparelhos(){
+  const d = S.adm.dados, lista = d.aparelhos || [];
+  return `<div class="nota info" style="margin-bottom:12px"><i class="ti ti-device-desktop"></i><div>O ponto só é batido nos computadores desta lista. Para autorizar um computador, abra o site <b>nele</b>, toque em "Autorizar este computador" no rodapé e digite o PIN da administração.${modoLoja()?' Este aqui já está autorizado.':''}</div></div>
+    <div class="tabela"><table><thead><tr><th>Nome</th><th>Loja</th><th>Autorizado em</th><th>Último ponto</th><th>Situação</th><th></th></tr></thead><tbody>
+    ${lista.length ? lista.map(a=>`<tr><td>${esc(a.nome)}${S.aparelho?.id===a.id?' <span class="selo ok">este</span>':''}</td><td>${esc(d.lojas[a.loja]?.nome||a.loja)}</td><td>${esc((a.criado_em||'').slice(0,16))}</td><td>${esc((a.ultimo_uso||'—').slice(0,16))}</td>
+      <td>${a.ativo==='SIM'?'<span class="selo ok">Ativo</span>':'<span class="selo">Revogado</span>'}</td><td>${a.ativo==='SIM'?`<button class="btn p" onclick="revogarAparelho('${a.id}')"><i class="ti ti-ban"></i> Revogar</button>`:''}</td></tr>`).join('') : '<tr><td colspan="6" class="suave">Nenhum computador autorizado ainda.</td></tr>'}
+    </tbody></table></div>
+    ${!modoLoja()?`<button class="btn ouro" style="margin-top:12px" onclick="S.admCred=S.adm.cred;abrirAutorizarAparelho(S.adm.dados)"><i class="ti ti-device-desktop"></i> Autorizar este computador agora</button>`:''}`;
+}
+async function revogarAparelho(id){
+  if(!confirm('Esse computador não vai mais conseguir bater ponto. Continuar?')) return;
+  try{ S.adm.dados = await api('admRevogarAparelho', {...S.adm.cred, id}); if(S.aparelho?.id===id){ S.aparelho=null; LS.del('lv_aparelho'); } render(); toast('Revogado'); }
+  catch(e){ toast(e.message, true); }
+}
 function admRegras(){
   const d = S.adm.dados, r = d.regras;
-  return `<div class="card pad" style="max-width:640px">
-    <div class="grid2">
-      <div class="field"><label>Jornada por dia útil (min)</label><input class="inp mono" id="cf-jornada_min" value="${r.jornada_min}"></div>
-      <div class="field"><label>Cada folga consome (min)</label><input class="inp mono" id="cf-folga_min" value="${r.folga_min}"></div>
-      <div class="field"><label>Tolerância diária (min)</label><input class="inp mono" id="cf-tolerancia_min" value="${r.tolerancia_min}"></div>
-      <div class="field"><label>Banco conta a partir de</label><input class="inp" type="date" id="cf-inicio_banco" value="${r.inicio_banco}"></div>
+  return `<div class="cartao pad" style="max-width:680px">
+    <div class="g2">
+      <div class="campo"><label>Jornada por dia útil (minutos)</label><input class="inp num" id="cf-jornada_min" value="${r.jornada_min}"></div>
+      <div class="campo"><label>Cada folga consome (minutos)</label><input class="inp num" id="cf-folga_min" value="${r.folga_min}"></div>
+      <div class="campo"><label>Tolerância por dia (minutos)</label><input class="inp num" id="cf-tolerancia_min" value="${r.tolerancia_min}"></div>
+      <div class="campo"><label>Banco conta a partir de</label><input class="inp" type="date" id="cf-inicio_banco" value="${r.inicio_banco}"></div>
     </div>
-    <div class="field"><label>Feriados (AAAA-MM-DD, separados por vírgula)</label><textarea class="inp mono" id="cf-feriados" style="font-size:13px">${esc(r.feriados.join(', '))}</textarea></div>
-    <button class="btn pri" onclick="salvarRegras()"><i class="ti ti-device-floppy"></i> Salvar regras</button>
-    <p class="faint" style="font-size:12.5px;margin-top:10px">Nunca recalcule mês já fechado com regra nova: mude a data de início do banco e lance o saldo de fechamento como "saldo inicial" de cada uma.</p>
+    <div class="campo"><label>Feriados (AAAA-MM-DD separados por vírgula)</label><textarea class="inp" id="cf-feriados" style="font-size:13px">${esc(r.feriados.join(', '))}</textarea></div>
+    <div class="g2">
+      <label class="linha" style="font-weight:700"><input type="checkbox" id="cf-exigir" ${d.exigirAparelho?'checked':''} style="width:18px;height:18px"> Ponto só em computador autorizado</label>
+      <label class="linha" style="font-weight:700"><input type="checkbox" id="cf-foto" ${d.fotoPonto?'checked':''} style="width:18px;height:18px"> Tirar foto a cada marcação</label>
+    </div>
+    <button class="btn pri" style="margin-top:14px" onclick="salvarRegras()"><i class="ti ti-device-floppy"></i> Salvar regras</button>
+    <p class="apagado" style="font-size:13px;margin-top:10px">Nunca recalcule um mês já fechado com regra nova: mude a data de início do banco e lance o saldo de fechamento como saldo inicial de cada uma.</p>
   </div>
-  <div class="h2">Horário das lojas</div>
-  <div class="card pad" style="max-width:640px">${Object.entries(d.lojas).map(([k,l])=>`<div class="grid3"><div class="field"><label>Loja</label><input class="inp" value="${esc(l.nome)}" disabled></div>
-    <div class="field"><label>Abre</label><input class="inp mono" type="time" id="lj-${k}-abre" value="${l.abre}"></div><div class="field"><label>Fecha</label><input class="inp mono" type="time" id="lj-${k}-fecha" value="${l.fecha}"></div></div>`).join('')}
+  <h2 class="secao">Horário das lojas</h2>
+  <div class="cartao pad" style="max-width:680px">${Object.entries(d.lojas).map(([k,l])=>`<div class="g3"><div class="campo"><label>Loja</label><input class="inp" value="${esc(l.nome)}" disabled></div>
+    <div class="campo"><label>Abre</label><input class="inp num" type="time" id="lj-${k}-abre" value="${l.abre}"></div><div class="campo"><label>Fecha</label><input class="inp num" type="time" id="lj-${k}-fecha" value="${l.fecha}"></div></div>`).join('')}
     <button class="btn" onclick="salvarLojas()"><i class="ti ti-device-floppy"></i> Salvar horários</button></div>
-  <div class="h2">PIN da administração</div>
-  <div class="card pad" style="max-width:640px"><div class="grid2"><input class="inp mono" id="adm-novo-pin" inputmode="numeric" maxlength="6" placeholder="Novo PIN (6 números)"><button class="btn" onclick="trocarPinAdmin()">Trocar PIN</button></div></div>
-  <div class="h2">Este aparelho</div>
-  <div class="card pad" style="max-width:640px"><div class="row wrap-row" style="gap:8px"><button class="btn sm" onclick="trocarLoja();S.adm=null;S.tela='inicio';render()"><i class="ti ti-building-store"></i> Trocar loja deste computador</button>
-    ${API_FIXO?'':`<button class="btn sm" onclick="S.tela='config';render()"><i class="ti ti-link"></i> Link do servidor</button>`}</div></div>`;
+  <h2 class="secao">Links úteis do portal</h2>
+  <div class="cartao pad" style="max-width:680px"><p class="suave" style="font-size:14px;margin-bottom:10px">Aparecem na tela inicial do portal de cada colaboradora. Um por linha: <b>Título | link</b></p>
+    <textarea class="inp" id="cf-links" style="min-height:110px">${esc((d.links||[]).map(l=>l.titulo+' | '+l.url).join('\n'))}</textarea>
+    <button class="btn" style="margin-top:10px" onclick="salvarLinks()"><i class="ti ti-device-floppy"></i> Salvar links</button></div>
+  <h2 class="secao">PIN da administração</h2>
+  <div class="cartao pad" style="max-width:680px"><div class="g2"><input class="inp num" id="adm-novo-pin" inputmode="numeric" maxlength="6" placeholder="Novo PIN (6 números)"><button class="btn" onclick="trocarPinAdmin()">Trocar PIN</button></div></div>`;
 }
 async function salvarRegras(){
   try{
     for(const k of ['jornada_min','folga_min','tolerancia_min','inicio_banco','feriados']){
       let v = $('#cf-'+k).value.trim();
       if(k==='feriados') v = v.split(/[\s,;]+/).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x)).join(',');
-      S.adm.dados = await api('admConfig', {adminPin:S.adm.pin, chave:k, valor:v});
+      S.adm.dados = await api('admConfig', {...S.adm.cred, chave:k, valor:v});
     }
-    render(); toast('Regras salvas ✔');
+    S.adm.dados = await api('admConfig', {...S.adm.cred, chave:'exigir_aparelho', valor:$('#cf-exigir').checked?'SIM':'NÃO'});
+    S.adm.dados = await api('admConfig', {...S.adm.cred, chave:'foto_ponto', valor:$('#cf-foto').checked?'SIM':'NÃO'});
+    carregarBootSilencioso(); render(); toast('Regras salvas ✔');
   }catch(e){ toast(e.message, true); }
 }
 async function salvarLojas(){
   const l = JSON.parse(JSON.stringify(S.adm.dados.lojas));
   Object.keys(l).forEach(k=>{ l[k].abre=$('#lj-'+k+'-abre').value; l[k].fecha=$('#lj-'+k+'-fecha').value; });
-  try{ S.adm.dados = await api('admConfig', {adminPin:S.adm.pin, chave:'lojas', valor:JSON.stringify(l)}); carregarBootSilencioso(); render(); toast('Horários salvos ✔'); }
+  try{ S.adm.dados = await api('admConfig', {...S.adm.cred, chave:'lojas', valor:JSON.stringify(l)}); carregarBootSilencioso(); render(); toast('Horários salvos ✔'); }
+  catch(e){ toast(e.message, true); }
+}
+async function salvarLinks(){
+  const links = $('#cf-links').value.split('\n').map(l=>l.split('|')).filter(p=>p.length>=2 && p[1].trim()).map(p=>({titulo:p[0].trim(), url:p[1].trim(), icone:'link'}));
+  try{ S.adm.dados = await api('admConfig', {...S.adm.cred, chave:'links', valor:JSON.stringify(links)}); carregarBootSilencioso(); render(); toast('Links salvos ✔'); }
   catch(e){ toast(e.message, true); }
 }
 async function trocarPinAdmin(){
   const v = $('#adm-novo-pin').value.trim();
   if(!/^\d{6}$/.test(v)){ toast('O PIN precisa ter 6 números', true); return; }
-  try{ await api('admTrocarPin', {adminPin:S.adm.pin, novo:v}); S.adm.pin=v; $('#adm-novo-pin').value=''; toast('PIN da administração trocado ✔'); }
+  try{ await api('admTrocarPin', {...S.adm.cred, novo:v}); S.adm.cred = await credencial('adminPin', v); $('#adm-novo-pin').value=''; toast('PIN da administração trocado ✔'); }
   catch(e){ toast(e.message, true); }
 }
 
 /* ──────────── espelho / exportações ──────────── */
-function imprimirEspelho(){
-  const d = S.adm.dados, c = admColabAtual(), ym = S.adm.mes;
-  const mapa = mapaPontos(d.pontos, c.id), res = resumoMes(c, ym, mapa, d.regras), banco = bancoTotal(c, mapa, d.regras);
+function espelhoHTML(c, ym){
+  const d = S.adm.dados, mapa = mapaPontos(d.pontos, c.id), res = resumoMes(c, ym, mapa, d.regras), banco = bancoTotal(c, mapa, d.regras);
   const linhas = res.dias.map(x=>{
     const r = x.r || {};
     const tipo = x.domingo && !r.entrada ? 'DSR' : x.feriado && !r.entrada ? 'Feriado' : (x.tipo!=='normal' ? TIPO_NOME[x.tipo] : '');
     return `<tr><td>${ddmm(x.data)} ${semana(x.data)}${r.loja&&r.entrada?' · '+esc((d.lojas[r.loja]||{}).nome||''):''}</td>${CAMPOS.map(k=>`<td>${r[k]||''}</td>`).join('')}<td>${x.trabalhado?hm(x.trabalhado):''}</td><td>${x.previsto?hm(x.previsto):''}</td><td>${x.saldo?hm(x.saldo,true):''}</td><td>${esc([tipo, ...x.flags.filter(f=>f.c!=='info').map(f=>f.n)].filter(Boolean).join(' · '))}</td></tr>`;
   }).join('');
-  $('#print').innerHTML = `
+  return `<div class="pagina">
     <div style="display:flex;align-items:center;gap:12px;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:10px">
       <img src="${LOGO}" style="height:40px"><div><h1>Espelho de Ponto — ${nomeMes(ym)}</h1><div>${EMPRESA.nome} · CNPJ ${EMPRESA.cnpj}</div></div></div>
-    <p><b>Colaboradora:</b> ${esc(c.nome)} &nbsp; · &nbsp; <b>Jornada:</b> 7h20 por dia, seg a sáb (44h semanais)</p>
-    <table style="width:100%;border-collapse:collapse;margin-top:8px"><thead><tr><th>Dia</th>${CAMPOS.map(k=>`<th>${CURTO[k]}</th>`).join('')}<th>Trab.</th><th>Prev.</th><th>Saldo</th><th>Obs.</th></tr></thead><tbody>${linhas}</tbody></table>
+    <p><b>Colaboradora:</b> ${esc(c.nome)}${c.cargo?' · '+esc(c.cargo):''} &nbsp; · &nbsp; <b>Jornada:</b> 7h20 por dia, seg a sáb (44h semanais)</p>
+    <table style="margin-top:8px"><thead><tr><th>Dia</th>${CAMPOS.map(k=>`<th>${CURTO[k]}</th>`).join('')}<th>Trab.</th><th>Prev.</th><th>Saldo</th><th>Obs.</th></tr></thead><tbody>${linhas}</tbody></table>
     <p style="margin-top:10px"><b>Trabalhado:</b> ${hm(res.trabalhado)} · <b>Previsto:</b> ${hm(res.previsto)} · <b>Saldo do mês:</b> ${hm(res.saldo,true)} · <b>Banco de horas acumulado:</b> ${hm(banco.saldo,true)}</p>
     <p style="margin-top:8px">Declaro que os horários acima conferem com a minha jornada. Caso discorde de algum registro, tenho 5 (cinco) dias úteis a partir do recebimento para contestar por escrito. Saldo credor do banco de horas deve ser compensado até o fim do mês seguinte; o que não for compensado será pago como hora extra com adicional de 50%.</p>
     <div style="display:flex;gap:40px;margin-top:46px">
       <div style="flex:1;border-top:1px solid #000;padding-top:4px;text-align:center">${EMPRESA.nome}<br>Empregadora</div>
       <div style="flex:1;border-top:1px solid #000;padding-top:4px;text-align:center">${esc(c.nome)}<br>Colaboradora</div></div>
-    <p style="margin-top:14px;color:#555">Rio Branco/AC, ____ de ______________ de ${ym.slice(0,4)}.</p>`;
+    <p style="margin-top:14px;color:#555">Rio Branco/AC, ____ de ______________ de ${ym.slice(0,4)}.</p></div>`;
+}
+function imprimirEspelho(lista){
+  $('#print').innerHTML = lista.map(c=>espelhoHTML(c, S.adm.mes)).join('');
   setTimeout(()=>window.print(), 300);
 }
 function copiarResumo(){
   const d = S.adm.dados, c = admColabAtual(), ym = S.adm.mes;
   const mapa = mapaPontos(d.pontos, c.id), res = resumoMes(c, ym, mapa, d.regras), banco = bancoTotal(c, mapa, d.regras);
-  const txt = `🕐 *Seu ponto de ${nomeMes(ym)}*\n\nOi, ${primeiroNome(c.nome)}! Segue o resumo:\n\n⏱️ *Trabalhado:* ${hm(res.trabalhado)}\n📋 *Previsto:* ${hm(res.previsto)}\n${res.saldo>=0?'➕':'➖'} *Saldo do mês:* ${hm(res.saldo,true)}\n🏦 *Banco de horas:* ${hm(banco.saldo,true)}${banco.folgasDisp?`\n🌴 *Folgas disponíveis:* ${banco.folgasDisp}`:''}${res.pend?`\n\n⚠️ _Tem ${res.pend} dia(s) com marcação pendente — confere na sua área do Cartão de Ponto e manda a correção por lá._`:''}\n\n_Qualquer dúvida, é só chamar_ 💛`;
-  navigator.clipboard.writeText(txt).then(()=>toast('Resumo copiado ✔ Cole no WhatsApp'), ()=>{ prompt('Copie o texto:', txt); });
+  const txt = `🕐 *Seu ponto de ${nomeMes(ym)}*\n\nOi, ${primeiroNome(c.nome)}! Segue o resumo:\n\n⏱️ *Trabalhado:* ${hm(res.trabalhado)}\n📋 *Previsto:* ${hm(res.previsto)}\n${res.saldo>=0?'➕':'➖'} *Saldo do mês:* ${hm(res.saldo,true)}\n🏦 *Banco de horas:* ${hm(banco.saldo,true)}${banco.folgasDisp?`\n🌴 *Folgas disponíveis:* ${banco.folgasDisp}`:''}${res.pend?`\n\n⚠️ _Tem ${res.pend} dia(s) com marcação pendente. Confere no seu portal e manda a correção por lá._`:''}\n\n_Qualquer dúvida é só chamar_ 💛`;
+  const tel = telWa(c.telefone);
+  if(tel) window.open('https://wa.me/'+tel+'?text='+encodeURIComponent(txt), '_blank');
+  else navigator.clipboard.writeText(txt).then(()=>toast('Resumo copiado ✔ Cole no WhatsApp'), ()=>{ prompt('Copie o texto:', txt); });
 }
 function exportarCSV(todas){
   const d = S.adm.dados, ym = S.adm.mes;
@@ -1259,21 +1423,21 @@ function exportarCSV(todas){
   const head = 'funcionaria,loja,data,'+CAMPOS.join(',')+',tipo,obs';
   const rows = d.pontos.filter(p=>ids.includes(p.colaboradora_id) && p.data.startsWith(ym)).sort((a,b)=>(a.colaboradora+a.data).localeCompare(b.colaboradora+b.data))
     .map(p=>[p.colaboradora,p.loja,p.data,...CAMPOS.map(k=>p[k]),p.tipo==='normal'?'':p.tipo,p.obs].map(q).join(','));
-  const blob = new Blob(['﻿'+[head,...rows].join('\n')], {type:'text/csv;charset=utf-8'});
+  const blob = new Blob([String.fromCharCode(0xFEFF)+[head,...rows].join('\n')], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `pontos-${ym}${todas?'':'-'+admColabAtual().id}.csv`; a.click();
 }
 
-/* ──────────── configuração do link (só sem API_FIXO) ──────────── */
+/* ──────────── link do servidor (só sem API_FIXO) ──────────── */
 function telaConfig(){
-  return `<div class="wrap" style="max-width:620px">${topo(' ')}
-    <div class="card pad"><div class="h2">Conectar à planilha</div>
-    <p class="muted" style="margin-bottom:12px">Cole o link do App da Web do Apps Script (termina em <b>/exec</b>).</p>
-    <div class="field"><input class="inp" id="api-url" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(S.api)}"></div>
+  return `<div class="wrap" style="max-width:620px">${letreiro(' ')}
+    <div class="cartao pad"><h2 class="secao">Conectar à planilha</h2>
+    <p class="suave" style="margin-bottom:12px">Cole o link do App da Web do Apps Script (termina em <b>/exec</b>).</p>
+    <div class="campo"><input class="inp" id="api-url" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(S.api)}"></div>
     <button class="btn pri" onclick="salvarApi()"><i class="ti ti-plug-connected"></i> Conectar</button></div></div>`;
 }
 async function salvarApi(){
   const v = $('#api-url').value.trim();
-  if(!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec/.test(v)){ toast('Link inválido — precisa terminar em /exec', true); return; }
+  if(!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec/.test(v)){ toast('Link inválido: precisa terminar em /exec', true); return; }
   S.api = v; LS.set('lv_api', v); S.tela='inicio'; carregar();
 }
 
