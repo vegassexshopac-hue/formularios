@@ -131,14 +131,15 @@ async function admRecarregar(){
 }
 function telaAdmin(){
   const A = S.adm, d = A.dados;
+  if(!A.v5){ A.v5 = true; AOV.d = null; AOV.vistos = null; if(A.tab==='hoje') A.tab = 'aovivo'; }
   const np = pendentes(d).length;
-  const tabs = [['pedidos','ti-inbox','Pedidos',np],['hoje','ti-clock','Hoje'],['metas','ti-trophy','Metas'],['caixa','ti-cash-banknote','Caixa'],['checklist','ti-checklist','Checklist'],['escala','ti-calendar-time','Escala'],['mes','ti-calendar','Espelho'],['banco','ti-pig-money','Banco'],['agenda','ti-calendar-event','Agenda'],['equipe','ti-users','Equipe'],['aparelhos','ti-device-desktop','Aparelhos'],['regras','ti-settings','Regras']];
-  const corpo = ({pedidos:admPedidos, hoje:admHoje, metas:admMetas, caixa:admCaixa, checklist:admChecklist, escala:admEscala, mes:admMes, banco:admBanco, agenda:admAgenda, equipe:admEquipe, aparelhos:admAparelhos, regras:admRegras})[A.tab]();
+  const tabs = [['aovivo','ti-broadcast','Ao vivo'],['pedidos','ti-inbox','Pedidos',np],['hoje','ti-clock','Hoje'],['produtividade','ti-chart-bar','Produtividade'],['mural','ti-speakerphone','Mural'],['protocolos','ti-book','Protocolos'],['treino','ti-school','Treinamento'],['atalhos','ti-apps','Atalhos'],['metas','ti-trophy','Metas'],['caixa','ti-cash-banknote','Caixa'],['checklist','ti-checklist','Checklist'],['escala','ti-calendar-time','Escala'],['mes','ti-calendar','Espelho'],['banco','ti-pig-money','Banco'],['agenda','ti-calendar-event','Agenda'],['equipe','ti-users','Equipe'],['aparelhos','ti-device-desktop','Aparelhos'],['regras','ti-settings','Regras']];
+  const corpo = ({aovivo:admAoVivo, produtividade:admProdutividade, mural:admMural, protocolos:admProtocolos, treino:admTreino, atalhos:admAtalhos, pedidos:admPedidos, hoje:admHoje, metas:admMetas, caixa:admCaixa, checklist:admChecklist, escala:admEscala, mes:admMes, banco:admBanco, agenda:admAgenda, equipe:admEquipe, aparelhos:admAparelhos, regras:admRegras})[A.tab]();
   return `<div class="wrap">${letreiro(`<div class="linha" style="margin-left:auto;gap:6px">
-      <button class="icone" title="Atualizar" onclick="admRecarregar()"><i class="ti ti-refresh"></i></button>
+      ${btnBusca()}<button class="icone" title="Atualizar" onclick="admRecarregar()"><i class="ti ti-refresh"></i></button>
       <button class="btn p" onclick="S.adm=null;S.tela='inicio';render()"><i class="ti ti-logout-2"></i> Sair</button></div>`)}
     ${btnVoltar('Sair da administração')}
-    <div class="abas" style="margin-bottom:16px">${tabs.map(([k,i,n,b])=>`<button class="aba ${A.tab===k?'on':''}" onclick="S.adm.tab='${k}';render()"><i class="ti ${i}"></i> ${n} ${b?`<span class="contador">${b}</span>`:''}</button>`).join('')}</div>
+    <div class="abas" style="margin-bottom:16px">${tabs.map(([k,i,n,b])=>`<button class="aba ${A.tab===k?'on':''}" onclick="S.adm.tab='${k}';TR=null;render()"><i class="ti ${i}"></i> ${n} ${b?`<span class="contador">${b}</span>`:''}</button>`).join('')}</div>
     ${corpo}</div>`;
 }
 function admPedidos(){
