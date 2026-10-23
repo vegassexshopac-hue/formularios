@@ -25,23 +25,14 @@ function roletaPublico_() {
   var cache = CacheService.getScriptCache();
   var modo = cache.get('roleta_modo');
   if (!modo) { modo = roletaCfg_().modo; cache.put('roleta_modo', modo, 60); }
-  return ContentService.createTextOutput(JSON.stringify({ ok: true, modo: modo }))
-    .setMimeType(ContentService.MimeType.JSON);
+  return { ok: true, modo: modo };
 }
 
-/* O site chama por GET (?a=roleta) ou POST ({"a":"roleta"}). Qualquer outra coisa segue normal. */
-var _rolDoGet = typeof doGet === 'function' ? doGet : null;
-doGet = function (e) {
-  if (e && e.parameter && e.parameter.a === 'roleta') return roletaPublico_();
-  return _rolDoGet ? _rolDoGet(e) : ContentService.createTextOutput('');
-};
-var _rolDoPost = doPost;
-doPost = function (e) {
-  try {
-    var b = JSON.parse((e && e.postData && e.postData.contents) || '{}');
-    if (b && b.a === 'roleta') return roletaPublico_();
-  } catch (x) {}
-  return _rolDoPost(e);
+/* O site pergunta com ?a=roleta (GET) ou {"a":"roleta"} (POST). Entra pelo mesmo caminho das outras ações. */
+var _rolRodar = rodar_;
+rodar_ = function (req) {
+  if (req && req.a === 'roleta') { try { return roletaPublico_(); } catch (e) { return { ok: false, erro: String(e && e.message || e) }; } }
+  return _rolRodar(req);
 };
 
 /* ───────── administração ───────── */
