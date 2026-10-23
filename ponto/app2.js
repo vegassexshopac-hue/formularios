@@ -2,7 +2,7 @@ function blocoAtalhos(){
   const sol = S.sess.dados.solicitacoes;
   const pend = sol.filter(x=>x.status==='pendente').length;
   const novas = sol.filter(x=>x.status!=='pendente' && x.decidido_em && x.decidido_em.slice(0,10) >= addDays(hojeISO(),-3));
-  return `<h2 class="secao">Precisa de algo?</h2>
+  return `${blocoAvisosPendentes()}<h2 class="secao">Precisa de algo?</h2>
     <div class="atalhos">
       <button onclick="novoPedido({tipo:'correcao'})"><i class="ti ti-clock-edit"></i>Esqueci de bater ou corrigir horário</button>
       <button onclick="novoPedido({tipo:'atestado'})"><i class="ti ti-file-certificate"></i>Enviar atestado</button>
@@ -202,7 +202,8 @@ function portalEscala(){
     <h2 class="secao">Minha escala <small>próximos 14 dias</small></h2><div class="dias">${minha}</div>`;
 }
 function portalMais(){
-  const itens = [['checklist','ti-checklist','Checklist do dia','Abertura, loja, conteúdo, fechamento'],['caixa','ti-cash-banknote','Caixa / sangria','Registrar a sangria de hoje'],['escala','ti-calendar-time','Minha escala','Loja e turno dos próximos dias'],['agenda','ti-calendar-event','Agenda da equipe','Folgas, eventos e campanhas'],['eu','ti-user-circle','Meu perfil','WhatsApp e PIN']];
+  const pend = S.sess.dados.solicitacoes.filter(s=>s.status==='pendente').length, tr = progressoTrilha();
+  const itens = [['pedidos','ti-send','Meus pedidos',pend?pend+' aguardando a administração':'Correção, atestado e folga'],['protocolos','ti-book','Protocolos da loja','O manual: regras e passo a passo'],['treino','ti-school','Treinamento',tr.total?tr.pct+'% da trilha concluída':'Trilha da equipe'],['atalhos','ti-apps','Atalhos','Kommo, Nuvemshop, Instagram…'],['mes','ti-calendar-stats','Meu mês','Ponto, saldo e banco de horas'],['checklist','ti-checklist','Checklist do dia','Abertura, loja, conteúdo, fechamento'],['caixa','ti-cash-banknote','Caixa / sangria','Registrar a sangria de hoje'],['escala','ti-calendar-time','Minha escala','Loja e turno dos próximos dias'],['agenda','ti-calendar-event','Agenda da equipe','Folgas, eventos e campanhas'],['eu','ti-user-circle','Meu perfil','WhatsApp e PIN']];
   return itens.map(([k,i,n,s])=>`<button class="pedido" style="width:100%;text-align:left;cursor:pointer" onclick="S.portalTab='${k}';render()"><div class="ico"><i class="ti ${i}"></i></div><div class="cresce"><b>${n}</b><p>${s}</p></div><i class="ti ti-chevron-right apagado"></i></button>`).join('');
 }
 function sair(){ S.sess=null; S.tela='inicio'; render(); }
@@ -212,14 +213,15 @@ function irPortal(){ S.tela='portal'; render(); }
 function telaPortal(){
   const d = S.sess.dados;
   const pend = d.solicitacoes.filter(s=>s.status==='pendente').length;
-  const abas = [['inicio','ti-home','Início'],['mes','ti-calendar-stats','Meu mês'],['metas','ti-trophy','Metas'],['pedidos','ti-send','Pedidos',pend],['checklist','ti-checklist','Checklist'],['caixa','ti-cash-banknote','Caixa'],['escala','ti-calendar-time','Escala'],['agenda','ti-calendar-event','Agenda'],['eu','ti-user-circle','Eu']];
-  const barra = [['inicio','ti-home','Início'],['metas','ti-trophy','Metas'],['pedidos','ti-send','Pedidos',pend],['checklist','ti-checklist','Checklist'],['mais','ti-dots','Mais']];
-  const fn = {inicio:portalInicio, mes:portalMes, metas:portalMetas, pedidos:portalPedidos, checklist:portalChecklist, caixa:portalCaixa, escala:portalEscala, agenda:portalAgenda, eu:portalEu, mais:portalMais};
+  const nl = avisosNaoLidos().length;
+  const abas = [['inicio','ti-home','Início'],['mural','ti-speakerphone','Mural',nl],['mes','ti-calendar-stats','Meu mês'],['metas','ti-trophy','Metas'],['pedidos','ti-send','Pedidos',pend],['checklist','ti-checklist','Checklist'],['caixa','ti-cash-banknote','Caixa'],['escala','ti-calendar-time','Escala'],['protocolos','ti-book','Protocolos'],['treino','ti-school','Treinamento'],['atalhos','ti-apps','Atalhos'],['agenda','ti-calendar-event','Agenda'],['eu','ti-user-circle','Eu']];
+  const barra = [['inicio','ti-home','Início'],['metas','ti-trophy','Metas'],['checklist','ti-checklist','Checklist'],['mural','ti-speakerphone','Mural',nl],['mais','ti-dots','Mais',pend]];
+  const fn = {inicio:portalInicio, mes:portalMes, metas:portalMetas, pedidos:portalPedidos, checklist:portalChecklist, caixa:portalCaixa, escala:portalEscala, agenda:portalAgenda, eu:portalEu, mais:portalMais, mural:portalMural, protocolos:portalProtocolos, treino:portalTreino, atalhos:portalAtalhos};
   const corpo = (fn[S.portalTab]||portalInicio)();
   const naBarra = barra.some(b=>b[0]===S.portalTab) ? S.portalTab : 'mais';
-  return `<div class="wrap" style="max-width:860px">${letreiro(`<button class="btn p" style="margin-left:auto" onclick="sair()"><i class="ti ti-logout-2"></i> Sair</button>`)}
+  return `<div class="wrap" style="max-width:860px">${letreiro(`<div class="linha" style="margin-left:auto;gap:6px">${btnBusca()}<button class="btn p" onclick="sair()"><i class="ti ti-logout-2"></i> Sair</button></div>`)}
     ${modoLoja()?btnVoltar('Voltar ao ponto'):''}
-    <div class="abas esconde-p" style="margin-bottom:14px">${abas.map(([k,i,n,b])=>`<button class="aba ${S.portalTab===k?'on':''}" style="flex:0 0 auto" onclick="S.portalTab='${k}';render()"><i class="ti ${i}"></i> ${n} ${b?`<span class="contador">${b}</span>`:''}</button>`).join('')}</div>
+    <div class="abas esconde-p" style="margin-bottom:14px">${abas.map(([k,i,n,b])=>`<button class="aba ${S.portalTab===k?'on':''}" style="flex:0 0 auto" onclick="S.portalTab='${k}';S.protoAberto=null;render()"><i class="ti ${i}"></i> ${n} ${b?`<span class="contador">${b}</span>`:''}</button>`).join('')}</div>
     ${corpo}
     <div class="barra" style="display:none" id="barra">${barra.map(([k,i,n,b])=>`<button class="${naBarra===k?'on':''}" onclick="S.portalTab='${k}';render()"><i class="ti ${i}"></i>${n}${b?`<span class="contador">${b}</span>`:''}</button>`).join('')}</div>
     <style>@media (max-width:640px){#barra{display:flex!important}}</style>
@@ -237,12 +239,15 @@ function portalInicio(){
   const proximos = (d.calendario?.eventos||[]).filter(e=>e.tipo!=='aviso' && (e.data_fim||e.data) >= hoje).sort((a,b)=>a.data.localeCompare(b.data)).slice(0,4);
   const pct = Math.max(0, Math.min(100, Math.round(res.trabalhado / Math.max(1,res.previsto) * 100)));
   const marcas = CAMPOS.filter(k=>r[k]).map(k=>`<span class="selo">${CURTO[k]} <b class="num">${r[k]}</b></span>`).join('');
+  const mh = minutosHoje(r), tr = progressoTrilha();
   return `<div class="ola" style="margin-bottom:4px">${saud}, ${esc(primeiroNome(c.nome))}!</div>
     <div class="suave" style="margin-bottom:14px">${esc(dataLonga(hoje))}</div>
-    <div class="cartao pad">
+    ${blocoAvisosPendentes()}
+    <div class="cartao pad linha" style="gap:16px;align-items:center">${r.tipo&&r.tipo!=='normal'?'':anel(mh/regras.jornada_min*100, hm(mh), 'de '+hm(regras.jornada_min), 92)}<div class="cresce">
       <div class="linha entre quebra"><b style="font-size:16px">Hoje</b>${r.tipo&&r.tipo!=='normal'?`<span class="selo info">${TIPO_NOME[r.tipo]}</span>`:prox?(r.entrada?`<span class="selo ok">Trabalhando</span>`:`<span class="selo">Ainda sem marcação</span>`):`<span class="selo ok">Dia encerrado · ${hm(trab(r))}</span>`}</div>
       <div class="linha quebra" style="gap:6px;margin-top:10px">${marcas || '<span class="apagado" style="font-size:14px">Nenhuma marcação hoje. O ponto é batido no computador da loja.</span>'}</div>
-    </div>
+    </div></div>
+    ${tr.total && tr.pct<100?`<button class="nota info" style="width:100%;text-align:left;margin-top:12px;cursor:pointer" onclick="S.portalTab='treino';render()"><i class="ti ti-school"></i><div><b>Treinamento: ${tr.feitos} de ${tr.total} passos.</b> Toque para continuar a sua trilha.</div></button>`:''}
     <div class="numeros" style="margin-top:12px">
       <div class="numero"><small>Banco de horas</small><b class="num ${banco.saldo>0?'pos':banco.saldo<0?'neg':''}">${hm(banco.saldo,true)}</b><span>${banco.folgasDisp?banco.folgasDisp+' folga(s) disponível(is)':'ainda sem folga disponível'}</span></div>
       <div class="numero"><small>Este mês</small><b class="num">${hm(res.trabalhado)}</b><span>de ${hm(res.previsto)} previstas</span><div class="medidor"><i style="width:${pct}%"></i></div></div>
@@ -264,9 +269,9 @@ function portalInicio(){
       <button onclick="novoPedido({tipo:'folga'})"><i class="ti ti-beach"></i>Pedir folga</button>
       <button onclick="S.portalTab='mes';render()"><i class="ti ti-calendar-stats"></i>Ver meu mês</button>
     </div>
-    ${avisos.length?`<h2 class="secao">Mural</h2><div class="mural">${avisos.map(e=>`<div class="item"><b>📌 ${esc(e.titulo)}</b>${e.obs?esc(e.obs):''}<div class="apagado" style="font-size:12px;margin-top:2px">${ddmm(e.data)}</div></div>`).join('')}</div>`:''}
+    ${avisos.filter(e=>lido('aviso',e.id,c.id,d.leituras)).length?`<h2 class="secao">Mural <small><button class="btn p fantasma" style="padding:0;height:auto" onclick="S.portalTab='mural';render()">ver todos</button></small></h2><div class="mural">${avisos.filter(e=>lido('aviso',e.id,c.id,d.leituras)).slice(0,3).map(e=>cardAviso(e,d)).join('')}</div>`:''}
     ${proximos.length?`<h2 class="secao">Próximos eventos</h2>${proximos.map(e=>{ const t=TIPO_EV[e.tipo]||TIPO_EV.evento; return `<div class="pedido" style="align-items:center"><div class="ico">${t.e}</div><div class="cresce"><b>${esc(e.titulo)}</b><p>${t.n}, ${ddmm(e.data)}${e.data_fim&&e.data_fim!==e.data?' a '+ddmm(e.data_fim):''}${e.loja&&d.lojas[e.loja]?', loja '+esc(d.lojas[e.loja].nome):''}${e.obs?' — '+esc(e.obs):''}</p></div></div>`; }).join('')}`:''}
-    ${(d.links||[]).length?`<h2 class="secao">Links úteis</h2><div class="links">${d.links.map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener"><i class="ti ti-${esc(l.icone||'link')}"></i>${esc(l.titulo)}</a>`).join('')}</div>`:''}`;
+    ${(d.atalhos||[]).length?`<h2 class="secao">Atalhos <small><button class="btn p fantasma" style="padding:0;height:auto" onclick="S.portalTab='atalhos';render()">ver todos</button></small></h2><div class="grade-atalhos">${(d.atalhos||[]).flatMap(g=>g.itens||[]).filter(a=>a.destaque).slice(0,6).map(a=>tileAtalho(a)).join('')}</div>`:''}`;
 }
 function portalMes(){
   const d = S.sess.dados, c = d.colaboradora, regras = d.regras;
