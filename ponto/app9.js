@@ -74,3 +74,6 @@ itensBusca = function itensBusca(){
   if(S.adm) r.unshift({t:'Roleta do site', s:'Liga, desliga ou testa a roleta', i:'ti-confetti', go:()=>{ S.adm.tab='roleta'; render(); }});
   return r;
 };
+
+/* v9: Estoque + entrada de mercadoria (Portal › Receber · Administração › Estoque) — carrega aqui, antes do app4 (que inicia o app) */
+document.write('<script src="app10.js?v=9"><\/script>');
