@@ -1,0 +1,134 @@
+/* ═══════ Portal Equipe Las Vegas · v6 — tela inicial ao vivo ═══════ */
+.lobby{max-width:1180px}
+.ao-vivo-chip{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 12px;border-radius:15px;background:rgba(61,220,151,.12);color:var(--ok);font-size:13px;font-weight:800}
+.ao-vivo-chip i{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:vivo 1.8s infinite}
+
+/* abertura orquestrada: só na primeira carga */
+.lobby.intro .lob-sec{animation:sobeLobby .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i) * .09s + .15s)}
+@keyframes sobeLobby{from{opacity:0;transform:translateY(18px) scale(.985)}}
+
+/* hero: o letreiro de Vegas */
+.lob-hero{position:relative;display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;padding:26px 28px;border-radius:26px;overflow:hidden;
+  background:radial-gradient(600px 260px at 85% 50%,rgba(245,181,36,.16),transparent 70%),radial-gradient(500px 300px at 0% 0%,rgba(227,16,31,.28),transparent 65%),linear-gradient(160deg,#2E1C19,#1B1210);
+  border:1.5px solid rgba(245,181,36,.35);box-shadow:var(--sh)}
+.lob-hero::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,244,224,.07) 48%,transparent 60%);transform:translateX(-100%);animation:brilhoHero 7s ease-in-out infinite 1.2s;pointer-events:none}
+@keyframes brilhoHero{0%,70%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.hero-saud{font-size:clamp(26px,4vw,40px);font-weight:800;letter-spacing:-.02em;line-height:1.05;font-variation-settings:'opsz' 96}
+.hero-data{color:var(--creme2);font-weight:600;margin-top:6px;text-transform:capitalize}
+.hero-entrar{margin-top:16px;box-shadow:0 8px 24px rgba(245,181,36,.3)}
+.hero-lojas{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.pill-loja{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:17px;background:rgba(0,0,0,.28);border:1px solid var(--linha2);font-size:13.5px;font-weight:700;color:var(--creme2)}
+.pill-loja i{width:9px;height:9px;border-radius:50%;background:var(--creme3)}
+.pill-loja.aberta{color:var(--creme);border-color:rgba(61,220,151,.4)}
+.pill-loja.aberta i{background:var(--ok);box-shadow:0 0 0 0 rgba(61,220,151,.6);animation:vivo 1.8s infinite}
+.neon-relogio{display:flex;align-items:center;font-size:clamp(64px,11vw,124px);font-weight:800;line-height:.9;letter-spacing:-.04em;color:var(--dourado2);font-variant-numeric:tabular-nums;font-variation-settings:'opsz' 96;
+  text-shadow:0 0 18px rgba(245,181,36,.55),0 0 42px rgba(245,181,36,.25)}
+.neon-relogio .dig{display:inline-block;min-width:.6em;text-align:center}
+.neon-relogio .dig.troca{animation:rolaDig .55s cubic-bezier(.2,.9,.2,1)}
+@keyframes rolaDig{0%{transform:translateY(-55%);opacity:0;filter:blur(3px)}100%{transform:none;opacity:1}}
+.neon-relogio .dois{animation:piscaDois 1s steps(1) infinite;margin:0 .02em;transform:translateY(-.06em)}
+@keyframes piscaDois{50%{opacity:.25}}
+.seg-barra{height:4px;border-radius:2px;background:rgba(255,244,224,.08);margin-top:10px;overflow:hidden}
+.seg-barra i{display:block;height:100%;background:linear-gradient(90deg,var(--vermelho),var(--dourado));transition:width 1s linear}
+
+/* letreiro de LED */
+.ticker{margin:14px 0;border-radius:16px;overflow:hidden;background:#0E0907;border:1px solid rgba(245,181,36,.25);box-shadow:inset 0 0 22px rgba(0,0,0,.7);
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+.ticker-trilho{display:flex;align-items:center;gap:22px;width:max-content;padding:13px 0;animation:corre-ticker var(--dur) linear infinite}
+.ticker:hover .ticker-trilho{animation-play-state:paused}
+.ticker span{white-space:nowrap;font-weight:800;font-size:15.5px;color:var(--dourado2);text-shadow:0 0 10px rgba(245,181,36,.45)}
+.ticker .sep{font-style:normal;color:var(--vermelho);text-shadow:0 0 8px rgba(227,16,31,.7)}
+@keyframes corre-ticker{to{transform:translateX(-50%)}}
+
+/* grade */
+.lob-grade{display:grid;grid-template-columns:1.25fr 1fr;gap:14px;margin-top:14px}
+.lob-grade.tres{grid-template-columns:repeat(3,1fr)}
+.lob-card{height:100%;padding:20px;border-radius:22px;background:var(--veludo);border:1px solid var(--linha);box-shadow:var(--sh)}
+.lob-card h3,.lob-h{font-size:17px;font-weight:800;letter-spacing:-.01em;margin-bottom:12px}
+.lob-h{margin:0}
+
+/* agora nas lojas */
+.lob-lojas{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.lob-loja{padding:14px;border-radius:18px;background:var(--noite2);border:1px solid var(--linha);transition:border-color .3s}
+.lob-loja.aberta{border-color:rgba(61,220,151,.3)}
+.lob-nome{font-size:15.5px}
+.lob-st{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--creme3)}
+.lob-st i{width:8px;height:8px;border-radius:50%;background:var(--creme3)}
+.lob-loja.aberta .lob-st{color:var(--ok)}.lob-loja.aberta .lob-st i{background:var(--ok);animation:vivo 1.8s infinite}
+.lob-pessoas{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;min-height:92px;align-items:flex-start}
+.lob-p{display:flex;flex-direction:column;align-items:center;text-align:center;width:84px}
+.lob-p b{font-size:14px;margin-top:8px}.lob-p small{font-size:11.5px;color:var(--creme3);line-height:1.2}
+.lob-p.saiu{opacity:.5}
+.lob-vazio{font-size:13.5px;align-self:center}
+.lob-av{position:relative;width:46px;height:46px;border-radius:50%;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#1A1210;background:var(--cor);box-shadow:0 0 0 3px var(--noite2),0 0 0 5px var(--linha2)}
+.lob-av.ativa{box-shadow:0 0 0 3px var(--noite2),0 0 0 5px var(--ok)}
+.lob-av.ativa::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px solid var(--ok);animation:ondaAv 2.2s ease-out infinite}
+@keyframes ondaAv{from{opacity:.8;transform:scale(1)}to{opacity:0;transform:scale(1.45)}}
+.lob-av.almoco,.lob-av.pausa{box-shadow:0 0 0 3px var(--noite2),0 0 0 5px var(--warn)}
+.lob-av.fora{filter:grayscale(.6);opacity:.75}
+.lob-esperando{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--linha2)}
+.lob-esperando>small{width:100%;font-size:12px;color:var(--creme3);font-weight:700}
+.esperando{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--creme2)}
+.esperando small{color:var(--creme3);font-weight:600}
+
+/* corrida da meta */
+.pista-l{margin-top:14px}
+.pista-pct b{font-size:24px;font-weight:800;color:var(--dourado2)}
+.pista-pct small{color:var(--creme3);font-size:12.5px}
+.pista{position:relative;height:16px;border-radius:8px;background:repeating-linear-gradient(90deg,var(--noite2) 0 18px,#241a17 18px 36px);margin:10px 0 6px;overflow:visible}
+.pista-fill{position:absolute;inset:0 auto 0 0;width:var(--w);border-radius:8px;background:linear-gradient(90deg,var(--vermelho2),var(--vermelho) 40%,var(--dourado));box-shadow:0 0 14px rgba(227,16,31,.4)}
+.corredor{position:absolute;top:50%;left:var(--w);width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:var(--dourado2);box-shadow:0 0 0 4px rgba(245,181,36,.25),0 0 18px rgba(255,209,92,.8)}
+.intro .pista-fill{animation:enche 1.4s cubic-bezier(.2,.8,.2,1) .5s both}
+.intro .corredor{animation:corre-pista 1.4s cubic-bezier(.2,.8,.2,1) .5s both}
+@keyframes enche{from{width:0}}
+@keyframes corre-pista{from{left:0}}
+.bandeira{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--creme2)}
+.bandeira.s{background:var(--dourado)}.bandeira.h{background:var(--ok)}
+.ritmo{position:absolute;top:-9px;width:0;height:0;margin-left:-6px;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid var(--creme)}
+.pista-leg{font-size:13px;font-weight:700}
+.warn-t{color:var(--warn)}
+.destaque{display:flex;align-items:center;gap:12px;margin-top:16px;padding:12px 14px;border-radius:16px;background:linear-gradient(90deg,rgba(245,181,36,.14),transparent);border:1px solid rgba(245,181,36,.3)}
+.destaque>span{font-size:26px;animation:giraEstrela 6s ease-in-out infinite}
+@keyframes giraEstrela{0%,80%{transform:none}90%{transform:rotate(25deg) scale(1.2)}}
+.destaque small{display:block;font-size:12px;color:var(--creme3);font-weight:700}.destaque b{font-size:18px}
+
+/* quem é você */
+.quem{margin-top:18px}
+.lob-pessoas-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:12px}
+.lob-pessoa{display:flex;align-items:center;gap:12px;padding:14px;border-radius:18px;background:var(--veludo);border:1px solid var(--linha);text-align:left;color:var(--creme);transition:border-color .15s,transform .12s,background .15s}
+.lob-pessoa:hover{border-color:var(--dourado);background:var(--veludo2);transform:translateY(-2px)}
+.lob-pessoa:active{transform:scale(.98)}
+.lob-pessoa b{display:block;font-size:16px}.lob-pessoa small{font-size:12.5px;color:var(--creme3)}
+.lob-pessoa>i{color:var(--creme3);transition:transform .15s}.lob-pessoa:hover>i{transform:translateX(3px);color:var(--dourado)}
+.lob-pessoa.on{border-color:rgba(61,220,151,.35)}
+
+/* eventos / checklist / frase */
+.evento{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--linha)}
+.evento:last-child{border-bottom:0}
+.evento b{display:block;font-size:14.5px}.evento small{font-size:12.5px;color:var(--creme3)}
+.dia-bloco{width:48px;height:52px;border-radius:12px;background:var(--noite2);border:1px solid var(--linha2);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}
+.dia-bloco b{font-size:20px;line-height:1;color:var(--dourado2)}.dia-bloco small{font-size:11px;text-transform:uppercase;font-weight:700}
+.falta{font-size:12.5px;font-weight:800;color:var(--creme2);white-space:nowrap}
+.falta.hoje{color:#fff;background:var(--vermelho);padding:3px 9px;border-radius:10px;animation:pulsoHoje 1.6s ease-in-out infinite}
+@keyframes pulsoHoje{50%{box-shadow:0 0 0 6px rgba(227,16,31,0)}0%{box-shadow:0 0 0 0 rgba(227,16,31,.55)}}
+.chk-l{margin-top:12px}.chk-l span{font-weight:700;font-size:14px}
+.frase-card{position:relative;display:flex;flex-direction:column;background:linear-gradient(160deg,#3A1717,var(--veludo))}
+.aspas{position:absolute;top:-6px;right:16px;font-size:110px;line-height:1;color:rgba(227,16,31,.35);font-family:Georgia,serif}
+#frase{font-size:19px;font-weight:700;line-height:1.35;margin-top:4px;max-width:30ch;position:relative}
+#frase.vem{animation:fraseVem .8s ease-out}
+@keyframes fraseVem{from{opacity:0;transform:translateY(8px);filter:blur(2px)}}
+.aviso-teaser{display:flex;gap:10px;align-items:flex-start;margin-top:auto;padding-top:16px;font-size:13.5px;color:var(--creme2)}
+.aviso-teaser i{color:var(--dourado);font-size:20px}
+
+@media (max-width:900px){
+  .lob-grade,.lob-grade.tres{grid-template-columns:1fr}
+  .lob-hero{grid-template-columns:1fr;padding:20px}
+  .hero-rel{order:-1}
+}
+@media (max-width:560px){
+  .lob-lojas{grid-template-columns:1fr}
+  .neon-relogio{font-size:78px}
+  .lob-pessoas-grade{grid-template-columns:1fr 1fr}
+  .lob-pessoa{flex-direction:column;text-align:center;padding:14px 8px}.lob-pessoa>i{display:none}
+}
+@media (prefers-reduced-motion:reduce){.ticker-trilho{flex-wrap:wrap;width:auto;padding:12px 16px}}
