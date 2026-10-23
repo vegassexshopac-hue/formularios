@@ -147,4 +147,5 @@ function telaInicio(){
 }
 
 /* v7: PDV (Vender) + Arena de vendas — carrega logo depois deste arquivo, antes do app4 (que inicia o app) */
-document.write('<link rel="stylesheet" href="pdv.css?v=7"><script src="app8.js?v=7"><\/script><script src="app8b.js?v=7"><\/script><script src="app8c.js?v=7"><\/script>');
+/* v8: Roleta do site (Administração › Roleta do site) */
+document.write('<link rel="stylesheet" href="pdv.css?v=7"><script src="app8.js?v=7"><\/script><script src="app8b.js?v=7"><\/script><script src="app8c.js?v=7"><\/script><script src="app9.js?v=8"><\/script>');
