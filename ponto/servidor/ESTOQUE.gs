@@ -7,7 +7,9 @@
    2) Cole este arquivo inteiro e salve.
    3) Implantar › Gerenciar implantações › lápis › Nova versão › Implantar.
       (o Google vai pedir uma permissão nova: "conectar a serviço externo" — é a IA que lê a nota)
-   As abas Estoque, MovEstoque, Entradas e VinculosEstoque são criadas sozinhas.
+   As abas Estoque, MovEstoque, Entradas, VinculosEstoque, Contagens, ContagemLeituras e Transferencias são criadas sozinhas.
+   LOCAIS de estoque (Config › estoque_locais): bosque = Bosque prateleira · deposito = Bosque depósito · centro = Centro prateleira.
+   A venda do PDV dá baixa na prateleira da loja onde foi feita.
    A chave da IA fica guardada nas Propriedades do Script (nunca na planilha).
    ═══════════════════════════════════════════════════════════════ */
 
@@ -16,10 +18,26 @@ ABAS.MovEstoque = ['id', 'quando', 'data', 'loja', 'produto_id', 'produto', 'tip
 ABAS.Entradas = ['id', 'criada_em', 'loja', 'fornecedor', 'cnpj', 'numero', 'chave_nfe', 'emissao', 'valor_total', 'qtd_total',
                  'itens', 'origem', 'status', 'por', 'divergencias', 'novos', 'obs', 'cancelada_em', 'cancelada_por'];
 ABAS.VinculosEstoque = ['chave', 'cnpj', 'cod_fornecedor', 'ean', 'produto_id', 'descricao', 'atualizado_em'];
+ABAS.Contagens = ['id', 'nome', 'local', 'status', 'criada_em', 'criada_por', 'fechada_em', 'fechada_por', 'resumo', 'obs'];
+ABAS.ContagemLeituras = ['id', 'contagem_id', 'produto_id', 'delta', 'por', 'quando'];
+ABAS.Transferencias = ['id', 'criada_em', 'de', 'para', 'itens', 'qtd_total', 'status', 'por', 'recebida_em', 'recebida_por', 'divergencias', 'obs'];
 
-var EST_PADRAO = { baixa_pdv: false, ia_provedor: 'anthropic', ia_modelo: '' };
+var EST_LOCAIS_PADRAO = [
+  { id: 'bosque', nome: 'Bosque · Prateleira', loja: 'bosque', tipo: 'prateleira' },
+  { id: 'deposito', nome: 'Bosque · Depósito', loja: 'bosque', tipo: 'deposito' },
+  { id: 'centro', nome: 'Centro · Prateleira', loja: 'centro', tipo: 'prateleira' }
+];
+CONFIG_PADRAO.push(['estoque_locais', JSON.stringify(EST_LOCAIS_PADRAO), 'Locais de estoque (JSON): id, nome, loja e tipo (prateleira | deposito)']);
+var EST_MOTIVOS_SAIDA = ['Avaria / quebra', 'Brinde', 'Chá de lingerie / evento', 'Uso interno / mostruário', 'Devolução ao fornecedor', 'Perda / sumiu', 'Troca com cliente', 'Outro'];
+function estLocaisLista_() { var l = cfgJson_('estoque_locais', null); return Array.isArray(l) && l.length ? l : EST_LOCAIS_PADRAO; }
+function estLocaisMapa_() { var m = {}; estLocaisLista_().forEach(function (x) { m[x.id] = x; }); return m; }
+/** Prateleira da loja (onde a venda do PDV dá baixa). */
+function estPrateleiraDe_(loja) { var l = estLocaisLista_().filter(function (x) { return x.loja === loja && x.tipo !== 'deposito'; })[0]; return l ? l.id : loja; }
+
+var EST_PADRAO = { baixa_pdv: true, ia_provedor: 'anthropic', ia_modelo: '' };
 var EST_MODELOS = { anthropic: 'claude-sonnet-5-5', gemini: 'gemini-2.5-flash' };
-var EST_TIPOS = { entrada: 'Entrada (nota)', saldo_inicial: 'Saldo inicial', ajuste: 'Ajuste', venda: 'Venda PDV', venda_cancelada: 'Venda cancelada', entrada_cancelada: 'Entrada cancelada' };
+var EST_TIPOS = { entrada: 'Entrada (nota)', saldo_inicial: 'Saldo inicial', ajuste: 'Ajuste', venda: 'Venda PDV', venda_cancelada: 'Venda cancelada', entrada_cancelada: 'Entrada cancelada',
+                  contagem: 'Contagem', transf_saida: 'Transferência (saiu)', transf_entrada: 'Transferência (entrou)', transf_cancelada: 'Transferência cancelada', saida: 'Saída' };
 CONFIG_PADRAO.push(['estoque', JSON.stringify(EST_PADRAO), 'Estoque (JSON): baixa_pdv = dá baixa ao vender no PDV · ia_provedor = anthropic | gemini · ia_modelo (opcional)']);
 
 function estCfg_() {
@@ -30,7 +48,7 @@ function estCfg_() {
   return o;
 }
 function estChaveIA_() { try { return PropertiesService.getScriptProperties().getProperty('IA_CHAVE') || ''; } catch (e) { return ''; } }
-function estLojas_() { return JSON.parse(cfg_('lojas')); }
+function estLojas_() { return estLocaisMapa_(); }   // entradas, saldo e ajuste agora são por LOCAL
 function estNum_(v) { var n = Number(String(v == null ? '' : v).replace(',', '.')); return isNaN(n) ? 0 : Math.round(n * 1000) / 1000; }
 
 /* ───────── leitura ───────── */
@@ -45,7 +63,8 @@ function estEntrada_(e) {
 }
 function estPacote_(admin) {
   var desde = diaMais_(admin ? -120 : -45);
-  var p = { cfg: estCfg_(), iaPronta: !!estChaveIA_(), saldos: estSaldos_(), tipos: EST_TIPOS,
+  var p = { cfg: estCfg_(), iaPronta: !!estChaveIA_(), saldos: estSaldos_(), tipos: EST_TIPOS, locais: estLocaisLista_(), motivos: EST_MOTIVOS_SAIDA,
+            contagens: estContagensPacote_(admin), transferencias: estTransfPacote_(admin),
             entradas: ler_('Entradas').filter(function (e) { return String(e.criada_em).slice(0, 10) >= desde; }).map(estEntrada_).reverse().slice(0, 80),
             vinculos: ler_('VinculosEstoque').map(function (v) { return { chave: v.chave, ean: v.ean, produto_id: v.produto_id }; }) };
   if (admin) p.movimentos = ler_('MovEstoque').slice(-400).map(limpar_).reverse();
@@ -278,7 +297,18 @@ function estOp_(req, por, admin) {
                                       extras: (r.extras || []).slice(0, 30).map(function (x) { return { desc: String(x.desc || '').slice(0, 120), qtd: estNum_(x.qtd) }; }), resumo: String(r.resumo || '').slice(0, 300) } };
   }
   if (op === 'confirmar') return { entrada: estConfirmar_(req, por) };
+  if (op === 'contar') return { contagem: estContar_(req, por) };
+  if (op === 'contagem') return { contagem: estContagemTotais_(String(req.id || '')) };
+  if (op === 'transferir') return { transferencia: estTransferir_(req, por) };
+  if (op === 'receberTransf') return { transferencia: estReceberTransf_(req, por) };
+  if (op === 'saida') { estSaida_(req, por); return {}; }
+  if (op === 'vincular') { estVincular_(req, por); return { ok: true, vinculos: estPacote_(false).vinculos }; }
   if (!admin) throw new Error('Só a administração pode fazer isso');
+  if (op === 'contagemAbrir') return { contagem: estContagemAbrir_(req, por) };
+  if (op === 'contagemFechar') { estContagemFechar_(req, por); return {}; }
+  if (op === 'contagemCancelar') { estContagemCancelar_(req, por); return {}; }
+  if (op === 'cancelarTransf') { estCancelarTransf_(req, por); return {}; }
+  if (op === 'locais') { estSalvarLocais_(req); return {}; }
   if (op === 'cancelar') { estCancelarEntrada_(req.id, req.motivo, por); return {}; }
   if (op === 'saldo') { estDefinir_(req, por, 'saldo_inicial'); return {}; }
   if (op === 'ajuste') { estDefinir_(req, por, 'ajuste'); return {}; }
@@ -306,7 +336,8 @@ rodar_ = function (req) {
     try {
       var c = checarColab_(req);
       var r = estOp_(req, c.nome, false);
-      if (req.op === 'confirmar') { var d = dadosColab_(c); d.entradaFeita = r.entrada; return d; }
+      if (['confirmar', 'transferir', 'receberTransf', 'saida'].indexOf(req.op) >= 0) { var d = dadosColab_(c); d.entradaFeita = r.entrada; d.transfFeita = r.transferencia; return d; }
+      if (req.op === 'contar' || req.op === 'contagem') { r.ok = true; return r; }
       return r;
     } catch (e) { return { ok: false, erro: String(e && e.message || e) }; }
   }
@@ -314,9 +345,10 @@ rodar_ = function (req) {
 };
 ADMIN.admEstoque = function (req) {
   var r = estOp_(req, 'Administração', true);
-  if (req.op === 'ler' || req.op === 'conferir') return r;
+  if (req.op === 'ler' || req.op === 'conferir' || req.op === 'contar' || req.op === 'contagem') { r.ok = true; return r; }
   var d = ADMIN.admDados(req);
   if (r.entrada) d.entradaFeita = r.entrada;
+  if (r.transferencia) d.transfFeita = r.transferencia;
   return d;
 };
 
@@ -327,7 +359,8 @@ pdvVender_ = function (c, req) {
   try {
     if (estCfg_().baixa_pdv && d && d.pdvVenda && !d.pdvRepetida) {
       var v = d.pdvVenda, soma = {};
-      (v.itens || []).forEach(function (i) { if (i.id) { soma[i.id] = soma[i.id] || { produto_id: i.id, produto: i.nome, loja: v.loja, delta: 0 }; soma[i.id].delta -= i.qtd; } });
+      var pr = estPrateleiraDe_(v.loja);
+      (v.itens || []).forEach(function (i) { if (i.id) { soma[i.id] = soma[i.id] || { produto_id: i.id, produto: i.nome, loja: pr, delta: 0 }; soma[i.id].delta -= i.qtd; } });
       estMovimentar_(Object.keys(soma).map(function (k) { return soma[k]; }), 'venda', 'PDV #' + v.numero, c.nome);
       d.estoque = estPacote_(false);
     }
@@ -338,11 +371,207 @@ var _estPdvCancelar = pdvCancelarLinha_;
 pdvCancelarLinha_ = function (v, por, motivo) {
   _estPdvCancelar(v, por, motivo);
   try {
-    var ja = ler_('MovEstoque').some(function (m) { return m.tipo === 'venda' && m.ref === 'PDV #' + v.numero && m.data === v.data && m.loja === v.loja; });
+    var pr = estPrateleiraDe_(v.loja);
+    var ja = ler_('MovEstoque').some(function (m) { return m.tipo === 'venda' && m.ref === 'PDV #' + v.numero && m.data === v.data && m.loja === pr; });
     if (!ja) return;                                   // só devolve se essa venda tinha dado baixa
     var itens = []; try { itens = JSON.parse(v.itens || '[]'); } catch (x) {}
     var soma = {};
-    itens.forEach(function (i) { if (i.id) { soma[i.id] = soma[i.id] || { produto_id: i.id, produto: i.nome, loja: v.loja, delta: 0 }; soma[i.id].delta += i.qtd; } });
+    itens.forEach(function (i) { if (i.id) { soma[i.id] = soma[i.id] || { produto_id: i.id, produto: i.nome, loja: pr, delta: 0 }; soma[i.id].delta += i.qtd; } });
     estMovimentar_(Object.keys(soma).map(function (k) { return soma[k]; }), 'venda_cancelada', 'PDV #' + v.numero, por, motivo);
   } catch (e) { log_('Sistema', 'erro devolver estoque', String(e && e.message || e)); }
 };
+
+
+/* ═════════════ CONTAGEM (levantamento) ═════════════
+   A administração abre uma contagem para um local. Várias pessoas contam ao mesmo tempo (leitor de código, câmera ou digitando):
+   cada aparelho manda as leituras em lotes (sem duplicar se reenviar). A administração revisa sistema × contado e fecha:
+   aí o saldo do local vira o número contado. */
+function estContagensPacote_(admin) {
+  var abertas = ler_('Contagens').filter(function (c) { return c.status === 'aberta' || (admin && String(c.fechada_em).slice(0, 10) >= diaMais_(-60)); });
+  return abertas.map(function (c) { var o = limpar_(c); try { o.resumo = JSON.parse(c.resumo || '{}'); } catch (e) { o.resumo = {}; } return o; }).reverse();
+}
+function estContagemAchar_(id, aberta) {
+  var c = ler_('Contagens').filter(function (x) { return x.id === id; })[0];
+  if (!c) throw new Error('Contagem não encontrada');
+  if (aberta && c.status !== 'aberta') throw new Error('Essa contagem já foi fechada');
+  return c;
+}
+function estContagemTotais_(id) {
+  var c = estContagemAchar_(id, false), tot = {}, pessoas = {}, n = 0;
+  ler_('ContagemLeituras').forEach(function (l) {
+    if (l.contagem_id !== id) return;
+    var d = estNum_(l.delta); tot[l.produto_id] = Math.round(((tot[l.produto_id] || 0) + d) * 1000) / 1000;
+    pessoas[l.por] = (pessoas[l.por] || 0) + d; n++;
+  });
+  return { id: id, nome: c.nome, local: c.local, status: c.status, totais: tot, pessoas: pessoas, leituras: n };
+}
+function estContagemAbrir_(req, por) {
+  var locais = estLocaisMapa_(), local = String(req.local || '');
+  if (!locais[local]) throw new Error('Escolha o local da contagem');
+  if (ler_('Contagens').some(function (c) { return c.status === 'aberta' && c.local === local; })) throw new Error('Já tem uma contagem aberta em ' + locais[local].nome);
+  var c = { id: 'C' + new Date().getTime() + Math.floor(Math.random() * 1e4), nome: String(req.nome || ('Contagem ' + locais[local].nome)).slice(0, 80), local: local, status: 'aberta',
+            criada_em: agora_(), criada_por: por, fechada_em: '', fechada_por: '', resumo: '', obs: String(req.obs || '').slice(0, 200) };
+  gravar_('Contagens', c);
+  log_(por, 'contagem aberta', c.nome);
+  return limpar_(c);
+}
+/** leituras: [{uid, produto_id, delta}] — uid evita contar duas vezes se a internet cair e o aparelho reenviar. */
+function estContar_(req, por) {
+  var c = estContagemAchar_(String(req.contagem_id || ''), true);
+  var lista = Array.isArray(req.leituras) ? req.leituras.slice(0, 500) : [];
+  var cat = {}; ler_('Produtos').forEach(function (p) { cat[p.id] = 1; });
+  var trava = LockService.getScriptLock(); trava.waitLock(20000);
+  try {
+    var ja = {}; ler_('ContagemLeituras').forEach(function (l) { if (l.contagem_id === c.id) ja[l.id] = 1; });
+    var novas = [], agora = agora_();
+    lista.forEach(function (l) {
+      var uid = String(l.uid || '').replace(/[^\w-]/g, '').slice(0, 50), d = estNum_(l.delta);
+      if (!uid || ja[uid] || !cat[l.produto_id] || !d || Math.abs(d) > 100000) return;
+      ja[uid] = 1; novas.push({ id: uid, contagem_id: c.id, produto_id: l.produto_id, delta: String(d), por: por, quando: agora });
+    });
+    if (novas.length) {
+      var sh = aba_('ContagemLeituras'), cab = cabecalho_('ContagemLeituras', sh);
+      sh.getRange(sh.getLastRow() + 1, 1, novas.length, cab.length).setNumberFormat('@').setValues(novas.map(function (x) { return linha_('ContagemLeituras', x, cab); }));
+    }
+  } finally { trava.releaseLock(); }
+  return estContagemTotais_(c.id);
+}
+/** Fecha: o saldo do local vira o contado. Produto não contado: zera (zerar:true) ou mantém o saldo antigo. */
+function estContagemFechar_(req, por) {
+  var c = estContagemAchar_(String(req.id || ''), true), t = estContagemTotais_(c.id).totais;
+  var cat = {}; ler_('Produtos').forEach(function (p) { cat[p.id] = p; });
+  var atuais = {}; estSaldos_().forEach(function (s) { if (s.loja === c.local) atuais[s.produto_id] = s.qtd; });
+  var lista = [], sobra = 0, falta = 0, iguais = 0, zerados = 0;
+  Object.keys(t).forEach(function (pid) {
+    if (!cat[pid]) return;
+    var q = Math.max(0, t[pid]), antes = atuais[pid] || 0;
+    if (q > antes) sobra += q - antes; else if (q < antes) falta += antes - q; else iguais++;
+    lista.push({ produto_id: pid, produto: cat[pid].nome, loja: c.local, definir: q });
+  });
+  if (req.zerar) Object.keys(atuais).forEach(function (pid) {
+    if (t[pid] != null || !cat[pid] || atuais[pid] === 0) return;
+    if (atuais[pid] > 0) falta += atuais[pid];
+    lista.push({ produto_id: pid, produto: cat[pid].nome, loja: c.local, definir: 0, obs: 'não contado' }); zerados++;
+  });
+  if (!lista.length) throw new Error('Nada contado ainda');
+  estMovimentar_(lista, 'contagem', c.nome, por, '');
+  c.status = 'fechada'; c.fechada_em = agora_(); c.fechada_por = por;
+  c.resumo = JSON.stringify({ produtos: Object.keys(t).length, pecas: Object.keys(t).reduce(function (s, k) { return s + Math.max(0, t[k]); }, 0), sobra: sobra, falta: falta, iguais: iguais, zerados: zerados });
+  gravar_('Contagens', c);
+  log_(por, 'contagem fechada', c.nome + ' · ' + c.resumo);
+}
+function estContagemCancelar_(req, por) {
+  var c = estContagemAchar_(String(req.id || ''), true);
+  c.status = 'cancelada'; c.fechada_em = agora_(); c.fechada_por = por; gravar_('Contagens', c);
+  log_(por, 'contagem cancelada', c.nome);
+}
+
+/* ═════════════ TRANSFERÊNCIAS ═════════════
+   Depósito → prateleira da MESMA loja: entra na hora. Entre lojas (ex.: depósito do Bosque → Centro): sai da origem e fica
+   "em trânsito" até quem recebe conferir no destino (o que faltar vira divergência). */
+function estTransfPacote_(admin) {
+  var desde = diaMais_(admin ? -60 : -20);
+  return ler_('Transferencias').filter(function (t) { return t.status === 'em_transito' || String(t.criada_em).slice(0, 10) >= desde; })
+    .map(estTransf_).reverse().slice(0, 60);
+}
+function estTransf_(t) {
+  var o = limpar_(t); try { o.itens = JSON.parse(t.itens || '[]'); } catch (e) { o.itens = []; }
+  try { o.divergencias = JSON.parse(t.divergencias || '[]'); } catch (e) { o.divergencias = []; }
+  o.qtd_total = Number(o.qtd_total) || 0; return o;
+}
+function estItensValidos_(itens) {
+  var cat = {}; ler_('Produtos').forEach(function (p) { cat[p.id] = p; });
+  var soma = {};
+  (Array.isArray(itens) ? itens.slice(0, 400) : []).forEach(function (i) {
+    var p = cat[i.produto_id], q = estNum_(i.qtd);
+    if (!p) throw new Error('Produto não encontrado');
+    if (q <= 0) return;
+    soma[p.id] = soma[p.id] || { produto_id: p.id, produto: p.nome, qtd: 0 }; soma[p.id].qtd += q;
+  });
+  var l = Object.keys(soma).map(function (k) { return soma[k]; });
+  if (!l.length) throw new Error('Nenhum item com quantidade');
+  return l;
+}
+function estTransferir_(req, por) {
+  var locais = estLocaisMapa_(), de = String(req.de || ''), para = String(req.para || '');
+  if (!locais[de] || !locais[para]) throw new Error('Escolha de onde sai e para onde vai');
+  if (de === para) throw new Error('Origem e destino são o mesmo local');
+  var itens = estItensValidos_(req.itens);
+  var mesmaLoja = locais[de].loja === locais[para].loja;
+  var t = { id: 'T' + new Date().getTime() + Math.floor(Math.random() * 1e3), criada_em: agora_(), de: de, para: para, itens: JSON.stringify(itens),
+            qtd_total: String(itens.reduce(function (s, i) { return s + i.qtd; }, 0)), status: mesmaLoja ? 'concluida' : 'em_transito', por: por,
+            recebida_em: mesmaLoja ? agora_() : '', recebida_por: mesmaLoja ? por : '', divergencias: '[]', obs: String(req.obs || '').slice(0, 200) };
+  var ref = locais[de].nome + ' → ' + locais[para].nome;
+  estMovimentar_(itens.map(function (i) { return { produto_id: i.produto_id, produto: i.produto, loja: de, delta: -i.qtd }; }), 'transf_saida', ref, por, t.obs);
+  if (mesmaLoja) estMovimentar_(itens.map(function (i) { return { produto_id: i.produto_id, produto: i.produto, loja: para, delta: i.qtd }; }), 'transf_entrada', ref, por, t.obs);
+  gravar_('Transferencias', t);
+  log_(por, 'transferência', ref + ' · ' + t.qtd_total + ' peças · ' + t.status);
+  return estTransf_(t);
+}
+function estReceberTransf_(req, por) {
+  var t = ler_('Transferencias').filter(function (x) { return x.id === req.id; })[0];
+  if (!t) throw new Error('Transferência não encontrada');
+  if (t.status !== 'em_transito') throw new Error('Essa transferência já foi recebida ou cancelada');
+  var locais = estLocaisMapa_(), enviados = JSON.parse(t.itens || '[]'), receb = {};
+  (Array.isArray(req.itens) ? req.itens : []).forEach(function (i) { receb[i.produto_id] = estNum_(i.qtd); });
+  var divs = [], mov = [];
+  enviados.forEach(function (i) {
+    var q = receb[i.produto_id] != null ? Math.max(0, receb[i.produto_id]) : i.qtd;
+    if (q !== i.qtd) divs.push({ produto: i.produto, enviado: i.qtd, recebido: q });
+    if (q > 0) mov.push({ produto_id: i.produto_id, produto: i.produto, loja: t.para, delta: q });
+  });
+  var ref = (locais[t.de] || {}).nome + ' → ' + (locais[t.para] || {}).nome;
+  if (mov.length) estMovimentar_(mov, 'transf_entrada', ref, por, divs.length ? 'recebido com diferença' : '');
+  t.status = 'recebida'; t.recebida_em = agora_(); t.recebida_por = por; t.divergencias = JSON.stringify(divs);
+  gravar_('Transferencias', t);
+  log_(por, 'transferência recebida', ref + (divs.length ? ' · ' + divs.length + ' divergência(s)' : ''));
+  return estTransf_(t);
+}
+function estCancelarTransf_(req, por) {
+  var t = ler_('Transferencias').filter(function (x) { return x.id === req.id; })[0];
+  if (!t) throw new Error('Transferência não encontrada');
+  if (t.status !== 'em_transito') throw new Error('Só dá para cancelar a que ainda está em trânsito');
+  var itens = JSON.parse(t.itens || '[]');
+  estMovimentar_(itens.map(function (i) { return { produto_id: i.produto_id, produto: i.produto, loja: t.de, delta: i.qtd }; }), 'transf_cancelada', 'Volta para a origem', por, String(req.motivo || '').slice(0, 200));
+  t.status = 'cancelada'; t.recebida_em = agora_(); t.recebida_por = por; t.obs = (t.obs ? t.obs + ' · ' : '') + 'Cancelada: ' + String(req.motivo || '').slice(0, 150);
+  gravar_('Transferencias', t);
+  log_(por, 'transferência cancelada', t.id);
+}
+
+/* ═════════════ SAÍDA (sem venda) ═════════════ */
+function estSaida_(req, por) {
+  var locais = estLocaisMapa_(), local = String(req.local || '');
+  if (!locais[local]) throw new Error('Escolha o local');
+  var motivo = String(req.motivo || '').trim();
+  if (!motivo) throw new Error('Escolha o motivo da saída');
+  var itens = estItensValidos_(req.itens);
+  estMovimentar_(itens.map(function (i) { return { produto_id: i.produto_id, produto: i.produto, loja: local, delta: -i.qtd }; }), 'saida', motivo, por, String(req.obs || '').slice(0, 200));
+  log_(por, 'saída estoque', locais[local].nome + ' · ' + motivo + ' · ' + itens.length + ' produto(s)');
+}
+function estSalvarLocais_(req) {
+  var l = Array.isArray(req.locais) ? req.locais : [];
+  var lojas = JSON.parse(cfg_('lojas')), ids = {};
+  l = l.map(function (x) {
+    var id = String(x.id || '').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
+    if (!id || ids[id]) throw new Error('Código de local inválido ou repetido');
+    if (!lojas[x.loja]) throw new Error('Loja inválida no local ' + id);
+    ids[id] = 1; return { id: id, nome: String(x.nome || id).slice(0, 40), loja: x.loja, tipo: x.tipo === 'deposito' ? 'deposito' : 'prateleira' };
+  });
+  if (!l.length) throw new Error('Cadastre ao menos um local');
+  setCfg_('estoque_locais', JSON.stringify(l));
+}
+
+/* Código de barras que não está no catálogo (ex.: EAN da embalagem de um produto cadastrado só com código interno):
+   a equipe diz qual produto é e o código passa a ser reconhecido na contagem, nas transferências e no PDV. */
+function estVincular_(req, por) {
+  var cod = String(req.codigo || '').replace(/\s/g, '').slice(0, 40);
+  if (cod.length < 4) throw new Error('Código inválido');
+  var p = ler_('Produtos').filter(function (x) { return x.id === req.produto_id; })[0];
+  if (!p) throw new Error('Produto não encontrado');
+  if (p.codigo === cod || p.sku === cod) return;
+  if (!p.codigo && /^\d{8,14}$/.test(cod)) { p.codigo = cod; p.atualizado_em = agora_(); gravar_('Produtos', p); }
+  var ch = 'EAN|' + cod, v = ler_('VinculosEstoque').filter(function (x) { return x.chave === ch; })[0] || { chave: ch, cnpj: 'EAN', cod_fornecedor: cod };
+  v.ean = cod; v.produto_id = p.id; v.descricao = p.nome + ' (por ' + por + ')'; v.atualizado_em = agora_();
+  gravar_('VinculosEstoque', v);
+  log_(por, 'código vinculado', cod + ' → ' + p.nome);
+}
