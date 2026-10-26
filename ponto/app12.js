@@ -1,243 +1,187 @@
-/* ════════════════════════════════════════════════════════════════════════════
-   Portal Equipe Las Vegas — v11: FOTOS DOS PRODUTOS + CATÁLOGO
-   • Cada produto tem foto (do site da Nuvemshop ou tirada pela equipe no celular).
-   • A foto aparece no PDV, na contagem e nas listas de transferência e saída.
-   • Tela "📸 Produtos" (Estoque › Produtos · link direto …/ponto/#produtos):
-     catálogo com fotos, filtro "sem foto" (toca e fotografa) e cadastro rápido de
-     produto novo (bipa o código, tira a foto, nome, preço e quantas peças chegaram).
-   ════════════════════════════════════════════════════════════════════════════ */
-(function(){ const st = document.createElement('style'); st.textContent = `
-.pf{flex:0 0 auto;object-fit:cover;border-radius:9px;background:#fff;display:inline-block;vertical-align:middle}
-.pf-emo{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;border-radius:9px;background:rgba(255,255,255,.05);vertical-align:middle;line-height:1}
-td .pf,td .pf-emo{margin-right:8px}
-.pdv-prod .pdv-foto{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:11px;background:#fff;margin-bottom:4px}
-.pdv-prod:has(.pdv-foto){min-height:0}
-.cat-topo{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
-.cat-barra{flex:1 1 220px;height:10px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
-.cat-barra i{display:block;height:100%;background:linear-gradient(90deg,var(--dourado),var(--ok));border-radius:99px}
-.cat-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-.cat-item{position:relative;display:flex;flex-direction:column;gap:5px;padding:8px;border-radius:14px;background:linear-gradient(165deg,var(--veludo2),var(--veludo));border:1px solid var(--linha);color:var(--creme);text-align:left;cursor:pointer}
-.cat-item:hover{border-color:var(--dourado)}
-.cat-item .ft{width:100%;aspect-ratio:1/1;border-radius:10px;object-fit:cover;background:#fff}
-.cat-item .semft{width:100%;aspect-ratio:1/1;border-radius:10px;border:2px dashed rgba(245,181,36,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--dourado2);font-weight:800;font-size:13px;background:rgba(245,181,36,.06)}
-.cat-item .semft i{font-size:30px}
-.cat-item b{font-size:12.5px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.cat-item small{font-size:11px;color:var(--creme3)}
-.cat-item .pr{font-weight:800;color:var(--dourado2);font-size:14px}
-.cat-item .novo{position:absolute;top:12px;left:12px;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:99px;background:var(--vermelho);color:#fff}
-.cat-foto-g{width:100%;max-height:52vh;object-fit:contain;border-radius:14px;background:#fff}
-.np-foto{width:100%;aspect-ratio:4/3;border-radius:14px;border:2px dashed rgba(245,181,36,.6);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--dourado2);font-weight:800;background:rgba(245,181,36,.06);cursor:pointer;overflow:hidden;margin-bottom:12px}
-.np-foto img{width:100%;height:100%;object-fit:contain;background:#fff}
-.np-foto i{font-size:38px}
-.cnt-ult .pf,.cnt-ult .pf-emo{margin-right:2px}
-.cnt-ult .semfoto{border:1px dashed rgba(245,181,36,.6);color:var(--dourado2);background:rgba(245,181,36,.08)}
-`; document.head.appendChild(st); })();
+/* ═══════════ Portal Equipe Las Vegas · v12 — layout novo ═══════════
+   Tema claro (tema.css), menu lateral agrupado no lugar da faixa de abas, "Mais" em blocos
+   no celular e movimento: troca de tela deslizando, números contando, barras e anéis enchendo,
+   indicador do menu deslizando e toque com onda. Não mexe nas telas: monta a casca em volta. */
+document.write('<link rel="stylesheet" href="tema.css?v=12">');
+(function(){ const m = document.querySelector('meta[name="theme-color"]'); if(m) m.content = '#E3101F'; })();
 
-/* ───────── foto: endereço no tamanho certo ───────── */
-function fotoUrl(p, w){
-  const u = p && p.foto; if(!u) return '';
-  if(/mitiendanube\.com/.test(u)) return u.replace(/^http:/,'https:').replace(/-\d+-\d+\.(webp|png|jpe?g)$/i, `-${w>320?640:w>100?240:100}-0.$1`);
-  if(/drive\.google\.com\/thumbnail/.test(u)) return u.replace(/sz=w\d+/, 'sz=w'+(w>320?800:320));
-  return u;
-}
-/* miniatura (ou o emoji, se ainda não tem foto) — px = lado */
-function pIco(p, px=36){
-  p = p || {};
-  const u = fotoUrl(p, px*2);
-  if(u) return `<img class="pf" src="${esc(u)}" style="width:${px}px;height:${px}px" loading="lazy" alt="" onclick="event.stopPropagation();fotoVer('${p.id||''}')" onerror="this.outerHTML='<span class=&quot;pf-emo&quot; style=&quot;width:${px}px;height:${px}px;font-size:${Math.round(px*.55)}px&quot;>🖼️</span>'">`;
-  return `<span class="pf-emo" style="width:${px}px;height:${px}px;font-size:${Math.round(px*.55)}px">${emojiDe(p)}</span>`;
-}
-function fotoVer(id){
-  const p = estProd(id); if(!p || !p.foto) return;
-  $('#modal').insertAdjacentHTML('beforeend', `<div class="veu" id="foto-zoom" style="z-index:9999" onclick="this.remove()"><div class="modal" style="max-width:520px"><div class="modal-c" style="padding:12px"><img class="cat-foto-g" src="${esc(fotoUrl(p,640))}"><p style="margin:10px 4px 0;font-weight:700">${esc(p.nome)}</p></div></div></div>`);
-}
+const GRUPOS_PORTAL = [
+  {n:'Vendas', cor:'var(--g-vendas)', k:['pdv','arena','metas','estoque']},
+  {n:'Meu dia', cor:'var(--g-dia)', k:['checklist','caixa','mural','agenda']},
+  {n:'Meu ponto', cor:'var(--g-ponto)', k:['mes','escala','pedidos']},
+  {n:'Aprender', cor:'var(--g-aprender)', k:['protocolos','treino','atalhos']}
+];
+const GRUPOS_ADM = [
+  {n:'Visão geral', cor:'var(--g-vendas)', k:['aovivo','arena']},
+  {n:'Vendas e estoque', cor:'var(--g-dia)', k:['pdv','estoque','metas','caixa','roleta']},
+  {n:'Equipe e ponto', cor:'var(--g-ponto)', k:['pedidos','hoje','produtividade','escala','mes','banco','equipe']},
+  {n:'Comunicação', cor:'var(--g-equipe)', k:['mural','agenda','checklist']},
+  {n:'Aprender', cor:'var(--g-aprender)', k:['protocolos','treino','atalhos']},
+  {n:'Sistema', cor:'var(--g-sistema)', k:['aparelhos','regras']}
+];
+const NOMES12 = {
+  portal:{pdv:'Vender', arena:'Arena de vendas', metas:'Metas e prêmios', estoque:'Estoque', checklist:'Checklist do dia', caixa:'Caixa e sangria', mural:'Mural de avisos', agenda:'Agenda da equipe', mes:'Meu mês', escala:'Minha escala', pedidos:'Meus pedidos', protocolos:'Protocolos', treino:'Treinamento', atalhos:'Atalhos'},
+  admin:{aovivo:'Ao vivo', arena:'Arena de vendas', pdv:'PDV', estoque:'Estoque', metas:'Metas', caixa:'Caixa', roleta:'Roleta do site', pedidos:'Pedidos', hoje:'Hoje', produtividade:'Produtividade', escala:'Escala', mes:'Espelho de ponto', banco:'Banco de horas', equipe:'Equipe', mural:'Mural', agenda:'Agenda', checklist:'Checklist', protocolos:'Protocolos', treino:'Treinamento', atalhos:'Atalhos', aparelhos:'Aparelhos', regras:'Regras'}
+};
+const M12 = {ultimo:'', indY:null, scroll:0, aberto:false};
 
-/* ───────── tirar / escolher foto (celular abre a câmera) ───────── */
-function fotoEscolher(){
-  return new Promise((res)=>{
-    const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; i.setAttribute('capture','environment'); i.style.display = 'none';
-    i.onchange = async ()=>{ const f = i.files[0]; i.remove(); if(!f) return res(null); try{ res(await fotoReduzir(f)); }catch(e){ toast('Não consegui ler essa foto', true); res(null); } };
-    document.body.appendChild(i); i.click();
+/* lê as abas que as telas antigas montaram (com ícone, nome, contador e o clique original) */
+function abas12(el){
+  const r = {};
+  if(!el) return r;
+  el.querySelectorAll('button').forEach(b=>{
+    const oc = b.getAttribute('onclick')||'', m = oc.match(/(?:portalTab|adm\.tab)='([\w-]+)'/); if(!m) return;
+    const ic = [...(b.querySelector('i.ti')?.classList||[])].find(c=>c.startsWith('ti-')) || 'ti-point';
+    const badge = b.querySelector('.contador')?.textContent.trim() || '';
+    const nome = [...b.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join(' ').trim();
+    r[m[1]] = {k:m[1], ic, nome, badge, oc};
   });
-}
-async function fotoReduzir(f, max=900){
-  const url = URL.createObjectURL(f);
-  try{
-    const img = await new Promise((ok, ruim)=>{ const im = new Image(); im.onload = ()=>ok(im); im.onerror = ruim; im.src = url; });
-    const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
-    const c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth*k); c.height = Math.round(img.naturalHeight*k);
-    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0,0,c.width,c.height); g.drawImage(img, 0, 0, c.width, c.height);
-    let q = .82, d = c.toDataURL('image/jpeg', q);
-    while(d.length > 600*1024 && q > .4){ q -= .12; d = c.toDataURL('image/jpeg', q); }
-    return d;
-  } finally { URL.revokeObjectURL(url); }
-}
-async function fotoTirar(pid, depois){
-  const p = estProd(pid); if(!p) return;
-  const img = await fotoEscolher(); if(!img) return;
-  toast('Enviando a foto…');
-  try{
-    const r = await estApi('foto', {produto_id:pid, img});
-    p.foto = r.foto; estBip(true); toast('Foto salva ✔ — já aparece no PDV');
-    if(depois) depois(); else render();
-  }catch(e){ toast(e.message, true); }
-}
-
-/* ───────── fotos no PDV (grade de produtos) ───────── */
-const _pdvPintarGradeV11 = pdvPintarGrade;
-pdvPintarGrade = function pdvPintarGrade(reanima){
-  _pdvPintarGradeV11(reanima);
-  document.querySelectorAll('#pdv-grade .pdv-prod[data-id]').forEach(b=>{
-    const p = estProd(b.dataset.id), u = fotoUrl(p, 240), e = b.querySelector('.emo');
-    if(u && e) e.outerHTML = `<img class="pdv-foto" src="${esc(u)}" loading="lazy" alt="" onerror="this.outerHTML='<span class=&quot;emo&quot;>${emojiDe(p)}</span>'">`;
-  });
-};
-
-/* ═════════ CATÁLOGO COM FOTOS ═════════ */
-var CAT = {q:'', filtro:'todos', lim:60};
-function catLista(){
-  const P = pdvD().produtos.filter(p=>p.ativo!==false), q = semAcento(CAT.q.trim()), ws = q ? q.split(/\s+/) : [];
-  let l = P.filter(p=>!ws.length || ws.every(w=>semAcento(p.nome+' '+(p.codigo||'')+' '+(p.sku||'')+' '+(p.categoria||'')).includes(w)));
-  if(CAT.filtro==='sem') l = l.filter(p=>!p.foto); else if(CAT.filtro==='com') l = l.filter(p=>p.foto);
-  else if(CAT.filtro==='estoque'){ const tem = new Set(estD().saldos.filter(s=>s.qtd>0).map(s=>s.produto_id)); l = l.filter(p=>tem.has(p.id)); }
-  return l.sort((a,b)=>a.nome.localeCompare(b.nome));
-}
-function estCatalogo(){
-  const P = pdvD().produtos.filter(p=>p.ativo!==false), com = P.filter(p=>p.foto).length, pct = P.length ? Math.round(com/P.length*100) : 0;
-  const l = catLista(), link = location.origin + location.pathname + '#produtos';
-  return `<div class="cartao pad">
-    <div class="linha entre quebra" style="gap:8px;margin-bottom:10px"><h2 style="margin:0;font-size:19px">📸 Produtos</h2>
-      <div class="linha" style="gap:6px"><button class="btn p" onclick="catCopiarLink()" title="${esc(link)}"><i class="ti ti-link"></i> Link</button><button class="btn ouro" onclick="novoProduto()"><i class="ti ti-plus"></i> Produto novo</button></div></div>
-    <div class="cat-topo"><div class="cat-barra"><i style="width:${pct}%"></i></div><span class="suave" style="font-size:13px"><b>${com}</b> de ${P.length} com foto (${pct}%)</span></div>
-    <div class="cnt-scan" style="margin-bottom:8px"><input class="inp" id="cat-q" placeholder="Buscar por nome ou código…" value="${esc(CAT.q)}" oninput="CAT.q=this.value;CAT.lim=60;catPintar()" onkeydown="if(event.key==='Enter')catEnter()">
-      <button class="btn" onclick="estCamera(catCodigo,'Achar produto pela câmera')"><i class="ti ti-barcode"></i></button></div>
-    <div class="est-lojas" style="margin-bottom:10px">${[['todos','Todos'],['sem','📷 Sem foto ('+(P.length-com)+')'],['com','Com foto'],['estoque','Com estoque']].map(([k,n])=>`<button class="${CAT.filtro===k?'on':''}" onclick="CAT.filtro='${k}';CAT.lim=60;render()">${n}</button>`).join('')}</div>
-    ${CAT.filtro==='sem'&&P.length-com?`<p class="suave" style="font-size:13px;margin:0 0 10px">Toque no produto, tire a foto com fundo claro e pronto. Ele sai desta lista na hora.</p>`:''}
-    <div id="cat-grade">${catGradeHtml(l)}</div></div>`;
-}
-function catGradeHtml(l){
-  if(!l.length) return `<p class="suave" style="text-align:center;margin:18px 0">${CAT.filtro==='sem'?'🎉 Todos os produtos já têm foto!':'Nada encontrado.'}</p>`;
-  return `<div class="cat-grade">${l.slice(0,CAT.lim).map(p=>`<button class="cat-item" onclick="${p.foto?`catAbrir('${p.id}')`:`fotoTirar('${p.id}')`}">
-      ${p.foto?`<img class="ft" src="${esc(fotoUrl(p,240))}" loading="lazy" alt="">`:`<span class="semft"><i class="ti ti-camera-plus"></i>Tirar foto</span>`}
-      <b>${esc(p.nome)}</b><small>${esc(p.codigo||p.sku||'sem código')}</small><span class="pr">${brl2(precoDe(p))}</span></button>`).join('')}</div>
-    ${l.length>CAT.lim?`<button class="btn largo" style="margin-top:12px" onclick="CAT.lim+=90;catPintar()">Mostrar mais (${l.length-CAT.lim})</button>`:''}`;
-}
-function catPintar(){ const g = $('#cat-grade'); if(g) g.innerHTML = catGradeHtml(catLista()); else render(); }
-function catEnter(){ const p = estAcharCodigo(CAT.q.trim()); if(p){ CAT.q=''; render(); catAbrir(p.id); } }
-function catCodigo(cod){
-  estCameraFechar(); const p = estAcharCodigo(cod);
-  if(p){ estBip(true); return catAbrir(p.id); }
-  estBip(false);
-  if(confirm('O código '+cod+' não está cadastrado. Cadastrar produto novo com ele?')) novoProduto({codigo:cod});
-}
-function catCopiarLink(){
-  const link = location.origin + location.pathname + '#produtos';
-  try{ navigator.clipboard.writeText(link); toast('Link copiado ✔ — mande no grupo da equipe'); }catch(e){ prompt('Copie o link:', link); }
-}
-function catAbrir(id){
-  const p = estProd(id); if(!p) return;
-  const locs = estLocais().map(l=>[l, estQtdDe(p.id, l.id)]).filter(([l,q])=>q!=null);
-  $('#modal').innerHTML = `<div class="veu" onclick="if(event.target===this)fecharModal()"><div class="modal">
-    <div class="modal-t"><h3 class="cresce" style="font-size:16px">${esc(p.nome)}</h3><button class="icone" onclick="fecharModal()"><i class="ti ti-x"></i></button></div>
-    <div class="modal-c">
-      ${p.foto?`<img class="cat-foto-g" src="${esc(fotoUrl(p,640))}" alt="">`:`<div class="np-foto" onclick="fotoTirar('${p.id}',()=>catAbrir('${p.id}'))"><i class="ti ti-camera-plus"></i>Tirar foto</div>`}
-      <div class="linha entre" style="margin:12px 0 4px"><span class="suave">${esc(p.codigo||p.sku||'sem código')}${p.categoria?' · '+esc(p.categoria):''}</span><b style="font-size:20px;color:var(--dourado2)">${brl2(precoDe(p))}</b></div>
-      ${locs.length?`<div class="est-lojas" style="margin:8px 0 12px">${locs.map(([l,q])=>`<span class="selo ${q>0?'ok':''}">${esc(l.nome)}: <b>${estFmt(q)}</b></span>`).join(' ')}</div>`:''}
-      <div class="g2"><button class="btn" onclick="fotoTirar('${p.id}',()=>catAbrir('${p.id}'))"><i class="ti ti-camera"></i> ${p.foto?'Trocar foto':'Tirar foto'}</button>
-        ${estAdmin()?`<button class="btn" onclick="fecharModal();admPdvProduto('${p.id}')"><i class="ti ti-pencil"></i> Editar</button>`:`<button class="btn" onclick="fecharModal()">Fechar</button>`}</div>
-      ${estAdmin()&&p.foto?`<button class="btn p largo" style="margin-top:8px" onclick="catRemoverFoto('${p.id}')"><i class="ti ti-trash"></i> Tirar a foto deste produto</button>`:''}
-    </div></div></div>`;
-}
-async function catRemoverFoto(id){
-  if(!confirm('Remover a foto deste produto?')) return;
-  try{ S.adm.dados = await api('admEstoque', {...S.adm.cred, op:'fotoRemover', produto_id:id}); fecharModal(); render(); toast('Foto removida'); }catch(e){ toast(e.message, true); }
-}
-
-/* ───────── produto novo (rápido, pelo celular) ───────── */
-var NP = null;
-function novoProduto(pre={}){
-  NP = {codigo:'', nome:'', preco:'', categoria:'', qtd:'', local:estLojaPadrao(), img:'', ...pre};
-  novoPintar();
-}
-function novoPintar(){
-  const cats = [...new Set(pdvD().produtos.map(x=>x.categoria).filter(Boolean))].sort();
-  $('#modal').innerHTML = `<div class="veu" onclick="if(event.target===this)fecharModal()"><div class="modal">
-    <div class="modal-t"><h3 class="cresce">➕ Produto novo</h3><button class="icone" onclick="fecharModal()"><i class="ti ti-x"></i></button></div>
-    <div class="modal-c">
-      <div class="np-foto" onclick="novoFoto()">${NP.img?`<img src="${NP.img}" alt="">`:`<i class="ti ti-camera-plus"></i>Tirar foto do produto<small class="apagado" style="font-weight:600">fundo claro, produto inteiro</small>`}</div>
-      <div class="campo"><label>Código de barras</label><div class="linha" style="gap:6px"><input class="inp num cresce" id="np-cod" inputmode="numeric" value="${esc(NP.codigo)}" placeholder="bipe ou digite (se tiver)" oninput="NP.codigo=this.value.trim()" onchange="novoChecarCodigo()">
-        <button class="btn" onclick="estCamera(novoCodigo,'Ler o código do produto')"><i class="ti ti-barcode"></i></button></div></div>
-      <div class="campo"><label>Nome do produto</label><input class="inp" value="${esc(NP.nome)}" placeholder="ex.: Gel excitante Xana Loka 15g" oninput="NP.nome=this.value"></div>
-      <div class="g2"><div class="campo"><label>Preço de venda (R$)</label><input class="inp num" inputmode="decimal" value="${esc(NP.preco)}" placeholder="0,00" oninput="NP.preco=this.value"></div>
-        <div class="campo"><label>Categoria</label><input class="inp" list="np-cats" value="${esc(NP.categoria)}" placeholder="opcional" oninput="NP.categoria=this.value"><datalist id="np-cats">${cats.map(c=>`<option value="${esc(c)}">`).join('')}</datalist></div></div>
-      <div class="campo"><label>Quantas peças chegaram? <span class="apagado">(opcional — já entra no estoque)</span></label><input class="inp num" inputmode="numeric" value="${esc(NP.qtd)}" placeholder="0" oninput="NP.qtd=this.value"></div>
-      <div class="campo"><label>Onde vai ficar</label>${estChipsLocal(NP.local, "NP.local='$ID';novoPintar()")}</div>
-      <button class="btn pri largo" id="btn-np" onclick="novoSalvar()"><i class="ti ti-device-floppy"></i> Cadastrar produto</button>
-    </div></div></div>`;
-}
-async function novoFoto(){ const img = await fotoEscolher(); if(img){ NP.img = img; novoPintar(); } }
-function novoCodigo(cod){ estCameraFechar(); NP.codigo = String(cod).trim(); estBip(true); novoPintar(); novoChecarCodigo(); }
-function novoChecarCodigo(){
-  const p = NP.codigo && estAcharCodigo(NP.codigo);
-  if(p){ estBip(false); if(confirm('Esse código já é do produto:\n\n'+p.nome+'\n\nAbrir ele?')){ catAbrir(p.id); } }
-}
-async function novoSalvar(mesmoAssim){
-  if(!NP.img && !confirm('Cadastrar sem foto? (dá pra tirar depois)')) return;
-  const b = $('#btn-np'); b.disabled = true; b.innerHTML = '<i class="ti ti-loader-2"></i> Cadastrando…';
-  try{
-    const d = await estApi('produtoNovo', {nome:NP.nome, preco:NP.preco, codigo:NP.codigo, categoria:NP.categoria, qtd:NP.qtd, local:NP.local, img:NP.img, mesmoAssim:!!mesmoAssim});
-    estAposSalvar(d); const p = d.produtoFeito;
-    fecharModal(); render(); chuvaConfete();
-    toast(`${p?.nome||'Produto'} cadastrado ✔${p?.erroFoto?' (a foto não subiu — tire de novo)':''}`, !!p?.erroFoto);
-  }catch(e){
-    if(/Já existe/.test(e.message) && confirm(e.message+'\n\nCadastrar mesmo assim?')) return novoSalvar(true);
-    toast(e.message, true); b.disabled = false; b.innerHTML = '<i class="ti ti-device-floppy"></i> Cadastrar produto';
-  }
-}
-
-/* ───────── link direto: …/ponto/#produtos ───────── */
-const _telaPortalV11 = telaPortal;
-telaPortal = function telaPortal(){
-  if(location.hash==='#produtos' && S.sess?.dados && !window._hashFeito){ window._hashFeito = true; S.portalTab = 'estoque'; S.estAba = 'produtos'; }
-  return _telaPortalV11();
-};
-const _telaAdminV11 = typeof telaAdmin==='function' ? telaAdmin : null;
-if(_telaAdminV11) telaAdmin = function telaAdmin(){
-  if(location.hash==='#produtos' && S.adm && !window._hashFeitoAdm){ window._hashFeitoAdm = true; S.adm.tab = 'estoque'; S.adm.estSub = 'produtos'; }
-  return _telaAdminV11.apply(this, arguments);
-};
-const _itensBuscaV11 = itensBusca;
-itensBusca = function itensBusca(){
-  const r = _itensBuscaV11(), adm = !!(S.adm && S.tela==='admin');
-  if(adm || S.sess) r.unshift({t:'Produtos e fotos', s:'Catálogo com fotos · cadastrar produto novo', i:'ti-photo', go:()=>{ if(adm){ S.adm.tab='estoque'; S.adm.estSub='produtos'; } else { S.tela='portal'; S.portalTab='estoque'; S.estAba='produtos'; } render(); }});
   return r;
+}
+function chave12(){
+  if(S.tela==='admin' && S.adm) return 'admin|'+S.adm.tab+'|'+(S.adm.pdvSub||'')+'|'+(S.adm.estSub||'');
+  if(S.tela==='portal') return 'portal|'+S.portalTab+'|'+(S.estAba||'')+'|'+(S.protoAberto||'');
+  return S.tela;
+}
+function itemMenu12(t, cor, on){
+  return `<a class="${on?'on':''}" style="--cor:${cor}" data-k="${t.k}" tabindex="0"><i class="ti ${t.ic}"></i><span>${esc(t.nome)}</span>${t.badge?`<span class="contador">${esc(t.badge)}</span>`:''}</a>`;
+}
+function menu12(tabs, adm){
+  const grupos = adm ? GRUPOS_ADM : GRUPOS_PORTAL, nomes = NOMES12[adm?'admin':'portal'];
+  const atual = adm ? S.adm.tab : S.portalTab, usados = new Set(['inicio','eu','mais']);
+  Object.values(tabs).forEach(t=>{ if(nomes[t.k]) t.nome = nomes[t.k]; });
+  let h = '';
+  if(!adm && tabs.inicio) h += itemMenu12({...tabs.inicio, nome:'Início'}, 'var(--g-vendas)', atual==='inicio');
+  grupos.forEach(g=>{
+    const its = g.k.filter(k=>tabs[k]); its.forEach(k=>usados.add(k));
+    if(its.length) h += `<div class="menu-g" style="--cor:${g.cor}"><small>${g.n}</small>${its.map(k=>itemMenu12(tabs[k], g.cor, atual===k)).join('')}</div>`;
+  });
+  const resto = Object.values(tabs).filter(t=>!usados.has(t.k));
+  if(resto.length) h += `<div class="menu-g" style="--cor:var(--g-sistema)"><small>Outros</small>${resto.map(t=>itemMenu12(t, 'var(--g-sistema)', atual===t.k)).join('')}</div>`;
+  let eu;
+  if(adm) eu = `<div class="menu-eu"><span class="av" style="--cor:var(--creme);background:var(--creme);color:#fff"><i class="ti ti-shield-lock"></i></span><div><b>Administração</b><small>Las Vegas Sex Shop</small></div></div>`;
+  else { const c = S.sess.dados.colaboradora; eu = `<a class="menu-eu" data-k="eu" style="height:auto;color:var(--creme)"><span class="av" style="--cor:${esc(c.cor||'#ccc')};background:${esc(c.cor||'#ccc')}">${esc(iniciais(c.nome))}</span><div><b>${esc(primeiroNome(c.nome))}</b><small>${esc(c.cargo||'Equipe')}</small></div></a>`; }
+  const sair = adm ? `S.adm=null;S.tela='inicio';render()` : `sair()`;
+  return `<aside class="menu" id="menu12" aria-label="Menu">
+    <button class="icone menu-x" aria-label="Fechar menu" onclick="menuFechar12()"><i class="ti ti-x"></i></button>
+    ${eu}
+    <nav class="menu-nav"><div class="menu-ind" hidden></div>${h}</nav>
+    <div class="menu-sair"><a data-sair="1" style="--cor:var(--g-sistema)" tabindex="0" onclick="${sair}"><i class="ti ti-logout-2"></i><span>${adm?'Sair da administração':'Sair do portal'}</span></a></div>
+  </aside>`;
+}
+function menuAbrir12(){ const m = $('#menu12'); if(!m) return; m.classList.add('aberto'); M12.aberto = true;
+  const f = document.createElement('div'); f.className = 'menu-fundo'; f.onclick = menuFechar12; document.body.appendChild(f); }
+function menuFechar12(){ $('#menu12')?.classList.remove('aberto'); M12.aberto = false; document.querySelectorAll('.menu-fundo').forEach(x=>x.remove()); }
+
+function montarCasca12(){
+  const app = $('#app'), w = app.querySelector(':scope > .wrap');
+  app.classList.remove('com-menu','adm','port'); app.querySelector(':scope > .menu')?.remove();
+  document.querySelectorAll('.menu-fundo').forEach(x=>x.remove());
+  if(!w) return null;
+  const adm = S.tela==='admin' && S.adm;
+  if(!adm && !(S.tela==='portal' && S.sess?.dados)) return w;
+  const faixa = w.querySelector(':scope > .abas'), tabs = abas12(faixa);
+  if(!Object.keys(tabs).length) return w;
+  faixa.remove();
+  if(adm) w.querySelectorAll(':scope > .voltar').forEach(v=>{ if(/administra/i.test(v.textContent)) v.remove(); });
+  app.insertAdjacentHTML('afterbegin', menu12(tabs, adm));
+  app.classList.add('com-menu', adm?'adm':'port');
+  const menu = $('#menu12');
+  menu.querySelectorAll('.menu-nav a[data-k], a.menu-eu').forEach(a=>{
+    const t = tabs[a.dataset.k];
+    const ir = ()=>{ menuFechar12(); if(a.dataset.k==='eu' && !t){ S.portalTab='eu'; S.protoAberto=null; render(); return; } if(t) new Function(t.oc)(); };
+    a.onclick = ir; a.onkeydown = e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); ir(); } };
+  });
+  // botões do letreiro: ☰ no celular (administração) e o "Sair" de cima só no celular
+  const dir = w.querySelector(':scope > .letreiro > .linha');
+  if(dir){
+    [...dir.querySelectorAll('button')].filter(b=>/sair\(\)|S\.adm=null/.test(b.getAttribute('onclick')||'')).forEach(b=>b.classList.add('btn-sair-top'));
+    if(adm) dir.insertAdjacentHTML('afterbegin', `<button class="icone btn-menu" aria-label="Abrir menu" onclick="menuAbrir12()"><i class="ti ti-menu-2"></i></button>`);
+  }
+  menu.scrollTop = M12.scroll;
+  // indicador vermelho desliza do item anterior para o novo
+  const on = menu.querySelector('.menu-nav a.on'), ind = menu.querySelector('.menu-ind');
+  if(on && ind){
+    ind.hidden = false;
+    const y = on.offsetTop;
+    if(M12.indY!=null && M12.indY!==y && !matchMedia('(prefers-reduced-motion: reduce)').matches){
+      ind.style.transition = 'none'; ind.style.transform = `translateY(${M12.indY}px)`; ind.offsetWidth;
+      ind.style.transition = ''; requestAnimationFrame(()=>{ ind.style.transform = `translateY(${y}px)`; });
+    } else ind.style.transform = `translateY(${y}px)`;
+    M12.indY = y;
+  } else M12.indY = null;
+  return w;
+}
+
+/* ───── movimento ───── */
+const calmo12 = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+function contar12(el){
+  const txt = el.textContent.trim(), m = txt.match(/^([+-]?)(R\$\s?)?(\d{1,3}(?:\.\d{3})*|\d+)(,\d{1,2})?(%?)$/);
+  if(!m || el.children.length) return;
+  const v = Number(m[3].replace(/\./g,'') + (m[4]?'.'+m[4].slice(1):''));
+  if(!v || v < 2) return;
+  const dec = m[4] ? m[4].length-1 : 0, t0 = performance.now(), dur = Math.min(1300, 600 + Math.log10(v)*140);
+  const fmt = x => m[1] + (m[2]||'') + x.toLocaleString('pt-BR', {minimumFractionDigits:dec, maximumFractionDigits:dec}) + m[5];
+  const passo = t => { if(!el.isConnected) return; const p = Math.min(1,(t-t0)/dur), e = 1-Math.pow(1-p,4);
+    el.textContent = p<1 ? fmt(Math.round(v*e*Math.pow(10,dec))/Math.pow(10,dec)) : txt; if(p<1) requestAnimationFrame(passo); };
+  el.textContent = fmt(0); requestAnimationFrame(passo);
+}
+function encher12(w){
+  w.querySelectorAll('.medidor i').forEach(el=>{ const fim = el.style.width; el.style.transition = 'none'; el.style.width = '0'; el.offsetWidth; el.style.transition = ''; setTimeout(()=>{ el.style.width = fim; }, 120); });
+  w.querySelectorAll('.anel .cheio').forEach(el=>{ const fim = el.style.strokeDashoffset, tot = el.style.strokeDasharray; if(!tot) return;
+    el.style.transition = 'none'; el.style.strokeDashoffset = tot; el.getBoundingClientRect(); el.style.transition = ''; setTimeout(()=>{ el.style.strokeDashoffset = fim; }, 150); });
+}
+function animarEntrada12(w){
+  if(!w || calmo12()) return;
+  [...w.children].filter(c=>!c.classList.contains('letreiro')).forEach((c,i)=>c.style.setProperty('--k', Math.min(i, 10)));
+  w.querySelectorAll('.numeros,.atalhos,.tiles').forEach(g=>[...g.children].forEach((c,j)=>c.style.setProperty('--j', Math.min(j, 12))));
+  w.classList.add('entra');
+  clearTimeout(M12.tEntra); M12.tEntra = setTimeout(()=>w.classList.remove('entra'), 1600);
+  w.querySelectorAll('.numero b, .mini-num b, .ar-num b, .pdv-total b').forEach(contar12);
+  encher12(w);
+}
+
+const _renderV12 = render;
+render = function(){
+  const m = $('#menu12'); if(m) M12.scroll = m.scrollTop;
+  _renderV12.apply(this, arguments);
+  let w = null;
+  try{ w = montarCasca12(); }catch(e){ console.warn('casca v12', e); }
+  document.querySelectorAll('.anel .cheio').forEach(c=>c.classList.toggle('zero', parseFloat(c.style.strokeDashoffset) >= parseFloat(c.style.strokeDasharray) - .5));
+  const k = chave12();
+  if(k !== M12.ultimo){
+    const veio = M12.ultimo; M12.ultimo = k;
+    if(S.tela!=='inicio' && veio) { try{ animarEntrada12(w || $('#app > .wrap')); }catch(e){} if(S.tela==='portal'||S.tela==='admin') window.scrollTo({top:0}); }
+  }
 };
 
-/* ───────── aba "Produtos" no Estoque (equipe e administração) ───────── */
-portalEstoque = function portalEstoque(){
-  const k = estContadores(), aba = S.estAba || (k.cont ? 'contar' : 'receber');
-  const abas = [['receber','ti-truck-delivery','Receber'],['contar','ti-scan','Contar',k.cont],['produtos','ti-photo','Produtos'],['transferir','ti-arrows-exchange','Transferir',k.chegando],['repor','ti-basket','Repor',k.repor],['saida','ti-package-export','Saída'],['consulta','ti-search','Consultar']];
-  const corpo = ({receber:estTela, contar:estContar, produtos:estCatalogo, transferir:estTransferir, repor:estRepor, saida:estSaidaTela, consulta:()=>estConsulta().replace('<h2 class="secao">','<h2 class="secao" style="margin-top:0">')})[aba]();
-  return `<div class="est-hub">${abas.map(([id,i,n,b])=>`<button class="${aba===id?'on':''}" onclick="S.estAba='${id}';render()"><i class="ti ${i}"></i>${n}${b?`<span class="contador">${b}</span>`:''}</button>`).join('')}</div>${corpo}`;
-};
-const _admEstoqueV11 = admEstoque;
-admEstoque = function admEstoque(){
-  let h;
-  if(S.adm.estSub==='produtos'){ S.adm.estSub = 'config'; try{ h = _admEstoqueV11(); } finally { S.adm.estSub = 'produtos'; }
-    h = h.slice(0, h.indexOf('</div>', h.indexOf('class="pdv-sub"')) + 6).replace('class="on" onclick="S.adm.estSub=\'config\'', 'class="" onclick="S.adm.estSub=\'config\'') + estCatalogo();
-  } else h = _admEstoqueV11();
-  return h.replace('<div class="pdv-sub">', `<div class="pdv-sub"><button class="${S.adm.estSub==='produtos'?'on':''}" onclick="S.adm.estSub='produtos';render()"><i class="ti ti-photo"></i>Produtos e fotos</button>`);
+/* "Mais" no celular: os mesmos grupos do menu, em blocos */
+portalMais = function portalMais(){
+  const d = S.sess.dados, pend = d.solicitacoes.filter(s=>s.status==='pendente').length, nl = avisosNaoLidos().length;
+  let tr = {total:0}; try{ tr = progressoTrilha(); }catch(e){}
+  let est = 0; try{ const k = estContadores(); est = k.cont + k.chegando; }catch(e){}
+  const info = {
+    pdv:['ti-shopping-cart','Vender','Abrir o caixa (PDV)'], arena:['ti-flame','Arena','Corrida da meta ao vivo'], metas:['ti-trophy','Metas e prêmios','Ranking e premiação'], estoque:['ti-packages','Estoque','Receber, contar, transferir', est],
+    checklist:['ti-checklist','Checklist do dia','Abertura até fechamento'], caixa:['ti-cash-banknote','Caixa e sangria','Registrar a sangria'], mural:['ti-speakerphone','Mural','Avisos da equipe', nl], agenda:['ti-calendar-event','Agenda','Folgas e eventos'],
+    mes:['ti-calendar-stats','Meu mês','Ponto e banco de horas'], escala:['ti-calendar-time','Minha escala','Loja e turno'], pedidos:['ti-send','Meus pedidos','Correção, atestado, folga', pend],
+    protocolos:['ti-book','Protocolos','O manual da loja'], treino:['ti-school','Treinamento', tr.total?tr.pct+'% concluído':'Trilha da equipe'], atalhos:['ti-apps','Atalhos','Kommo, Nuvemshop…']
+  };
+  const tile = (k,cor) => { const [ic,n,s,b] = info[k]; return `<button class="tile" style="--cor:${cor}" onclick="S.portalTab='${k}';S.protoAberto=null;render()"><i class="ti ${ic}"></i><b>${n}</b><small>${esc(String(s))}</small>${b?`<span class="contador">${b}</span>`:''}</button>`; };
+  return `<div class="ola" style="margin-bottom:14px">Tudo do portal</div>
+    ${GRUPOS_PORTAL.map(g=>`<div class="mais-g" style="--cor:${g.cor}"><small>${g.n}</small><div class="tiles">${g.k.map(k=>tile(k,g.cor)).join('')}</div></div>`).join('')}
+    <div class="mais-g" style="--cor:var(--g-sistema)"><small>Eu</small><div class="tiles">
+      <button class="tile" style="--cor:var(--g-sistema)" onclick="S.portalTab='eu';render()"><i class="ti ti-user-circle"></i><b>Meu perfil</b><small>WhatsApp e PIN</small></button>
+      <button class="tile" style="--cor:var(--g-vendas)" onclick="sair()"><i class="ti ti-logout-2"></i><b>Sair</b><small>Fechar o portal</small></button></div></div>`;
 };
 
-/* ───────── foto na busca e na lista da contagem ───────── */
-cntResHtml = function cntResHtml(res){ return res.map(p=>`<button class="est-prod" onclick="cntLer('${p.id}')">${pIco(p,40)}<div class="cresce"><b>${esc(p.nome)}</b><small>${esc(p.codigo||p.sku||'')}</small></div><b>+${CNT.mult}</b></button>`).join(''); };
-estListaResHtml = function estListaResHtml(nome, res, loc){ return res.map(p=>`<button class="est-prod" onclick="estListaAdd('${nome}','${p.id}')">${pIco(p,40)}<div class="cresce"><b>${esc(p.nome)}</b><small>${esc(p.codigo||p.sku||'')}${loc?' · tem '+estFmt(estQtdLocal(p.id,loc)):''}</small></div><i class="ti ti-plus apagado"></i></button>`).join(''); };
-const _estContarV11 = estContar;
-estContar = function estContar(){
-  let h = _estContarV11(); if(!CNT) return h;
-  let k = 0;
-  h = h.replace(/<span class="q">([^<]*)<\/span><div class="nm">/g, (m, q)=>{ const u = CNT.ult[k], p = u && estProd(u.produto_id), kk = k++;
-    return `<span class="q">${q}</span>${pIco(p, kk===0?56:38)}<div class="nm">`; });
-  return h.replace(/<button class="btn p" onclick="cntDesfazer\((\d+)\)">/g, (m, n)=>{ const u = CNT.ult[+n], p = u && estProd(u.produto_id);
-    return (p && !p.foto && +n<3 ? `<button class="btn p semfoto" title="Tirar foto" onclick="fotoTirar('${p.id}')"><i class="ti ti-camera-plus"></i></button>` : '') + m; });
-};
+/* onda no toque */
+document.addEventListener('pointerdown', e=>{
+  if(calmo12()) return;
+  const el = e.target.closest('.btn, .tile, .atalhos button, .menu a, .numero[onclick], button.numero');
+  if(!el || el.disabled) return;
+  const r = el.getBoundingClientRect(), s = Math.max(r.width, r.height)*2.2, o = document.createElement('span');
+  o.className = 'onda'; o.style.cssText = `width:${s}px;height:${s}px;left:${e.clientX-r.left-s/2}px;top:${e.clientY-r.top-s/2}px`;
+  if(getComputedStyle(el).position==='static') el.style.position = 'relative';
+  el.appendChild(o); setTimeout(()=>o.remove(), 650);
+}, {passive:true});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && M12.aberto) menuFechar12(); });
