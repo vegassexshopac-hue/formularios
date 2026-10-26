@@ -77,4 +77,5 @@ itensBusca = function itensBusca(){
 
 /* v9: Estoque + entrada de mercadoria (Portal › Receber · Administração › Estoque) — carrega aqui, antes do app4 (que inicia o app) */
 /* v10: depósito + contagem + transferências + saída + reposição + PDV ligado ao estoque (app11.js) */
-document.write('<script src="app10.js?v=10"><\/script><script src="app11.js?v=10"><\/script>');
+/* v11: fotos dos produtos + tela Produtos (catálogo, tirar foto, produto novo, link #produtos) (app12.js) */
+document.write('<script src="app10.js?v=10"><\/script><script src="app11.js?v=11"><\/script><script src="app12.js?v=11"><\/script>');
