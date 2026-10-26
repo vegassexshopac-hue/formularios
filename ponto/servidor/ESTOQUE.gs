@@ -303,7 +303,11 @@ function estOp_(req, por, admin) {
   if (op === 'receberTransf') return { transferencia: estReceberTransf_(req, por) };
   if (op === 'saida') { estSaida_(req, por); return {}; }
   if (op === 'vincular') { estVincular_(req, por); return { ok: true, vinculos: estPacote_(false).vinculos }; }
+  if (op === 'foto') return { ok: true, foto: estFotoSalvar_(req, por) };
+  if (op === 'produtoNovo') return { ok: true, produto: estProdutoNovo_(req, por) };
   if (!admin) throw new Error('Só a administração pode fazer isso');
+  if (op === 'fotosSite') return { fotos: estFotosSite_(req, por) };
+  if (op === 'fotoRemover') { estFotoRemover_(req, por); return {}; }
   if (op === 'contagemAbrir') return { contagem: estContagemAbrir_(req, por) };
   if (op === 'contagemFechar') { estContagemFechar_(req, por); return {}; }
   if (op === 'contagemCancelar') { estContagemCancelar_(req, por); return {}; }
@@ -336,7 +340,7 @@ rodar_ = function (req) {
     try {
       var c = checarColab_(req);
       var r = estOp_(req, c.nome, false);
-      if (['confirmar', 'transferir', 'receberTransf', 'saida'].indexOf(req.op) >= 0) { var d = dadosColab_(c); d.entradaFeita = r.entrada; d.transfFeita = r.transferencia; return d; }
+      if (['confirmar', 'transferir', 'receberTransf', 'saida', 'produtoNovo'].indexOf(req.op) >= 0) { var d = dadosColab_(c); d.entradaFeita = r.entrada; d.transfFeita = r.transferencia; d.produtoFeito = r.produto; return d; }
       if (req.op === 'contar' || req.op === 'contagem') { r.ok = true; return r; }
       return r;
     } catch (e) { return { ok: false, erro: String(e && e.message || e) }; }
@@ -345,8 +349,10 @@ rodar_ = function (req) {
 };
 ADMIN.admEstoque = function (req) {
   var r = estOp_(req, 'Administração', true);
-  if (req.op === 'ler' || req.op === 'conferir' || req.op === 'contar' || req.op === 'contagem') { r.ok = true; return r; }
+  if (req.op === 'ler' || req.op === 'conferir' || req.op === 'contar' || req.op === 'contagem' || req.op === 'foto') { r.ok = true; return r; }
+  if (req.op === 'produtoNovo') { var d0 = ADMIN.admDados(req); d0.produtoFeito = r.produto; return d0; }
   var d = ADMIN.admDados(req);
+  if (r.fotos) d.fotosFeitas = r.fotos;
   if (r.entrada) d.entradaFeita = r.entrada;
   if (r.transferencia) d.transfFeita = r.transferencia;
   return d;
@@ -574,4 +580,96 @@ function estVincular_(req, por) {
   v.ean = cod; v.produto_id = p.id; v.descricao = p.nome + ' (por ' + por + ')'; v.atualizado_em = agora_();
   gravar_('VinculosEstoque', v);
   log_(por, 'código vinculado', cod + ' → ' + p.nome);
+}
+
+/* ───────── fotos dos produtos ─────────
+   As fotos do site (Nuvemshop) entram de uma vez pela administração; o que faltar a equipe fotografa pelo celular
+   (Estoque › Produtos ou na contagem). A foto aparece no PDV, na contagem e nas listas. Aba FotosProdutos. */
+ABAS.FotosProdutos = ['produto_id', 'url', 'origem', 'por', 'em'];
+function estFotosMapa_() { var m = {}; ler_('FotosProdutos').forEach(function (f) { if (f.url) m[f.produto_id] = f.url; }); return m; }
+var _estPdvProdutos = pdvProdutos_;
+pdvProdutos_ = function (admin) {
+  var l = _estPdvProdutos(admin), f = estFotosMapa_();
+  l.forEach(function (p) { if (f[p.id]) p.foto = f[p.id]; });
+  return l;
+};
+function estFotoUrlOk_(u) { return /^https:\/\/([a-z0-9-]+\.mitiendanube\.com|drive\.google\.com|lh3\.googleusercontent\.com)\//.test(String(u || '')); }
+function estComTrava_(fn) {
+  var lock = LockService.getScriptLock(); lock.waitLock(25000);
+  try { return fn(); } finally { lock.releaseLock(); }
+}
+/* mapa {produto_id: url}; manter = não troca a foto que a equipe tirou */
+function estFotosGravar_(mapa, origem, por, manter) {
+  var sh = aba_('FotosProdutos'), cab = cabecalho_('FotosProdutos', sh), atuais = ler_('FotosProdutos'), porId = {}, n = 0, agora = agora_();
+  atuais.forEach(function (f) { porId[f.produto_id] = f; });
+  Object.keys(mapa).forEach(function (id) {
+    var f = porId[id], u = mapa[id];
+    if (f && f.url && manter && f.origem !== 'site') return;
+    if (!f) { f = { produto_id: id }; atuais.push(f); porId[id] = f; }
+    if (f.url === u) return;
+    f.url = u; f.origem = u ? origem : ''; f.por = por; f.em = agora; n++;
+  });
+  var linhas = atuais.filter(function (f) { return f.url; }).map(function (f) { return linha_('FotosProdutos', f, cab); });
+  if (sh.getLastRow() > 1) sh.getRange(2, 1, sh.getLastRow() - 1, cab.length).clearContent();
+  if (linhas.length) sh.getRange(2, 1, linhas.length, cab.length).setNumberFormat('@').setValues(linhas);
+  return n;
+}
+function estFotoSalvar_(req, por) {
+  var id = String(req.produto_id || '');
+  var p = ler_('Produtos').filter(function (x) { return x.id === id; })[0];
+  if (!p) throw new Error('Produto não encontrado');
+  var bytes = Utilities.base64Decode(String(req.img || '').replace(/^data:image\/\w+;base64,/, ''));
+  if (bytes.length < 1500) throw new Error('A foto não chegou — tente de novo');
+  if (bytes.length > 700 * 1024) throw new Error('Foto grande demais');
+  var raiz = pastaAnexos_(), it = raiz.getFoldersByName('Fotos dos produtos');
+  var pasta = it.hasNext() ? it.next() : raiz.createFolder('Fotos dos produtos');
+  var f = pasta.createFile(Utilities.newBlob(bytes, 'image/jpeg', (p.codigo || p.id) + ' - ' + String(p.nome).slice(0, 60) + '.jpg'));
+  f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  var url = 'https://drive.google.com/thumbnail?id=' + f.getId() + '&sz=w600', m = {};
+  m[id] = url;
+  estComTrava_(function () { estFotosGravar_(m, 'equipe', por, false); });
+  log_(por, 'foto do produto', p.nome);
+  return url;
+}
+function estFotosSite_(req, por) {
+  var lista = Array.isArray(req.lista) ? req.lista.slice(0, 6000) : [];
+  var porCod = {}, ids = {};
+  ler_('Produtos').forEach(function (p) { ids[p.id] = 1; if (p.codigo) porCod[p.codigo] = p.id; if (p.sku && !porCod[p.sku]) porCod[p.sku] = p.id; });
+  var m = {}, sem = 0;
+  lista.forEach(function (i) {
+    var id = ids[i.produto_id] ? i.produto_id : porCod[String(i.codigo || '').trim()], u = String(i.url || '').trim();
+    if (!id || !estFotoUrlOk_(u)) { sem++; return; }
+    m[id] = u;
+  });
+  var n = estComTrava_(function () { return estFotosGravar_(m, 'site', por, !req.substituir); });
+  log_(por, 'fotos do site', n + ' gravadas · ' + sem + ' sem par');
+  return { gravadas: n, recebidas: lista.length, sem_par: sem };
+}
+function estFotoRemover_(req, por) {
+  var m = {}; m[String(req.produto_id || '')] = '';
+  estComTrava_(function () { estFotosGravar_(m, '', por, false); });
+}
+
+/* Produto que chegou e ainda não está no sistema: a equipe cadastra pelo celular (código, foto, nome, preço e quantas peças chegaram). */
+function estProdutoNovo_(req, por) {
+  var nome = String(req.nome || '').replace(/\s+/g, ' ').trim().slice(0, 120);
+  if (nome.length < 3) throw new Error('Escreva o nome do produto');
+  var preco = valor_(req.preco);
+  if (!(preco > 0)) throw new Error('Informe o preço de venda');
+  var cod = String(req.codigo || '').replace(/\s/g, '').slice(0, 40), todos = ler_('Produtos');
+  if (cod) {
+    var ja = todos.filter(function (x) { return x.codigo === cod || x.sku === cod; })[0];
+    if (ja) throw new Error('Esse código já é do produto "' + ja.nome + '"');
+  }
+  var mesmoNome = todos.filter(function (x) { return norm_(x.nome) === norm_(nome); })[0];
+  if (mesmoNome && !req.mesmoAssim) throw new Error('Já existe "' + mesmoNome.nome + '" — confira se não é o mesmo produto');
+  var r = { id: 'P' + new Date().getTime() + Math.floor(Math.random() * 1e3), origem: 'equipe', codigo: cod, sku: '', nome: nome,
+            categoria: String(req.categoria || '').trim().slice(0, 60), preco: String(preco), preco_promo: '', ativo: 'SIM', atualizado_em: agora_() };
+  gravar_('Produtos', r);
+  log_(por, 'produto novo', nome + ' R$ ' + preco + (cod ? ' · ' + cod : ''));
+  var o = { id: r.id, codigo: r.codigo, sku: '', nome: r.nome, categoria: r.categoria, preco: preco, promo: 0, ativo: true };
+  if (req.img) { try { o.foto = estFotoSalvar_({ produto_id: r.id, img: req.img }, por); } catch (e) { o.erroFoto = String(e.message || e); } }
+  var qtd = estNum_(req.qtd), locais = estLocaisMapa_();
+  if (qtd > 0 && locais[req.local]) estMovimentar_([{ produto_id: r.id, produto: nome, loja: req.local, delta: qtd }], 'entrada', 'cadastro', por, 'produto novo');
+  return o;
 }
