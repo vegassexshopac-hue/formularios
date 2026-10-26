@@ -58,12 +58,21 @@ function estD(){
   return {saldos:[], entradas:[], vinculos:[], movimentos:[], cfg:{}, iaPronta:false, semServidor:true, erro:d?.estoque?.erro};
 }
 const estAdmin = () => !!(S.adm && S.tela==='admin');
-function estLojaPadrao(){
+/* locais de estoque: bosque (prateleira) · deposito (Bosque) · centro (prateleira) — vêm do servidor */
+const EST_LOCAIS_PADRAO = [{id:'bosque',nome:'Bosque · Prateleira',loja:'bosque',tipo:'prateleira'},{id:'deposito',nome:'Bosque · Depósito',loja:'bosque',tipo:'deposito'},{id:'centro',nome:'Centro · Prateleira',loja:'centro',tipo:'prateleira'}];
+const estLocais = () => (estD().locais && estD().locais.length) ? estD().locais : EST_LOCAIS_PADRAO;
+const estLocaisIds = () => estLocais().map(l=>l.id);
+function estLojaHoje(){
   if(S.aparelho?.loja) return S.aparelho.loja;
-  const d = S.sess?.dados; if(!d) return Object.keys(S.boot.lojas)[0];
-  return (d.pontos||[]).find(p=>p.data===hojeISO())?.loja || (d.escala||[]).find(e=>e.data===hojeISO() && e.colaboradora_id===S.sess.eid)?.loja || d.colaboradora?.loja || Object.keys(S.boot.lojas)[0];
+  const d = S.sess?.dados; if(!d) return estLocaisIds()[0];
+  return (d.pontos||[]).find(p=>p.data===hojeISO())?.loja || (d.escala||[]).find(e=>e.data===hojeISO() && e.colaboradora_id===S.sess.eid)?.loja || d.colaboradora?.loja || estLocaisIds()[0];
 }
-const estLojaNome = k => S.boot.lojas[k]?.nome || k;
+const estPrateleira = loja => (estLocais().find(l=>l.loja===loja && l.tipo!=='deposito')||{}).id || loja;
+/* mercadoria que chega vai para o depósito da loja (se tiver); senão para a prateleira */
+function estLojaPadrao(){ const loja = estLojaHoje(); return (estLocais().find(l=>l.loja===loja && l.tipo==='deposito')||{}).id || estPrateleira(loja); }
+const estLojaNome = k => (estLocais().find(l=>l.id===k)||{}).nome || S.boot.lojas[k]?.nome || k;
+const estLocalIco = k => (estLocais().find(l=>l.id===k)||{}).tipo==='deposito' ? 'ti-building-warehouse' : 'ti-building-store';
+function estChipsLocal(atual, acao, filtro){ return `<div class="est-lojas">${estLocais().filter(filtro||(()=>true)).map(l=>`<button class="${atual===l.id?'on':''}" onclick="${acao.replace(/\$ID/g,l.id)}"><i class="ti ${estLocalIco(l.id)}"></i> ${esc(l.nome)}</button>`).join('')}</div>`; }
 function estQtdDe(pid, loja){ const s = estD().saldos.find(x=>x.produto_id===pid && x.loja===loja); return s ? s.qtd : null; }
 const estN = v => { let t = String(v??'').trim().replace(/[^\d,.-]/g,''); if(t.includes(',')) t = t.replace(/\./g,'').replace(',','.'); const n = Number(t); return isNaN(n) ? 0 : Math.round(n*1000)/1000; };
 const estFmt = n => n==null ? '—' : (Number(n)||0).toLocaleString('pt-BR',{maximumFractionDigits:3});
@@ -181,7 +190,7 @@ function estInicio(){
   return `<div class="cartao pad">
     <h2 style="margin:0 0 4px;font-size:20px">📦 Receber mercadoria</h2>
     <p class="suave" style="margin:0 0 14px;font-size:14px">Mande a nota do fornecedor: o sistema lê os produtos, você confere o que chegou e o estoque da loja já sai atualizado, com relatório pronto.</p>
-    <div class="campo" style="margin-bottom:4px"><label>Qual loja recebeu?</label><div class="est-lojas">${Object.entries(S.boot.lojas).map(([k,l])=>`<button class="${EST.loja===k?'on':''}" onclick="EST.loja='${k}';estPintar()"><i class="ti ti-building-store"></i> ${esc(l.nome)}</button>`).join('')}</div></div>
+    <div class="campo" style="margin-bottom:4px"><label>Onde a mercadoria vai ficar?</label>${estChipsLocal(EST.loja, "EST.loja='$ID';estPintar()")}</div>
     <div class="est-fontes">
       ${fonte('xml','ti-file-code','XML da nota','O arquivo .xml que o fornecedor ou o contador manda. Leitura 100% exata, sem IA.','.xml,text/xml,application/xml','multiple')}
       ${fonte('foto','ti-camera','Foto da nota','Tire foto do DANFE (pode ser mais de uma página). A IA lê os itens.'+(ia?'':' <br><b>'+semIA+'</b>'),'image/*','multiple capture="environment"', !ia)}
@@ -197,7 +206,7 @@ function estLinhaEntrada(e){
   const div = (e.divergencias||[]).length;
   return `<button class="est-ent" onclick="estVerEntrada('${e.id}')" style="${e.status==='cancelada'?'opacity:.5':''}"><span class="ico">${e.status==='cancelada'?'🚫':div?'⚠️':'✅'}</span>
     <div class="cresce"><b>${esc(e.fornecedor||'Sem fornecedor')} ${e.numero?'· NF '+esc(e.numero):''}</b>
-    <small>Loja ${esc(estLojaNome(e.loja))} · ${quando(e.criada_em)} · ${esc(primeiroNome(e.por))} · ${estFmt(e.qtd_total)} peças${div?` · <span style="color:var(--warn)">${div} divergência(s)</span>`:''}${e.novos?` · ${e.novos} novo(s)`:''}${e.status==='cancelada'?' · cancelada':''}</small></div>
+    <small>${esc(estLojaNome(e.loja))} · ${quando(e.criada_em)} · ${esc(primeiroNome(e.por))} · ${estFmt(e.qtd_total)} peças${div?` · <span style="color:var(--warn)">${div} divergência(s)</span>`:''}${e.novos?` · ${e.novos} novo(s)`:''}${e.status==='cancelada'?' · cancelada':''}</small></div>
     <i class="ti ti-chevron-right apagado"></i></button>`;
 }
 function estLendo(){
@@ -214,7 +223,7 @@ function estConferir(){
   if(it.some(i=>!EST_UN_OK.test(i.un||'UN'))) avisos.push(['warn','ti-box-multiple','Tem item vendido em <b>caixa/pacote</b> (unidade diferente de UN). Ajuste a quantidade para o número de <b>peças</b> que entram no estoque.']);
   if(EST.fila?.length) avisos.push(['info','ti-files',`Depois desta, ainda tem ${EST.fila.length} nota(s) na fila.`]);
   return `<div class="cartao pad">
-    <div class="linha entre quebra" style="gap:8px;margin-bottom:12px"><h2 style="margin:0;font-size:19px">Conferir ${EST.origem==='manual'?'entrada':'a nota'} · Loja ${esc(estLojaNome(EST.loja))}</h2>
+    <div class="linha entre quebra" style="gap:8px;margin-bottom:12px"><h2 style="margin:0;font-size:19px">Conferir ${EST.origem==='manual'?'entrada':'a nota'} · ${esc(estLojaNome(EST.loja))}</h2>
       <span class="selo ${EST.origem==='xml'?'ok':'info'}">${({xml:'XML · exato',foto:'Foto · lida pela IA',pdf:'PDF · lido pela IA',manual:'Lançado na mão'})[EST.origem]||''}</span></div>
     <div class="est-cab">
       <div><small>Fornecedor</small><input class="inp" style="padding:4px 0;border:0;background:transparent;font-weight:700" value="${esc(N.fornecedor)}" placeholder="nome" oninput="EST.nota.fornecedor=this.value"></div>
@@ -231,7 +240,7 @@ function estConferir(){
     <button class="btn p" style="margin-top:10px" onclick="estBuscarProduto(-1)"><i class="ti ti-plus"></i> Adicionar item</button>
     <div class="campo" style="margin-top:14px"><label>Observação (opcional)</label><input class="inp" value="${esc(EST.obs)}" placeholder="ex.: 1 caixa chegou amassada" oninput="EST.obs=this.value"></div>
     <div class="est-barra"><button class="btn" onclick="if(confirm('Descartar esta conferência?')){estNovo();estPintar()}"><i class="ti ti-x"></i> Descartar</button>
-      <button class="btn pri cresce" id="btn-est-ok" onclick="estConfirmar()" ${it.length?'':'disabled'}><i class="ti ti-check"></i> <span id="est-ok-txt">Confirmar · ${estFmt(pecas)} peças</span><span class="est-ok-loja">&nbsp;na loja ${esc(estLojaNome(EST.loja))}</span></button></div>
+      <button class="btn pri cresce" id="btn-est-ok" onclick="estConfirmar()" ${it.length?'':'disabled'}><i class="ti ti-check"></i> <span id="est-ok-txt">Confirmar · ${estFmt(pecas)} peças</span><span class="est-ok-loja">&nbsp;em ${esc(estLojaNome(EST.loja))}</span></button></div>
   </div>`;
 }
 function estItem(x, k){
@@ -329,7 +338,7 @@ async function estConfirmar(){
 }
 
 function estRelatorio(e){
-  const L = [`*📦 Entrada de mercadoria — Loja ${estLojaNome(e.loja)}*`, `_${[e.fornecedor, e.numero?'NF '+e.numero:'', quando(e.criada_em)].filter(Boolean).join(' · ')}_`, '',
+  const L = [`*📦 Entrada de mercadoria — ${estLojaNome(e.loja)}*`, `_${[e.fornecedor, e.numero?'NF '+e.numero:'', quando(e.criada_em)].filter(Boolean).join(' · ')}_`, '',
     `✅ *${e.itens.length} itens · ${estFmt(e.qtd_total)} peças*${e.valor_total?' · '+brl2(e.valor_total):''}`];
   if(e.divergencias.length){ L.push('', `⚠️ *Divergências (${e.divergencias.length})*`); e.divergencias.forEach(x=>L.push(`• ${x.produto}: nota ${estFmt(x.nota)}, chegou *${estFmt(x.recebido)}*`)); }
   const novos = e.itens.filter(i=>i.novo); if(novos.length){ L.push('', `🆕 *Produtos novos no catálogo (${novos.length})*`); novos.slice(0,15).forEach(i=>L.push('• '+i.produto)); }
@@ -342,7 +351,7 @@ function estFeito(){
   const prox = EST.fila?.length ? `<button class="btn ouro" onclick="const n=EST.fila.shift(), f=EST.fila, l=EST.loja; estNovo(); EST.loja=l; EST.fila=f; estAbrirNota(n,'xml')"><i class="ti ti-arrow-right"></i> Próxima nota (${EST.fila.length})</button>` : '';
   return `<div class="cartao est-feito"><div class="big">${e.divergencias.length?'⚠️':'🎉'}</div>
     <h2 style="margin:0;font-size:22px">Entrada confirmada!</h2>
-    <p class="suave" style="margin:0">${estFmt(e.qtd_total)} peças entraram no estoque da Loja ${esc(estLojaNome(e.loja))}${e.divergencias.length?` · <b style="color:var(--warn)">${e.divergencias.length} divergência(s) registrada(s)</b>`:''}.</p>
+    <p class="suave" style="margin:0">${estFmt(e.qtd_total)} peças entraram no estoque da ${esc(estLojaNome(e.loja))}${e.divergencias.length?` · <b style="color:var(--warn)">${e.divergencias.length} divergência(s) registrada(s)</b>`:''}.</p>
     <div class="est-relat">${esc(txt)}</div>
     <div class="linha quebra" style="gap:8px;justify-content:center"><button class="btn ouro" onclick="estCopiar()"><i class="ti ti-brand-whatsapp"></i> Copiar relatório</button>${prox}
       <button class="btn" onclick="estNovo();estPintar()"><i class="ti ti-plus"></i> Nova entrada</button></div></div>`;
@@ -354,7 +363,7 @@ function estVerEntrada(id){
   const adm = estAdmin();
   $('#modal').innerHTML = `<div class="veu" onclick="if(event.target===this)fecharModal()"><div class="modal largo">
     <div class="modal-t"><h3 class="cresce">${esc(e.fornecedor||'Entrada')} ${e.numero?'· NF '+esc(e.numero):''}</h3><button class="icone" onclick="fecharModal()"><i class="ti ti-x"></i></button></div>
-    <div class="modal-c"><p class="suave" style="margin:0 0 10px;font-size:14px">Loja ${esc(estLojaNome(e.loja))} · ${quando(e.criada_em)} · por ${esc(e.por)} · ${({xml:'XML',foto:'foto + IA',pdf:'PDF + IA',manual:'na mão'})[e.origem]||esc(e.origem)}${e.status==='cancelada'?` · <b style="color:var(--bad)">cancelada por ${esc(e.cancelada_por)}</b>`:''}</p>
+    <div class="modal-c"><p class="suave" style="margin:0 0 10px;font-size:14px">${esc(estLojaNome(e.loja))} · ${quando(e.criada_em)} · por ${esc(e.por)} · ${({xml:'XML',foto:'foto + IA',pdf:'PDF + IA',manual:'na mão'})[e.origem]||esc(e.origem)}${e.status==='cancelada'?` · <b style="color:var(--bad)">cancelada por ${esc(e.cancelada_por)}</b>`:''}</p>
       ${e.obs?`<div class="nota info" style="margin-bottom:10px"><i class="ti ti-note"></i><div>${esc(e.obs)}</div></div>`:''}
       <div class="tabela"><table><thead><tr><th>Produto</th><th>Nota</th><th>Chegou</th>${e.itens.some(i=>i.visto!=null)?'<th>Foto</th>':''}<th>Custo un.</th></tr></thead><tbody>
       ${e.itens.map(i=>`<tr style="${i.qtd!==i.qtd_nota?'color:var(--warn)':''}"><td>${i.novo?'🆕 ':''}${esc(i.produto)}<br><small class="apagado">${esc(i.desc)}</small></td><td class="n num">${estFmt(i.qtd_nota)}</td><td class="n num"><b>${estFmt(i.qtd)}</b></td>${e.itens.some(z=>z.visto!=null)?`<td class="n num">${i.visto==null?'—':estFmt(i.visto)}</td>`:''}<td class="n num">${i.vunit?brl2(i.vunit):''}</td></tr>`).join('')}</tbody></table></div>
@@ -368,7 +377,7 @@ async function estCancelarEntrada(id){
 
 /* consulta rápida de estoque (equipe) */
 function estConsulta(){
-  const q = S.estQ||'', P = pdvD().produtos, lojas = Object.keys(S.boot.lojas);
+  const q = S.estQ||'', P = pdvD().produtos, lojas = estLocaisIds();
   const qs = semAcento(q.trim());
   const lista = qs.length>=2 ? P.filter(p=>semAcento(p.nome+' '+p.codigo+' '+p.sku).includes(qs)).slice(0,12) : [];
   return `<h2 class="secao">Tem na loja? <small>consulta rápida</small></h2>
@@ -386,7 +395,7 @@ function admEstoque(){
     <div class="pdv-sub">${subs.map(([k,i,n])=>`<button class="${sub===k?'on':''}" onclick="S.adm.estSub='${k}';render()"><i class="ti ${i}"></i>${n}</button>`).join('')}</div>${corpo}`;
 }
 function admEstSaldo(){
-  const P = pdvD().produtos, E = estD(), lojas = Object.keys(S.boot.lojas), f = S.adm.estF || 'todos', qs = semAcento(S.adm.estQ||'');
+  const P = pdvD().produtos, E = estD(), lojas = estLocaisIds(), f = S.adm.estF || 'todos', qs = semAcento(S.adm.estQ||'');
   const sal = {}; E.saldos.forEach(s=>{ (sal[s.produto_id] = sal[s.produto_id] || {})[s.loja] = s; });
   let linhas = P.map(p=>{ const s = sal[p.id]||{}; const tot = lojas.reduce((a,l)=>a+(s[l]?.qtd||0),0); return {p, s, tot, tem: Object.keys(s).length>0}; });
   if(qs) linhas = linhas.filter(x=>semAcento(x.p.nome+' '+x.p.codigo+' '+x.p.sku+' '+x.p.categoria).includes(qs));
@@ -394,7 +403,7 @@ function admEstSaldo(){
   const cont = {todos:linhas.length, com:linhas.filter(x=>x.tem).length, zerado:linhas.filter(x=>x.tem && lojas.some(l=>x.s[l] && x.s[l].qtd<=0)).length, baixo:linhas.filter(baixo).length, sem:linhas.filter(x=>!x.tem).length};
   linhas = linhas.filter(x=> f==='todos' || (f==='com'&&x.tem) || (f==='zerado'&&x.tem&&lojas.some(l=>x.s[l]&&x.s[l].qtd<=0)) || (f==='baixo'&&baixo(x)) || (f==='sem'&&!x.tem)).sort((a,b)=>a.p.nome.localeCompare(b.p.nome));
   const pecas = l => E.saldos.filter(s=>s.loja===l && s.qtd>0).reduce((a,s)=>a+s.qtd,0);
-  return `<div class="numeros" style="margin-bottom:12px">${lojas.map(l=>`<div class="numero"><small>Loja ${esc(estLojaNome(l))}</small><b class="num">${estFmt(pecas(l))}</b><span>peças em estoque</span></div>`).join('')}
+  return `<div class="numeros" style="margin-bottom:12px">${lojas.map(l=>`<div class="numero"><small>${esc(estLojaNome(l))}</small><b class="num">${estFmt(pecas(l))}</b><span>peças em estoque</span></div>`).join('')}
       <div class="numero"><small>Produtos com saldo</small><b class="num">${cont.com}</b><span>de ${P.length} no catálogo</span></div></div>
     <div class="est-q"><input class="inp" style="max-width:320px" id="est-aq" placeholder="Buscar produto…" value="${esc(S.adm.estQ||'')}" oninput="S.adm.estQ=this.value;clearTimeout(window._eaq);window._eaq=setTimeout(()=>{render();const i=$('#est-aq');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}},250)">
       ${[['todos','Todos'],['com','Com saldo'],['zerado','Zerados/negativos'],['baixo','Abaixo do mínimo'],['sem','Nunca contados']].map(([k,n])=>`<button class="selo ${f===k?'info':''}" style="cursor:pointer;border:0" onclick="S.adm.estF='${k}';render()">${n} · ${cont[k]}</button>`).join('')}
@@ -405,7 +414,7 @@ function admEstSaldo(){
     ${linhas.length>300?`<p class="apagado" style="font-size:13px;margin-top:8px">Mostrando 300 de ${linhas.length}. Use a busca.</p>`:''}`;
 }
 function estExportarSaldo(){
-  const P = pdvD().produtos, lojas = Object.keys(S.boot.lojas), sal = {};
+  const P = pdvD().produtos, lojas = estLocaisIds(), sal = {};
   estD().saldos.forEach(s=>{ (sal[s.produto_id] = sal[s.produto_id] || {})[s.loja] = s.qtd; });
   const q = v => '"'+String(v??'').replace(/"/g,'""')+'"';
   const linhas = [['Produto','Código de barras','SKU','Categoria',...lojas.map(estLojaNome),'Total'].map(q).join(';')]
@@ -414,13 +423,13 @@ function estExportarSaldo(){
 }
 let AJ = null;
 function admEstAjuste(pid){
-  const p = pdvD().produtos.find(x=>x.id===pid), lojas = Object.keys(S.boot.lojas);
+  const p = pdvD().produtos.find(x=>x.id===pid), lojas = estLocaisIds();
   AJ = {pid, obs:'', v:Object.fromEntries(lojas.map(l=>{ const s = estD().saldos.find(x=>x.produto_id===pid && x.loja===l); return [l, {qtd: s?String(s.qtd):'', minimo: s&&s.minimo?String(s.minimo):'', antes: s?s.qtd:null}]; }))};
   const movs = (estD().movimentos||[]).filter(m=>m.produto_id===pid).slice(0,12);
   $('#modal').innerHTML = `<div class="veu" onclick="if(event.target===this)fecharModal()"><div class="modal">
     <div class="modal-t"><h3 class="cresce">${emojiDe(p)} ${esc(p.nome)}</h3><button class="icone" onclick="fecharModal()"><i class="ti ti-x"></i></button></div>
     <div class="modal-c"><p class="suave" style="margin:0 0 12px;font-size:14px">Contou e deu diferente? Ponha o número <b>real</b> da prateleira. O mínimo avisa quando precisa repor.</p>
-      ${lojas.map(l=>`<div class="g2"><div class="campo"><label>Loja ${esc(estLojaNome(l))} — quantidade</label><input class="inp num" inputmode="decimal" value="${esc(AJ.v[l].qtd)}" placeholder="não contado" oninput="AJ.v['${l}'].qtd=this.value"></div>
+      ${lojas.map(l=>`<div class="g2"><div class="campo"><label>${esc(estLojaNome(l))} — qtd</label><input class="inp num" inputmode="decimal" value="${esc(AJ.v[l].qtd)}" placeholder="não contado" oninput="AJ.v['${l}'].qtd=this.value"></div>
         <div class="campo"><label>Mínimo</label><input class="inp num" inputmode="decimal" value="${esc(AJ.v[l].minimo)}" placeholder="opcional" oninput="AJ.v['${l}'].minimo=this.value"></div></div>`).join('')}
       <div class="campo"><label>Motivo</label><input class="inp" placeholder="ex.: contagem do mês, quebrou, brinde, troca" oninput="AJ.obs=this.value"></div>
       <button class="btn pri largo" id="btn-aj" onclick="admEstSalvarAjuste()"><i class="ti ti-device-floppy"></i> Salvar</button>
@@ -454,11 +463,11 @@ function admEstMov(){
 /* saldo inicial: a lista do PDV antigo (CSV/Excel colado) → define o número exato por loja */
 let SI = null;
 function admEstImportar(){
-  SI = SI || {loja:Object.keys(S.boot.lojas)[0], linhas:null, txt:''};
+  SI = SI || {loja:estLocaisIds()[0], linhas:null, txt:''};
   return `<div class="cartao pad" style="max-width:860px">
     <h2 style="margin:0 0 4px;font-size:18px">Saldo inicial (o que está nas lojas hoje)</h2>
     <p class="suave" style="margin:0 0 12px;font-size:14px">Use a lista de estoque do PDV de cada loja: CSV/Excel com <b>código de barras</b> (ou nome) e <b>quantidade</b>. O número que vier aqui <b>substitui</b> o saldo daquela loja. Faça uma loja de cada vez.</p>
-    <div class="campo"><label>Loja</label><div class="est-lojas">${Object.entries(S.boot.lojas).map(([k,l])=>`<button class="${SI.loja===k?'on':''}" onclick="SI.loja='${k}';admEstPrever(SI.txt)"><i class="ti ti-building-store"></i> ${esc(l.nome)}</button>`).join('')}</div></div>
+    <div class="campo"><label>Local</label>${estChipsLocal(SI.loja, "SI.loja='$ID';admEstPrever(SI.txt)")}</div>
     <div class="campo"><label>Arquivo CSV</label><input class="inp" type="file" accept=".csv,.txt,text/csv" style="padding-top:10px" onchange="admEstArquivo(this)"></div>
     <div class="campo"><label>…ou cole do Excel (com a linha de títulos: Código; Produto; Quantidade)</label><textarea class="inp" placeholder="Código;Produto;Quantidade" oninput="admEstPrever(this.value)">${esc(SI.txt)}</textarea></div>
     <div id="si-prev">${admEstPrevHtml()}</div></div>`;
@@ -501,12 +510,12 @@ function admEstPrevHtml(){
     <div class="tabela pdv-prev" style="margin-top:10px"><table><thead><tr><th>Na lista</th><th>No catálogo</th><th>Qtd</th></tr></thead><tbody>
     ${[...par, ...sem, ...ok.filter(x=>x.como==='exato')].slice(0,40).map(x=>`<tr style="${!x.p?'opacity:.55':''}"><td>${esc(x.nome||x.cod)}<br><small class="apagado">${esc(x.cod)}</small></td><td>${x.p?esc(x.p.nome)+(x.como==='parecido'?' <span class="selo warn">parecido</span>':''):'<span class="selo bad">não achei</span>'}</td><td class="n num">${estFmt(x.qtd)}</td></tr>`).join('')}
     ${SI.linhas.length>40?`<tr><td colspan="3" class="apagado">… e mais ${SI.linhas.length-40}</td></tr>`:''}</tbody></table></div>
-    ${ok.length?`<button class="btn ouro largo" id="btn-si" style="margin-top:12px" onclick="admEstConfirmarSaldo()"><i class="ti ti-database-import"></i> Definir saldo de ${ok.length} produtos na Loja ${esc(estLojaNome(SI.loja))}</button>`:''}`;
+    ${ok.length?`<button class="btn ouro largo" id="btn-si" style="margin-top:12px" onclick="admEstConfirmarSaldo()"><i class="ti ti-database-import"></i> Definir saldo de ${ok.length} produtos na ${esc(estLojaNome(SI.loja))}</button>`:''}`;
 }
 async function admEstConfirmarSaldo(){
   const ok = SI.linhas.filter(x=>x.p), soma = {};
   ok.forEach(x=>{ soma[x.p.id] = (soma[x.p.id]||0) + x.qtd; });
-  if(!confirm(`Substituir o saldo de ${Object.keys(soma).length} produtos na Loja ${estLojaNome(SI.loja)} pelos números da lista?`)) return;
+  if(!confirm(`Substituir o saldo de ${Object.keys(soma).length} produtos na ${estLojaNome(SI.loja)} pelos números da lista?`)) return;
   const b = $('#btn-si'); b.disabled = true; b.innerHTML = '<i class="ti ti-loader-2"></i> Gravando… (pode levar até 1 minuto)';
   try{ S.adm.dados = await api('admEstoque', {...S.adm.cred, op:'saldo', ref:'Saldo inicial · PDV '+estLojaNome(SI.loja), lista:Object.entries(soma).map(([produto_id,qtd])=>({produto_id, loja:SI.loja, qtd}))});
     SI = null; S.adm.estSub = 'saldo'; render(); toast('Saldo da loja definido ✔'); }
@@ -526,7 +535,7 @@ function admEstConfig(){
     <div class="campo"><label>Chave da API ${E.iaPronta?'(deixe em branco para manter a atual)':''}</label><input class="inp" type="password" autocomplete="off" placeholder="${ECF.prov==='anthropic'?'sk-ant-…':'AIza…'}" value="${esc(ECF.chave)}" oninput="ECF.chave=this.value"></div>
     <p class="apagado" style="font-size:12.5px;margin:-4px 0 12px">A chave fica guardada no servidor (Propriedades do Apps Script), nunca na planilha nem no celular de ninguém.</p>
     <h2 style="margin:18px 0 6px;font-size:18px"><i class="ti ti-shopping-cart"></i> Baixa automática nas vendas</h2>
-    <label class="linha" style="gap:10px;align-items:flex-start;margin-bottom:6px;cursor:pointer"><input type="checkbox" ${ECF.baixa?'checked':''} onchange="ECF.baixa=this.checked" style="margin-top:4px"><div><b>Tirar do estoque quando vender pelo PDV do portal</b><br><span class="suave" style="font-size:13.5px">Ligue só quando as lojas estiverem vendendo <b>pelo portal</b> (e não mais pelo PDV antigo), senão a venda é descontada só num dos dois sistemas. Venda desfeita ou cancelada devolve ao estoque.</span></div></label>
+    <label class="linha" style="gap:10px;align-items:flex-start;margin-bottom:6px;cursor:pointer"><input type="checkbox" ${ECF.baixa?'checked':''} onchange="ECF.baixa=this.checked" style="margin-top:4px"><div><b>Tirar do estoque quando vender pelo PDV do portal</b><br><span class="suave" style="font-size:13.5px">Cada venda tira da <b>prateleira</b> da loja onde foi feita. Venda desfeita ou cancelada devolve. O que for vendido pelo PDV antigo o portal não vê: por isso o ideal é as lojas venderem só pelo portal.</span></div></label>
     <div class="linha quebra" style="gap:8px;margin-top:14px"><button class="btn pri" id="btn-ecf" onclick="admEstSalvarCfg()"><i class="ti ti-device-floppy"></i> Salvar</button>
       ${E.iaPronta?`<button class="btn p" style="color:var(--bad)" onclick="if(confirm('Desligar a IA e apagar a chave?')){ECF.chave='__apagar';admEstSalvarCfg()}">Apagar chave</button>`:''}</div></div>`;
 }
