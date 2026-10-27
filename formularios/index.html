@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Las Vegas Sex Shop — Formulários</title>
+<meta name="description" content="Formulários da Las Vegas Sex Shop: chá de lingerie e quiz do casal.">
+<meta name="theme-color" content="#0B0709">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Las Vegas Sex Shop — Formulários">
+<meta property="og:description" content="Chá de lingerie, quiz do casal e processo seletivo.">
+<meta property="og:locale" content="pt_BR">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B0709;
+    --ink-2:#150E11;
+    --red:#E10E1E;
+    --gold:#F7A600;
+    --bone:#F5F1E8;
+    --muted:#8F8279;
+    --display:"Bodoni Moda",Georgia,serif;
+    --body:"DM Sans",-apple-system,BlinkMacSystemFont,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--ink);
+    color:var(--bone);
+    font-family:var(--body);
+    line-height:1.55;
+    min-height:100vh;
+    padding:clamp(28px,7vw,64px) 20px 40px;
+    display:flex;justify-content:center;
+    background-image:radial-gradient(120% 70% at 50% -10%, #23151a 0%, var(--ink) 62%);
+  }
+  .wrap{width:100%;max-width:560px}
+
+  /* — signature: trilho de lâmpadas de marquise — */
+  .marquee{
+    display:flex;justify-content:center;gap:14px;
+    margin-bottom:26px;
+  }
+  .bulb{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--gold);
+    box-shadow:0 0 10px rgba(247,166,0,.75);
+    animation:blink 2.4s infinite ease-in-out;
+  }
+  .bulb:nth-child(1){animation-delay:0s}
+  .bulb:nth-child(2){animation-delay:.2s}
+  .bulb:nth-child(3){animation-delay:.4s}
+  .bulb:nth-child(4){animation-delay:.6s}
+  .bulb:nth-child(5){animation-delay:.8s}
+  .bulb:nth-child(6){animation-delay:1s}
+  .bulb:nth-child(7){animation-delay:1.2s}
+  @keyframes blink{0%,70%,100%{opacity:1}82%{opacity:.22}}
+
+  .logo{display:block;width:min(230px,62vw);margin:0 auto 22px}
+
+  .eyebrow{
+    text-align:center;
+    font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--gold);font-weight:500;
+  }
+  h1{
+    font-family:var(--display);
+    font-weight:700;
+    font-size:clamp(28px,8vw,40px);
+    line-height:1.12;
+    text-align:center;
+    margin:12px 0 8px;
+  }
+  .sub{
+    text-align:center;color:var(--muted);
+    font-size:15px;max-width:38ch;margin:0 auto 34px;
+  }
+
+  .card{
+    display:block;text-decoration:none;color:inherit;
+    background:var(--ink-2);
+    border:1px solid #2A1B20;
+    border-radius:14px;
+    padding:22px 22px 20px;
+    margin-bottom:14px;
+    position:relative;
+    transition:border-color .2s ease, transform .2s ease, background .2s ease;
+  }
+  .card::before{
+    content:"";position:absolute;left:22px;right:22px;top:0;height:2px;
+    background:var(--red);border-radius:0 0 2px 2px;
+    opacity:.55;transition:opacity .2s ease, box-shadow .2s ease;
+  }
+  .card:hover,.card:focus-visible{
+    border-color:#4A2028;background:#1B1116;transform:translateY(-2px);
+  }
+  .card:hover::before,.card:focus-visible::before{
+    opacity:1;box-shadow:0 0 14px rgba(225,14,30,.85);
+  }
+  .card:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+
+  .card h2{
+    font-family:var(--display);font-weight:700;
+    font-size:22px;line-height:1.2;margin-bottom:6px;
+  }
+  .card p{color:var(--muted);font-size:14.5px;margin-bottom:14px}
+  .go{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    font-weight:700;color:var(--gold);
+  }
+  .go svg{width:14px;height:14px}
+
+  footer{
+    margin-top:34px;text-align:center;
+    font-size:13px;color:var(--muted);
+  }
+  footer a{color:var(--bone);text-decoration:none;border-bottom:1px solid #3A2229;padding-bottom:1px}
+  footer a:hover{border-color:var(--red)}
+  footer .sep{margin:0 8px;color:#3A2229}
+
+  @media (prefers-reduced-motion:reduce){
+    .bulb{animation:none}
+    .card{transition:none}
+    .card:hover{transform:none}
+  }
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="marquee" aria-hidden="true">
+      <span class="bulb"></span><span class="bulb"></span><span class="bulb"></span>
+      <span class="bulb"></span><span class="bulb"></span><span class="bulb"></span>
+      <span class="bulb"></span>
+    </div>
+
+    <img class="logo" id="logo" alt="Las Vegas Sex Shop" width="230" height="155" style="height:auto">
+
+    <p class="eyebrow">Rio Branco &middot; Acre</p>
+    <h1>Nossos formulários</h1>
+    <p class="sub">Escolha abaixo. As respostas chegam direto no WhatsApp da loja.</p>
+
+    <a class="card" href="/cha-lingerie.html">
+      <h2>Chá de lingerie</h2>
+      <p>Conte os detalhes do evento pra gente montar o seu chá do jeito que você quer. Leva uns 3 minutos.</p>
+      <span class="go">Preencher formulário
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8h9M9 4l4 4-4 4"/></svg>
+      </span>
+    </a>
+
+    <a class="card" href="/quiz-casal.html">
+      <h2>Quiz do casal</h2>
+      <p>Perguntas rápidas pra descobrir o clima de vocês dois — e o que combina com o casal.</p>
+      <span class="go">Começar o quiz
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8h9M9 4l4 4-4 4"/></svg>
+      </span>
+    </a>
+
+    <a class="card" href="/processo-seletivo.html">
+      <h2>Trabalhe com a gente</h2>
+      <p>Vagas abertas na loja. Escolhe a vaga, responde a ficha e manda direto pro nosso WhatsApp.</p>
+      <span class="go">Quero me candidatar
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8h9M9 4l4 4-4 4"/></svg>
+      </span>
+    </a>
+
+    <footer>
+      <a href="https://wa.me/5568992822275">WhatsApp da loja</a>
+      <span class="sep">&middot;</span>
+      <a href="https://www.lasvegassexshop.com.br/">lasvegassexshop.com.br</a>
+    </footer>
+  </main>
+<script>/* logo: a mesma imagem da página original (versão guardada no GitHub); se não carregar, usa o logo do portal */
+(function(){ const img = document.getElementById('logo'), re = /data:image\/png;base64,[A-Za-z0-9+\/=]+/;
+  const usa = s => { const m = s && s.match(re); if(m){ img.src = m[0]; return true; } };
+  fetch('https://raw.githubusercontent.com/vegassexshopac-hue/formularios/b340dde4c77bf8b0a224978585733895f9b7e79a/index.html').then(r=>r.ok?r.text():'').then(usa)
+    .then(ok=>ok || fetch('/ponto/app1.js').then(r=>r.text()).then(usa)).catch(()=>{});
+})();</script>
+</body>
+</html>
