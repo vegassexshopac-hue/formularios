@@ -71,6 +71,10 @@
 .fl-avl div span{flex:1}
 .fl-avl button{border:1px solid rgba(0,0,0,.15);background:#fff;border-radius:99px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
 .fl-dica{font-size:12px;color:#777;margin-top:4px}
+.fl-falta{display:flex;flex-direction:column;gap:5px;margin-top:10px}
+.fl-falta button{position:relative;display:flex;justify-content:space-between;gap:8px;border:0;background:#faf5f3;border-radius:10px;padding:7px 10px;font:inherit;font-size:13px;color:#333;cursor:pointer;overflow:hidden;text-align:left}
+.fl-falta button span,.fl-falta button b{position:relative;z-index:1}
+.fl-falta button i{position:absolute;left:0;top:0;bottom:0;background:rgba(212,18,27,.12);border-radius:10px}
 .fl-pend{font-size:12.5px;font-weight:800;color:#8a5d00;background:rgba(245,181,36,.18);border-radius:10px;padding:6px 10px;margin-top:6px}
 `; document.head.appendChild(st); })();
 
@@ -87,8 +91,8 @@ const FL_AVISOS = {
   codigo_repetido: {t:'Tem outro produto com o mesmo código', c:'código repetido'}
 };
 function flNorm(s){ return semAcento(String(s||'')).replace(/\s+/g,' ').trim(); }
-function flAvisos(p){
-  const a = [], nm = String(p.nome||'');
+function flAvisos(p, D){
+  D = D || FL; const a = [], nm = String(p.nome||'');
   if(!p.foto) a.push('sem_foto');
   if(!p.codigo && !p.sku) a.push('sem_codigo');
   if(!String(p.categoria||'').trim()) a.push('sem_categoria');
@@ -96,12 +100,27 @@ function flAvisos(p){
   else if(p.preco>=1000) a.push('preco_estranho');
   if(/[A-ZÁÉÍÓÚÂÊÔÃÕÇ]{4}/.test(nm) && nm===nm.toUpperCase()) a.push('nome_maiusculo');
   if(/[?�]|\s{2,}/.test(nm) || nm.trim().length<5) a.push('nome_estranho');
-  if((FL.dupNome[flNorm(nm)]||0)>1) a.push('nome_repetido');
+  if((D.dupNome[flNorm(nm)]||0)>1) a.push('nome_repetido');
   const cod = p.codigo || '';
-  if(cod && (FL.dupCod[cod]||0)>1) a.push('codigo_repetido');
+  if(cod && (D.dupCod[cod]||0)>1) a.push('codigo_repetido');
   return a.filter(k=>!(p.ok||[]).includes(k));
 }
-function flTitulo(s){ return String(s||'').toLowerCase().replace(/(^|[\s\-\/(])([a-zà-ú])/g,(m,a,b)=>a+b.toUpperCase()).replace(/\b(De|Da|Do|Das|Dos|E|Com|Para|Em|No|Na|Nos|Nas|Ao)\b/g, w=>w.toLowerCase()).replace(/\b(\d+)(Ml|G|Gr|Cm|Un)\b/g,(m,n,u)=>n+u.toLowerCase()); }
+const FL_SIGLAS = new Set(['LGBT','LGBTQIA','LGBTQIA+','LGBTQ','INTT','BDSM','DS','PU','USB','LED','APP','CBD','SD','KY','TPE','PVC','3D','XL','XXL','XG','GG','PP','P','M','G','UV','SI','MDF','IA','TV','DVD']);
+const FL_MINUSC = new Set(['de','da','do','das','dos','e','com','para','em','no','na','nos','nas','ao','aos','que','a','o','as','os','ou','sem','por','pra','c/','s/']);
+function flTitulo(s){
+  let primeira = true;
+  return String(s||'').replace(/\s+/g,' ').trim().split(/(\s|[-\/(),.·])/).map(t=>{
+    if(!t || /^(\s|[-\/(),.·])$/.test(t)) return t;
+    const up = t.toUpperCase(), lo = t.toLowerCase(), era1 = primeira; primeira = false;
+    if(/^\d+([.,]\d+)?(ml|g|gr|cm|mm|kg|un|x|m)$/i.test(t)) return lo;
+    if(/^\d+x\d+$/i.test(t)) return lo;
+    if(!era1 && /^(x|cm|ml|mm|kg|un|gr)$/i.test(t)) return lo;
+    if(FL_SIGLAS.has(up) && !(up==='E'||up==='O'||up==='A')) return (t.length===1 && era1) ? up : (t.length===1 && !/^[PMG]$/.test(up)) ? lo : up;
+    if(!era1 && FL_MINUSC.has(lo)) return lo;
+    if(/\d/.test(t) && /[A-Za-z]/.test(t) && t.length<=4) return up;   // I3, 5G, A6…
+    return lo.charAt(0).toUpperCase() + lo.slice(1);
+  }).join('').replace(/(^|\s)([CS])\/ ?/g,(m,a,l)=>a+l.toLowerCase()+'/ ').replace(/\s+$/,'');
+}
 
 var FL = null;
 function flChaveDaUrl(){ const m = location.hash.match(/^#fotos=([a-z0-9]{6,20})$/i); return m ? m[1] : ''; }
@@ -112,7 +131,7 @@ carregar = async function(){
   const ch = flChaveDaUrl();
   if(!ch || !S.api) return _carregarV15();
   S.tela = 'fotos';
-  FL = {chave: ch, por: LS.get('lv_fotos_por', ''), lista: [], total: 0, ranking: [], nomes: [], erro: '', q: '', filtro: 'arrumar', aviso: '', lim: 150, dupNome: {}, dupCod: {}, enviando: {}, eu: 0, carregando: true};
+  FL = {chave: ch, por: LS.get('lv_fotos_por', ''), lista: [], total: 0, nomes: [], erro: '', q: '', filtro: 'arrumar', aviso: '', lim: 150, dupNome: {}, dupCod: {}, enviando: {}, eu: 0, carregando: true};
   flPintar();
   await flCarregar();
 };
@@ -123,16 +142,18 @@ async function flCarregar(){
   FL.carregando = true;
   try{
     const r = await api('fotos', {chave: FL.chave, op: 'lista'});
-    FL.lista = r.produtos || []; FL.total = r.total || FL.lista.length; FL.nomes = r.nomes || []; FL.ranking = r.ranking || []; FL.erro = '';
+    FL.lista = r.produtos || []; FL.total = r.total || FL.lista.length; FL.nomes = r.nomes || []; FL.erro = '';
     flRecalcular();
   }catch(e){ FL.erro = e.message; }
   FL.carregando = false; flPintar();
 }
-function flRecalcular(){
-  FL.dupNome = {}; FL.dupCod = {};
-  FL.lista.forEach(p=>{ const n = flNorm(p.nome); FL.dupNome[n] = (FL.dupNome[n]||0)+1; if(p.codigo) FL.dupCod[p.codigo] = (FL.dupCod[p.codigo]||0)+1; });
-  FL.lista.forEach(p=>{ p._av = flAvisos(p); });
+function flCalcular(L){
+  const D = {dupNome:{}, dupCod:{}};
+  L.forEach(p=>{ const n = flNorm(p.nome); D.dupNome[n] = (D.dupNome[n]||0)+1; if(p.codigo) D.dupCod[p.codigo] = (D.dupCod[p.codigo]||0)+1; });
+  L.forEach(p=>{ p._av = flAvisos(p, D); });
+  return D;
 }
+function flRecalcular(){ const D = flCalcular(FL.lista); FL.dupNome = D.dupNome; FL.dupCod = D.dupCod; }
 function flContas(){
   const L = FL.lista, c = {todos: L.length, arrumar: 0, sem_foto: 0, prontos: 0, por: {}};
   L.forEach(p=>{ if(p._av.length){ c.arrumar++; p._av.forEach(k=>c.por[k]=(c.por[k]||0)+1); } else c.prontos++; if(!p.foto) c.sem_foto++; });
@@ -159,8 +180,8 @@ function flPintar(){
       <div class="fl-resumo"><span><b style="color:#222">${c.prontos}</b> de ${c.todos} produtos prontos (${pct}%)</span></div>
       <div class="fl-barra"><i style="width:${pct}%"></i></div>
       <div class="fl-resumo"><span>📷 ${c.sem_foto} sem foto</span><span>⚠️ ${c.arrumar} com algo para arrumar</span>${FL.eu?`<span style="color:#2fb36b;font-weight:800">✔ você arrumou ${FL.eu} agora</span>`:''}</div>
+      ${Object.keys(c.por).length?`<div class="fl-falta">${Object.keys(FL_AVISOS).filter(k=>c.por[k]).map(k=>`<button onclick="FL.filtro='arrumar';FL.aviso='${k}';FL.lim=150;flPintar();document.getElementById('fl-lista').scrollIntoView({behavior:'smooth'})"><span>${FL_AVISOS[k].t}</span><b>${c.por[k]}</b><i style="width:${Math.max(4,Math.round(c.por[k]/c.todos*100))}%"></i></button>`).join('')}</div>`:''}
     </div>
-    ${flRankingHtml()}
     <div class="fl-card">
       ${FL.por?`<div style="display:flex;align-items:center;gap:8px"><span style="flex:1;font-size:14px">Você é <b>${esc(FL.por)}</b></span><button class="fl-bt sec" style="padding:7px 12px;font-size:13px" onclick="FL.trocarNome=1;flPintar()">trocar</button></div>`:''}
       ${!FL.por || FL.trocarNome ? `<h3 style="margin-top:${FL.por?10:0}px">Quem está arrumando?</h3>
@@ -169,7 +190,7 @@ function flPintar(){
     </div>
     <div class="fl-card">
       <h3>Toque no produto para arrumar</h3>
-      <p class="fl-dica" style="margin:0">Foto com fundo claro e produto inteiro. Confira nome, código, categoria e preço. Preço novo vai para a administração aprovar.</p>
+      <p class="fl-dica" style="margin:0">Com calma e capricho: foto com fundo claro e produto inteiro; confira nome, código, categoria e preço. Na dúvida, deixe para a administração. Preço novo vai para a administração aprovar.</p>
       <input class="fl-busca" style="margin-top:10px" placeholder="Buscar por nome ou código…" value="${esc(FL.q)}" oninput="FL.q=this.value;FL.lim=150;flPintarLista()">
       <div class="fl-chips">${[['arrumar','⚠️ Para arrumar',c.arrumar],['sem_foto','📷 Sem foto',c.sem_foto],['prontos','✅ Prontos',c.prontos],['todos','Todos',c.todos]].map(([k,n,v])=>`<button class="${FL.filtro===k?'on':''}" onclick="FL.filtro='${k}';FL.lim=150;flPintar()">${n} (${v})</button>`).join('')}</div>
       ${FL.filtro==='arrumar'?`<select class="fl-sel" onchange="FL.aviso=this.value;FL.lim=150;flPintarLista()"><option value="">Todos os problemas</option>${Object.keys(FL_AVISOS).filter(k=>c.por[k]).map(k=>`<option value="${k}" ${FL.aviso===k?'selected':''}>${FL_AVISOS[k].t} (${c.por[k]})</option>`).join('')}</select>`:''}
@@ -179,11 +200,6 @@ function flPintar(){
   </div>`;
 }
 function flTopo(sub){ return `<div class="fl-topo"><img src="${LOGO}" alt=""><div><b>Mutirão dos produtos</b><small>Las Vegas Sex Shop · ${esc(sub)}</small></div></div>`; }
-function flRankingHtml(){
-  const R = FL.ranking || []; if(!R.length) return `<div class="fl-card"><h3>🏆 Ranking do mutirão</h3><p class="fl-dica" style="margin:0">Ninguém pontuou ainda. Cada foto ou correção vale 1 ponto — seja a primeira!</p></div>`;
-  const med = ['🥇','🥈','🥉'];
-  return `<div class="fl-card"><h3>🏆 Ranking do mutirão</h3><div class="fl-rank">${R.slice(0,6).map((r,i)=>`<div class="${r.nome===FL.por?'eu':''}"><span class="med">${med[i]||(i+1)+'º'}</span><b>${esc(r.nome)}</b><small>📷 ${r.fotos} · ✏️ ${r.correcoes}</small><span class="pt">${r.pontos}</span></div>`).join('')}</div></div>`;
-}
 function flListaHtml(){
   const l = flFiltrada();
   if(!l.length) return `<div class="fl-card fl-vazio">${FL.filtro==='arrumar'&&!FL.q?'🎉 Nada para arrumar aqui!':'Nada encontrado.'}</div>`;
@@ -206,7 +222,7 @@ function flPintarLista(){ const g = $('#fl-lista'); if(g) g.innerHTML = flListaH
 function flPor(n){ FL.por = n; FL.trocarNome = 0; LS.set('lv_fotos_por', n); flPintar(); }
 function flPorOutro(){ const n = prompt('Seu nome:', FL.por && !FL.nomes.includes(FL.por) ? FL.por : ''); if(n && n.trim()) flPor(n.trim().slice(0,40)); }
 function flPrecisaNome(){ if(FL.por) return false; toast('Primeiro toque no seu nome (lá em cima)', true); window.scrollTo({top:0, behavior:'smooth'}); return true; }
-function flPonto(r){ FL.eu++; if(r && r.ranking) FL.ranking = r.ranking; }
+function flPonto(){ FL.eu++; }
 
 /* ───────── arrumar um produto ───────── */
 let FLP = null;
@@ -283,10 +299,10 @@ async function flOk(aviso){
   catch(e){ toast(e.message, true); }
 }
 
-/* ═════════ administração: link + preços para aprovar + ranking (na tela 📸 Produtos) ═════════ */
-var FLA = {pend: null, ranking: [], carregado: false};
+/* ═════════ administração: link + preços para aprovar + histórico do mutirão (na tela 📸 Produtos) ═════════ */
+var FLA = {pend: null, carregado: false, hist: null, pessoas: [], fPessoa: '', fTipo: '', fStatus: ''};
 async function flaCarregar(){
-  try{ const r = await api('admEstoque', {...S.adm.cred, op:'arrPendentes'}); FLA.pend = r.pendentes || []; FLA.ranking = r.ranking || []; }catch(e){ FLA.pend = []; }
+  try{ const r = await api('admEstoque', {...S.adm.cred, op:'arrPendentes'}); FLA.pend = r.pendentes || []; }catch(e){ FLA.pend = []; }
   FLA.carregado = true; if(S.tela==='admin' && S.adm?.tab==='estoque') render();
 }
 const _estCatalogoV15 = estCatalogo;
@@ -295,7 +311,7 @@ estCatalogo = function(){
   if(!estAdmin()) return h;
   if(!FLA.carregado){ FLA.carregado = true; setTimeout(flaCarregar, 50); }
   const n = (FLA.pend||[]).length;
-  const extra = `<button class="btn" onclick="flAdmin()" title="Link do mutirão (sem PIN)"><i class="ti ti-camera-share"></i> Link sem PIN</button>${n?`<button class="btn ouro" onclick="flaPrecos()"><i class="ti ti-currency-real"></i> ${n} preço(s) para aprovar</button>`:''}<button class="btn ouro" onclick="novoProduto()">`;
+  const extra = `<button class="btn" onclick="flAdmin()" title="Link do mutirão (sem PIN)"><i class="ti ti-camera-share"></i> Link sem PIN</button><button class="btn" onclick="flaPainel()" title="O que já foi feito e o que falta"><i class="ti ti-chart-bar"></i> Painel do mutirão</button><button class="btn" onclick="flaHistorico()" title="Quem editou o quê no mutirão"><i class="ti ti-history"></i> Histórico</button>${(()=>{ const n = pdvD().produtos.filter(p=>p.ativo!==false && nsMaiusculoFL(p.nome)).length; return n?`<button class="btn" onclick="flaMaiusculas()"><i class="ti ti-letter-case"></i> Arrumar maiúsculas (${n})</button>`:''; })()}${n?`<button class="btn ouro" onclick="flaPrecos()"><i class="ti ti-currency-real"></i> ${n} preço(s) para aprovar</button>`:''}<button class="btn ouro" onclick="novoProduto()">`;
   return h.replace('<button class="btn ouro" onclick="novoProduto()">', extra);
 };
 function flaPrecos(){
@@ -306,7 +322,6 @@ function flaPrecos(){
       <b>${esc(a.produto)}</b><div class="suave" style="font-size:13px;margin:2px 0 8px">${esc(a.por)} · ${esc(String(a.quando).slice(8,10)+'/'+String(a.quando).slice(5,7)+' '+String(a.quando).slice(11,16))}</div>
       <div class="linha" style="gap:8px;align-items:center;flex-wrap:wrap"><span class="apagado">${brl2(Number(a.antes)||0)} →</span><input class="inp num" id="pa-${esc(a.id)}" inputmode="decimal" value="${esc((Number(a.depois)||0).toFixed(2).replace('.',','))}" style="max-width:130px">
         <button class="btn ouro" onclick="flaRevisar('${esc(a.id)}',true)"><i class="ti ti-check"></i> Aprovar</button><button class="btn p" onclick="flaRevisar('${esc(a.id)}',false)"><i class="ti ti-x"></i> Recusar</button></div></div>`).join('')}
-    ${FLA.ranking.length?`<h4 style="margin:14px 0 6px">🏆 Ranking do mutirão</h4>${FLA.ranking.slice(0,10).map((r,i)=>`<div class="linha entre" style="padding:4px 0"><span>${i+1}º ${esc(r.nome)}</span><span class="suave">📷 ${r.fotos} · ✏️ ${r.correcoes} · <b>${r.pontos}</b></span></div>`).join('')}`:''}
     </div></div></div>`;
 }
 async function flaRevisar(id, aprovar){
@@ -322,16 +337,109 @@ async function flAdmin(acao){
   try{ toast('Um instante…'); const r = await api('admEstoque', {...S.adm.cred, op:'fotosLink', novo: acao==='novo', desligar: acao==='desligar'}); chave = r.chave; }
   catch(e){ toast(e.message, true); return; }
   const link = chave ? location.origin + location.pathname + '#fotos=' + chave : '';
-  const msg = `📸 *Mutirão dos produtos — Las Vegas* ✨\n\nMeninas, vamos deixar o catálogo impecável! 💪\n\n1️⃣ Toquem no link e escolham o nome de vocês\n2️⃣ Abram *⚠️ Para arrumar*\n3️⃣ Toquem no produto: tirem a foto (fundo claro, produto inteiro) e confiram nome, código, categoria e preço\n\n🏆 Cada foto ou correção vale 1 ponto no *ranking*!\n\n${link}`;
+  const msg = `📸 *Mutirão dos produtos — Las Vegas* ✨\n\nMeninas, vamos deixar o catálogo impecável, com calma e capricho 💛\n\n1️⃣ Toquem no link e escolham o nome de vocês\n2️⃣ Abram *⚠️ Para arrumar*\n3️⃣ Toquem no produto: tirem a foto (fundo claro, produto inteiro) e confiram nome, código, categoria e preço\n\n✨ Sem pressa: o importante é ficar *certinho*. Na dúvida, deixa que a administração confere.\n\n${link}`;
   $('#modal').innerHTML = `<div class="veu" onclick="if(event.target===this)fecharModal()"><div class="modal" style="max-width:520px">
     <div class="modal-t"><h3 class="cresce" style="font-size:16px">📸 Link do mutirão (sem PIN)</h3><button class="icone" aria-label="Fechar" onclick="fecharModal()"><i class="ti ti-x"></i></button></div>
     <div class="modal-c">
-      ${chave?`<p class="suave" style="margin:0 0 8px;font-size:13px">Quem abrir este link vê os produtos com o que falta arrumar (foto, nome, código, categoria, preço), sem estoque nem vendas. Foto, nome, código e categoria entram na hora; <b>preço vem para você aprovar</b>. Tem ranking de quem mais arrumou.</p>
+      ${chave?`<p class="suave" style="margin:0 0 8px;font-size:13px">Quem abrir este link vê os produtos com o que falta arrumar (foto, nome, código, categoria, preço), sem estoque nem vendas. Foto, nome, código e categoria entram na hora; <b>preço vem para você aprovar</b>. Tudo fica registrado no <b>Histórico do mutirão</b> (só a administração vê).</p>
       <input class="inp" readonly value="${esc(link)}" onclick="this.select()" style="margin-bottom:10px">
       <div class="g2"><button class="btn ouro" onclick="flCopiar()"><i class="ti ti-copy"></i> Copiar link</button>
         <a class="btn" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener"><i class="ti ti-brand-whatsapp"></i> Mandar no WhatsApp</a></div>
       <div class="g2" style="margin-top:8px"><button class="btn p" onclick="flAdmin('novo')"><i class="ti ti-refresh"></i> Gerar link novo</button><button class="btn p" onclick="flAdmin('desligar')"><i class="ti ti-link-off"></i> Desligar o link</button></div>
       <p class="apagado" style="font-size:12px;margin:10px 0 0">Gerar link novo ou desligar faz o link antigo parar de funcionar na hora.</p>`
       :`<p class="suave" style="margin:0 0 12px">O link está <b>desligado</b>. Ninguém consegue mexer nos produtos por ele.</p><button class="btn ouro largo" onclick="flAdmin('novo')"><i class="ti ti-link"></i> Ligar e gerar o link</button>`}
+    </div></div></div>`;
+}
+
+/* ───────── Histórico do mutirão (conferência interna) ───────── */
+const FLA_CAMPO = {foto:'📷 Foto', nome:'Nome', codigo:'Código', categoria:'Categoria', preco:'💲 Preço'};
+const FLA_ST = {feito:'', pendente:'⏳ aguardando aprovação', aprovado:'✅ aprovado', recusado:'✖ recusado', desfeito:'↩ desfeito'};
+async function flaHistorico(rec){
+  if(!FLA.hist || rec){ try{ toast('Carregando o histórico…'); const r = await api('admEstoque', {...S.adm.cred, op:'arrHistorico'}); FLA.hist = r.historico || []; FLA.pessoas = r.pessoas || []; }catch(e){ toast(e.message, true); return; } }
+  flaHistPintar();
+}
+function flaHistPintar(){
+  const H = (FLA.hist||[]).filter(a=>(!FLA.fPessoa || a.por===FLA.fPessoa) && (!FLA.fTipo || (FLA.fTipo==='foto'?a.tipo==='foto':FLA.fTipo==='ok'?a.tipo==='ok':FLA.fTipo==='preco'?a.campo==='preco':(a.tipo==='correcao'&&a.campo!=='preco'))) && (!FLA.fStatus || a.status===FLA.fStatus));
+  const quando = q => String(q).slice(8,10)+'/'+String(q).slice(5,7)+' '+String(q).slice(11,16);
+  const val = (a,v) => a.campo==='foto' ? (v?`<img src="${esc(fotoUrl({foto:v},120))}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;vertical-align:middle;background:#f3f3f3">`:'<span class="apagado">sem foto</span>') : a.campo==='preco' ? brl2(Number(v)||0) : (v?esc(v):'<span class="apagado">vazio</span>');
+  const linha = a => `<tr style="${a.status==='desfeito'||a.status==='recusado'?'opacity:.5':''}"><td style="white-space:nowrap" class="suave">${quando(a.quando)}</td><td><b>${esc(a.por)}</b></td>
+    <td><div style="font-weight:700">${esc(a.produto)}</div>${a.tipo==='ok'?`<span class="suave">marcou "está certo assim": ${esc(a.campo)}</span>`:`<span class="suave">${FLA_CAMPO[a.campo]||esc(a.campo)}:</span> ${val(a,a.antes)} → <b>${val(a,a.depois)}</b>`}
+      ${FLA_ST[a.status]?`<div class="apagado" style="font-size:12px">${FLA_ST[a.status]}${a.revisado_por?' · '+esc(a.revisado_por):''}</div>`:''}</td>
+    <td style="text-align:right">${a.tipo!=='ok' && (a.status==='feito'||a.status==='aprovado')?`<button class="btn p" style="padding:6px 10px;font-size:12px" onclick="flaDesfazer('${esc(a.id)}')"><i class="ti ti-arrow-back-up"></i> Desfazer</button>`:''}</td></tr>`;
+  const P = FLA.pessoas || [];
+  $('#modal').innerHTML = `<div class="veu" onclick="if(event.target===this)fecharModal()"><div class="modal" style="max-width:860px">
+    <div class="modal-t"><h3 class="cresce" style="font-size:16px">🕵️ Histórico do mutirão <span class="suave" style="font-size:12px;font-weight:500">· só a administração vê</span></h3><button class="icone" aria-label="Atualizar" onclick="flaHistorico(1)"><i class="ti ti-refresh"></i></button><button class="icone" aria-label="Fechar" onclick="fecharModal()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-c">
+      ${P.length?`<div class="tabela-wrap" style="margin-bottom:10px"><table class="ns-tab" style="width:100%;font-size:13px"><tr class="suave"><td>Pessoa</td><td>📷 Fotos</td><td>✏️ Correções</td><td>💲 Preços</td><td>👍 "Está certo"</td><td>↩ Desfeitos/recusados</td></tr>
+        ${P.map(x=>`<tr style="cursor:pointer" onclick="FLA.fPessoa=FLA.fPessoa===${esc(JSON.stringify(x.nome))}?'':${esc(JSON.stringify(x.nome))};flaHistPintar()"><td><b>${esc(x.nome)}</b>${FLA.fPessoa===x.nome?' ✔':''}</td><td>${x.fotos}</td><td>${x.correcoes}</td><td>${x.precos}</td><td>${x.ok}</td><td>${x.desfeitos}</td></tr>`).join('')}</table></div>`:''}
+      <div class="est-lojas" style="margin-bottom:8px">${[['','Tudo'],['foto','📷 Fotos'],['correcao','✏️ Nome/código/categoria'],['preco','💲 Preços'],['ok','👍 "Está certo"']].map(([k,n])=>`<button class="${FLA.fTipo===k?'on':''}" onclick="FLA.fTipo='${k}';flaHistPintar()">${n}</button>`).join('')}
+        ${FLA.fPessoa?`<button class="on" onclick="FLA.fPessoa='';flaHistPintar()">✕ ${esc(FLA.fPessoa)}</button>`:''}</div>
+      ${!H.length?'<p class="suave">Nada por aqui ainda.</p>':`<div class="ns-lista" style="max-height:56vh"><table class="ns-tab">${H.slice(0,400).map(linha).join('')}</table></div>${H.length>400?`<p class="apagado">mostrando as 400 mais recentes de ${H.length}</p>`:''}`}
+      <p class="apagado" style="font-size:12px;margin:8px 0 0">Desfazer volta o campo (ou a foto) para como estava antes daquela edição. Preço pendente se resolve em "preços para aprovar".</p>
+    </div></div></div>`;
+}
+async function flaDesfazer(id){
+  try{ const r = await api('admEstoque', {...S.adm.cred, op:'arrDesfazer', id}); FLA.hist = r.historico || []; FLA.pessoas = r.pessoas || []; toast('Desfeito ✔');
+    try{ S.adm.dados = await api('admDados', S.adm.cred); }catch(e){} flaHistPintar(); }
+  catch(e){ toast(e.message, true); }
+}
+
+/* ───────── Arrumar maiúsculas de uma vez (com prévia) ───────── */
+function nsMaiusculoFL(s){ const t = String(s||''); return /[A-ZÁÉÍÓÚÂÊÔÃÕÇ]{4}/.test(t) && t===t.toUpperCase(); }
+var FLM = null;
+function flaMaiusculas(){
+  const L = pdvD().produtos.filter(p=>p.ativo!==false && nsMaiusculoFL(p.nome)).map(p=>({id:p.id, de:p.nome, para:flTitulo(p.nome)})).filter(x=>x.para!==x.de);
+  FLM = {L, fora:new Set(), gravando:false}; flaMaiPintar();
+}
+function flaMaiPintar(){
+  const M = FLM, n = M.L.length - M.fora.size;
+  $('#modal').innerHTML = `<div class="veu" onclick="if(event.target===this&&!FLM.gravando)fecharModal()"><div class="modal" style="max-width:720px">
+    <div class="modal-t"><h3 class="cresce" style="font-size:16px">🔠 Arrumar maiúsculas</h3><button class="icone" aria-label="Fechar" onclick="if(!FLM.gravando)fecharModal()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-c"><p class="suave" style="margin:0 0 8px;font-size:13px">Primeira letra de cada palavra; de/da/com/e… minúsculas; siglas (LGBT, INTT, BDSM…) e tamanhos (P, M, G) continuam em maiúscula; 15ML → 15ml. Desmarque o que não quiser.</p>
+      <div class="ns-lista" style="max-height:52vh"><table class="ns-tab">${M.L.map(x=>`<tr><td style="width:26px"><input type="checkbox" ${M.fora.has(x.id)?'':'checked'} onchange="this.checked?FLM.fora.delete('${x.id}'):FLM.fora.add('${x.id}');flaMaiPintar()"></td><td><span class="de">${esc(x.de)}</span><br><span class="para">${esc(x.para)}</span></td></tr>`).join('')}</table></div>
+      <button class="btn ouro largo" style="margin-top:10px" ${n&&!M.gravando?'':'disabled'} onclick="flaMaiAplicar()">${M.gravando?'<span class="gira"></span> Gravando…':`<i class="ti ti-check"></i> Arrumar ${n} nome(s)`}</button></div></div></div>`;
+}
+async function flaMaiAplicar(){
+  const lista = FLM.L.filter(x=>!FLM.fora.has(x.id)).map(x=>({id:x.id, nome:x.para})); if(!lista.length) return;
+  FLM.gravando = true; flaMaiPintar();
+  try{ let n = 0; for(let i=0;i<lista.length;i+=150){ const r = await api('admEstoque', {...S.adm.cred, op:'catalogoLote', lista:lista.slice(i,i+150), origem:'arrumar maiúsculas'}); n += r.alterados||0; }
+    S.adm.dados = await api('admDados', S.adm.cred); FLM.gravando = false; fecharModal(); render(); toast(`Nomes arrumados ✔ ${n}`); }
+  catch(e){ FLM.gravando = false; flaMaiPintar(); toast(e.message, true); }
+}
+
+/* ───────── Painel do mutirão (gráficos) ───────── */
+var FLP2 = null;
+async function flaPainel(){
+  try{ toast('Montando o painel…'); const r = await api('admEstoque', {...S.adm.cred, op:'arrPainel'}); FLP2 = {L: r.produtos||[], H: r.historico||[]}; }
+  catch(e){ toast(e.message, true); return; }
+  flCalcular(FLP2.L); flaPainelPintar();
+}
+function flaBarra(rot, v, tot, cor, extra){ const pct = tot ? Math.round(v/tot*100) : 0;
+  return `<div style="margin:6px 0"><div class="linha entre" style="font-size:13px"><span>${rot}</span><span><b>${v}</b>${tot?` <span class="apagado">/ ${tot} · ${pct}%</span>`:''}${extra||''}</span></div>
+    <div style="height:10px;border-radius:99px;background:rgba(0,0,0,.07);overflow:hidden;margin-top:3px"><i style="display:block;height:100%;width:${pct}%;background:${cor};border-radius:99px"></i></div></div>`; }
+function flaPainelPintar(){
+  const L = FLP2.L, H = FLP2.H, tot = L.length, prontos = L.filter(p=>!p._av.length).length, comFoto = L.filter(p=>p.foto).length;
+  const por = {}; L.forEach(p=>p._av.forEach(k=>por[k]=(por[k]||0)+1));
+  const feitosPor = {foto:0, nome:0, codigo:0, categoria:0, preco:0, ok:0};
+  H.forEach(a=>{ if(a.status==='desfeito'||a.status==='recusado') return; if(a.tipo==='ok') feitosPor.ok++; else feitosPor[a.campo]=(feitosPor[a.campo]||0)+1; });
+  const cats = {}; L.forEach(p=>{ const k = p.categoria||'Sem categoria'; cats[k] = cats[k]||{t:0,ok:0}; cats[k].t++; if(!p._av.length) cats[k].ok++; });
+  const dias = []; for(let i=13;i>=0;i--){ const d = new Date(Date.now()-i*864e5); dias.push(d.toISOString().slice(0,10)); }
+  const porDia = {}; H.forEach(a=>{ if(a.status==='desfeito'||a.status==='recusado') return; const d = String(a.quando).slice(0,10); porDia[d]=(porDia[d]||0)+1; });
+  const maxDia = Math.max(1, ...dias.map(d=>porDia[d]||0));
+  $('#modal').innerHTML = `<div class="veu" onclick="if(event.target===this)fecharModal()"><div class="modal" style="max-width:820px">
+    <div class="modal-t"><h3 class="cresce" style="font-size:16px">📊 Painel do mutirão</h3><button class="icone" aria-label="Atualizar" onclick="flaPainel()"><i class="ti ti-refresh"></i></button><button class="icone" aria-label="Fechar" onclick="fecharModal()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-c">
+      <div class="ns-res"><div><b>${prontos}</b>prontos de ${tot} (${tot?Math.round(prontos/tot*100):0}%)</div><div><b>${tot-prontos}</b>ainda com algo</div><div><b>${comFoto}</b>com foto (${tot?Math.round(comFoto/tot*100):0}%)</div><div><b>${H.filter(a=>a.status!=='desfeito'&&a.status!=='recusado'&&a.tipo!=='ok').length}</b>edições feitas</div></div>
+      ${flaBarra('<b>Produtos prontos</b>', prontos, tot, 'linear-gradient(90deg,#F5B524,#2fb36b)')}
+      <h4 style="margin:16px 0 4px">O que falta, por tipo</h4>
+      ${Object.keys(FL_AVISOS).filter(k=>por[k]).map(k=>flaBarra(FL_AVISOS[k].t, por[k], tot, '#D4121B')).join('') || '<p class="suave">Nada faltando 🎉</p>'}
+      <h4 style="margin:16px 0 4px">O que já foi feito no mutirão</h4>
+      <div class="ns-res">${[['foto','📷 fotos'],['nome','✏️ nomes'],['codigo','🔢 códigos'],['categoria','🏷️ categorias'],['preco','💲 preços'],['ok','👍 "está certo"']].map(([k,n])=>`<div><b>${feitosPor[k]||0}</b>${n}</div>`).join('')}</div>
+      <h4 style="margin:16px 0 4px">Prontos por categoria</h4>
+      ${Object.entries(cats).sort((a,b)=>b[1].t-a[1].t).map(([k,v])=>flaBarra(esc(k), v.ok, v.t, '#2fb36b')).join('')}
+      <h4 style="margin:16px 0 6px">Edições por dia (14 dias)</h4>
+      <div style="display:flex;align-items:flex-end;gap:4px;height:120px;padding:4px 0;border-bottom:1px solid var(--linha)">${dias.map(d=>{ const v = porDia[d]||0; return `<div title="${d.slice(8,10)}/${d.slice(5,7)}: ${v}" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%"><span style="font-size:10px;color:var(--creme3)">${v||''}</span><i style="display:block;width:100%;height:${Math.round(v/maxDia*90)}%;min-height:${v?3:0}px;background:#D4121B;border-radius:5px 5px 0 0"></i></div>`; }).join('')}</div>
+      <div style="display:flex;gap:4px">${dias.map(d=>`<span style="flex:1;text-align:center;font-size:10px;color:var(--creme3)">${d.slice(8,10)}</span>`).join('')}</div>
+      <p class="apagado" style="font-size:12px;margin:12px 0 0">Quem fez cada edição: botão <b>Histórico</b>.</p>
     </div></div></div>`;
 }

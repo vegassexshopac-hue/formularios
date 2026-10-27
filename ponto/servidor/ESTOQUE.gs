@@ -305,7 +305,10 @@ function estOp_(req, por, admin) {
   }
   if (op === 'fotosLink') { if (!admin) throw new Error('Só a administração'); return estFotosLink_(req); }
   if (op === 'catalogoLote') { if (!admin) throw new Error('Só a administração'); return estCatalogoLote_(req); }
-  if (op === 'arrPendentes') { if (!admin) throw new Error('Só a administração'); return { pendentes: estArrPendentes_(), ranking: estArrRanking_() }; }
+  if (op === 'arrPendentes') { if (!admin) throw new Error('Só a administração'); return { pendentes: estArrPendentes_() }; }
+  if (op === 'arrPainel') { if (!admin) throw new Error('Só a administração'); return { produtos: estArrLista_(), historico: estArrHistorico_().historico }; }
+  if (op === 'arrHistorico') { if (!admin) throw new Error('Só a administração'); return estArrHistorico_(); }
+  if (op === 'arrDesfazer') { if (!admin) throw new Error('Só a administração'); return estArrDesfazer_(req); }
   if (op === 'arrRevisar') { if (!admin) throw new Error('Só a administração'); return estArrRevisar_(req); }
   if (op === 'confirmar') return { entrada: estConfirmar_(req, por) };
   if (op === 'contar') return { contagem: estContar_(req, por) };
@@ -360,7 +363,7 @@ function estFotosLink_(req) {
   return { chave: ch };
 }
 /* ───────── MUTIRÃO DE ARRUMAÇÃO (v15c) — o mesmo link sem PIN ─────────
-   lista: todos os produtos ativos (foto, código, categoria, preço) + ranking de quem mais arrumou.
+   lista: todos os produtos ativos (foto, código, categoria, preço) (sem ranking: o histórico de quem fez o quê fica só na administração).
    salvar: foto · corrigir: nome / código / categoria entram na hora; PREÇO vira pedido para a administração aprovar.
    ok: "está certo assim" (some o aviso daquele produto). Tudo fica na aba Arrumacao (quem, o quê, antes → depois). */
 ABAS.Arrumacao = ['id', 'quando', 'por', 'produto_id', 'produto', 'tipo', 'campo', 'antes', 'depois', 'status', 'revisado_por', 'revisado_em'];
@@ -387,10 +390,10 @@ function estFotosPublico_(req) {
   if (op !== 'lista' && !por) throw new Error('Toque no seu nome antes');
   var achar = function () { var p = ler_('Produtos').filter(function (x) { return x.id === String(req.produto_id || ''); })[0]; if (!p) throw new Error('Produto não encontrado'); return p; };
   if (op === 'salvar') {
-    var p0 = achar();
+    var p0 = achar(), fotoAntes = estFotosMapa_()[p0.id] || '';
     var url = estFotoSalvar_(req, por + ' (link)');
-    comTrava_(function () { estArrRegistrar_({ por: por, produto_id: p0.id, produto: p0.nome, tipo: 'foto', campo: 'foto', antes: '', depois: url }); });
-    return { ok: true, foto: url, ranking: estArrRanking_() };
+    comTrava_(function () { estArrRegistrar_({ por: por, produto_id: p0.id, produto: p0.nome, tipo: 'foto', campo: 'foto', antes: fotoAntes, depois: url }); });
+    return { ok: true, foto: url };
   }
   if (op === 'corrigir') {
     return comTrava_(function () {
@@ -423,7 +426,7 @@ function estFotosPublico_(req) {
       }
       if (!feitos.length && !pendentes.length) throw new Error('Nada mudou');
       log_(por + ' (link)', 'arrumou produto', p.nome + ' · ' + feitos.concat(pendentes).join(', '));
-      return { ok: true, feitos: feitos, pendentes: pendentes, ranking: estArrRanking_() };
+      return { ok: true, feitos: feitos, pendentes: pendentes };
     });
   }
   if (op === 'ok') {
@@ -434,19 +437,20 @@ function estFotosPublico_(req) {
       return { ok: true };
     });
   }
-  // lista
+  var lista = estArrLista_(), com = lista.filter(function (p) { return p.foto; }).length;
+  return { ok: true, total: lista.length, com: com, produtos: lista, todos: 1,
+           nomes: colabs_().filter(function (c) { return c.ativa === 'SIM'; }).map(function (c) { return String(c.nome).split(' ')[0]; }) };
+}
+function estArrLista_() {
   var fotos = estFotosMapa_(), okAvisos = {}, pend = {};
   ler_('Arrumacao').forEach(function (a) {
     if (a.tipo === 'ok') (okAvisos[a.produto_id] = okAvisos[a.produto_id] || []).push(a.campo);
     if (a.campo === 'preco' && a.status === 'pendente') pend[a.produto_id] = Number(a.depois) || 0;
   });
-  var lista = ler_('Produtos').filter(function (p) { return p.ativo !== 'NÃO'; }).map(function (p) {
+  return ler_('Produtos').filter(function (p) { return p.ativo !== 'NÃO'; }).map(function (p) {
     return { id: p.id, nome: p.nome, codigo: p.codigo || '', sku: p.sku || '', categoria: p.categoria || '', preco: Number(p.preco) || 0,
              foto: fotos[p.id] || '', ok: okAvisos[p.id] || [], precoPendente: pend[p.id] || 0 };
   });
-  var com = lista.filter(function (p) { return p.foto; }).length;
-  return { ok: true, total: lista.length, com: com, produtos: lista, todos: 1, ranking: estArrRanking_(),
-           nomes: colabs_().filter(function (c) { return c.ativa === 'SIM'; }).map(function (c) { return String(c.nome).split(' ')[0]; }) };
 }
 /* ───────── CATÁLOGO EM LOTE (v15d) — categorias, nomes, descrição e preços vindos do CSV da Nuvemshop ─────────
    O navegador da administração lê o CSV, cruza com os produtos, mostra a prévia; aqui só grava o que foi aprovado.
@@ -473,6 +477,37 @@ function estCatalogoLote_(req) {
     if (linhas.length) sh.getRange(2, 1, linhas.length, cab.length).setNumberFormat('@').setValues(linhas);
     log_('Administração', 'catálogo em lote', n + ' produto(s) · ' + String(req.origem || 'CSV').slice(0, 40));
     return { alterados: n };
+  });
+}
+/* administração: histórico do mutirão (conferência interna) e desfazer uma edição */
+function estArrHistorico_() {
+  var L = ler_('Arrumacao').map(limpar_).reverse().slice(0, 2000);
+  var porPessoa = {};
+  L.forEach(function (a) { var n = a.por || '?'; var x = porPessoa[n] = porPessoa[n] || { nome: n, fotos: 0, correcoes: 0, precos: 0, ok: 0, desfeitos: 0 };
+    if (a.status === 'desfeito' || a.status === 'recusado') x.desfeitos++;
+    if (a.tipo === 'foto') x.fotos++; else if (a.tipo === 'ok') x.ok++; else if (a.campo === 'preco') x.precos++; else x.correcoes++; });
+  return { historico: L, pessoas: Object.keys(porPessoa).map(function (k) { return porPessoa[k]; }) };
+}
+function estArrDesfazer_(req) {
+  return comTrava_(function () {
+    var a = ler_('Arrumacao').filter(function (x) { return x.id === req.id; })[0];
+    if (!a) throw new Error('Edição não encontrada');
+    if (a.status === 'desfeito') throw new Error('Essa edição já foi desfeita');
+    if (a.status === 'pendente' || a.status === 'recusado') throw new Error('Preço pendente/recusado não precisa desfazer — use Aprovar/Recusar');
+    if (a.tipo === 'foto') {
+      var m = {}; m[a.produto_id] = a.antes || '';
+      estFotosGravar_(m, a.antes ? 'equipe' : '', 'Administração (desfez)', false);
+    } else if (a.tipo === 'correcao') {
+      var p = ler_('Produtos').filter(function (x) { return x.id === a.produto_id; })[0];
+      if (!p) throw new Error('Produto não encontrado');
+      var campo = a.campo === 'preco' ? 'preco' : a.campo;
+      if (['nome', 'codigo', 'categoria', 'preco'].indexOf(campo) < 0) throw new Error('Campo não pode ser desfeito');
+      if (String(p[campo] || '') !== String(a.depois || '') && !req.forcar) throw new Error('Esse campo já foi mudado de novo depois (agora: "' + p[campo] + '"). Confira antes de desfazer.');
+      p[campo] = a.antes || ''; p.atualizado_em = agora_(); gravar_('Produtos', p);
+    }
+    a.status = 'desfeito'; a.revisado_por = 'Administração'; a.revisado_em = agora_(); gravar_('Arrumacao', a);
+    log_('Administração', 'desfez edição do mutirão', a.produto + ' · ' + a.campo + ' (' + a.por + ')');
+    return estArrHistorico_();
   });
 }
 /* administração: preços sugeridos pelo link (aprovar / recusar) */
@@ -511,7 +546,7 @@ rodar_ = function (req) {
 };
 ADMIN.admEstoque = function (req) {
   var r = estOp_(req, 'Administração', true);
-  if (req.op === 'ler' || req.op === 'conferir' || req.op === 'contar' || req.op === 'contagem' || req.op === 'foto' || req.op === 'fotosLink' || req.op === 'arrPendentes' || req.op === 'arrRevisar' || req.op === 'catalogoLote') { r.ok = true; return r; }
+  if (req.op === 'ler' || req.op === 'conferir' || req.op === 'contar' || req.op === 'contagem' || req.op === 'foto' || req.op === 'fotosLink' || req.op === 'arrPendentes' || req.op === 'arrRevisar' || req.op === 'catalogoLote' || req.op === 'arrHistorico' || req.op === 'arrDesfazer' || req.op === 'arrPainel') { r.ok = true; return r; }
   if (req.op === 'produtoNovo') { var d0 = ADMIN.admDados(req); d0.produtoFeito = r.produto; return d0; }
   var d = ADMIN.admDados(req);
   if (r.fotos) d.fotosFeitas = r.fotos;
