@@ -192,6 +192,7 @@ function flPintar(){
       <h3>Toque no produto para arrumar</h3>
       <p class="fl-dica" style="margin:0">Com calma e capricho: foto com fundo claro e produto inteiro; confira nome, código, categoria e preço. Na dúvida, deixe para a administração. Preço novo vai para a administração aprovar.</p>
       <input class="fl-busca" style="margin-top:10px" placeholder="Buscar por nome ou código…" value="${esc(FL.q)}" oninput="FL.q=this.value;FL.lim=150;flPintarLista()">
+      <button class="fl-bt ouro" style="width:100%;margin-top:10px" onclick="flEditados()"><i class="ti ti-edit"></i> Ver os já editados (quem fez e o que mudou)</button>
       <div class="fl-chips">${[['arrumar','⚠️ Para arrumar',c.arrumar],['sem_foto','📷 Sem foto',c.sem_foto],['prontos','✅ Prontos',c.prontos],['todos','Todos',c.todos]].map(([k,n,v])=>`<button class="${FL.filtro===k?'on':''}" onclick="FL.filtro='${k}';FL.lim=150;flPintar()">${n} (${v})</button>`).join('')}</div>
       ${FL.filtro==='arrumar'?`<select class="fl-sel" onchange="FL.aviso=this.value;FL.lim=150;flPintarLista()"><option value="">Todos os problemas</option>${Object.keys(FL_AVISOS).filter(k=>c.por[k]).map(k=>`<option value="${k}" ${FL.aviso===k?'selected':''}>${FL_AVISOS[k].t} (${c.por[k]})</option>`).join('')}</select>`:''}
     </div>
@@ -255,7 +256,7 @@ function flModal(){
     <button class="fl-bt pri" id="flp-ok" onclick="flSalvar()"><i class="ti ti-check"></i> Salvar</button>
   </div></div>`;
 }
-function flFechar(){ const m = $('#fl-m'); if(m) m.innerHTML = ''; FLP = null; }
+function flFechar(){ const m = $('#fl-m'); if(m) m.innerHTML = ''; FLP = null; if(EDT && EDT.modo==='link' && document.getElementById('ed-tela')?.innerHTML) flEditados(); }
 function flBipar(){ try{ estCamera(cod=>{ try{ estCameraFechar(); }catch(e){} FLP.codigo = String(cod).trim(); const i = $('#flp-cod'); if(i) i.value = FLP.codigo; try{ estBip(true); }catch(e){} }, 'Ler o código do produto'); }catch(e){ toast('Câmera indisponível — digite o código', true); } }
 async function flFoto(){
   if(flPrecisaNome() || !FLP) return;
@@ -463,7 +464,7 @@ function flaPainelPintar(){
 .ed-tipos{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 14px}
 .ed-tipos button{border:1.5px solid rgba(0,0,0,.1);background:#fff;border-radius:99px;padding:6px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
 .ed-tipos button.on{background:#222;color:#fff;border-color:#222}
-.ed-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.ed-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px}
 .ed-card{position:relative;background:#fff;border-radius:18px;overflow:hidden;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.06);animation:edCard .45s cubic-bezier(.2,.9,.3,1.1) both;animation-delay:calc(min(var(--i),24)*35ms);transition:transform .2s, box-shadow .2s;text-align:left;border:0;padding:0;font:inherit;color:#222}
 .ed-card:hover{transform:translateY(-4px);box-shadow:0 10px 26px rgba(0,0,0,.12)}
 @keyframes edCard{from{opacity:0;transform:translateY(18px) scale(.96)}}
@@ -507,8 +508,15 @@ function edHa(q){ const t = new Date(String(q).replace(' ','T')+'-05:00').getTim
   return m<1?'agora':m<60?`há ${m} min`:m<1440?`há ${Math.round(m/60)} h`:`há ${Math.round(m/1440)} d`; }
 function edCampo(a){ return a.tipo==='foto' ? 'foto' : a.tipo==='ok' ? 'ok' : a.campo; }
 var EDT = null;
+async function flEditados(){
+  EDT = Object.assign(EDT||{pessoa:'', tipo:'', q:'', aberto:null}, {modo:'link'});
+  try{ toast('Carregando…'); const r = await api('fotos', {chave: FL.chave, op:'editados'}); EDT.H = r.historico||[]; EDT.L = FL.lista; }
+  catch(e){ toast(erroRede(e)?'Sem internet — tente de novo':e.message, true); return; }
+  EDT.porId = {}; EDT.L.forEach(p=>EDT.porId[p.id]=p);
+  edPintar();
+}
 async function flaEditados(){
-  if(!EDT) EDT = {pessoa:'', tipo:'', q:'', aberto:null};
+  EDT = Object.assign(EDT||{pessoa:'', tipo:'', q:'', aberto:null}, {modo:'admin'});
   try{ toast('Carregando…'); const r = await api('admEstoque', {...S.adm.cred, op:'arrPainel'}); EDT.L = r.produtos||[]; EDT.H = r.historico||[]; }
   catch(e){ toast(e.message, true); return; }
   EDT.porId = {}; EDT.L.forEach(p=>EDT.porId[p.id]=p);
@@ -525,14 +533,15 @@ function edPintar(){
   const cards = [...grupos.entries()].filter(([id,ev])=>!q || semAcento((EDT.porId[id]?.nome||ev[0].produto)).includes(q));
   const pessoas = {}; H.forEach(a=>{ const n = a.por||'?'; pessoas[n] = pessoas[n]||{n:0, prods:new Set()}; if(a.status!=='desfeito'&&a.status!=='recusado'){ pessoas[n].n++; pessoas[n].prods.add(a.produto_id); } });
   const validos = H.filter(a=>a.status!=='desfeito'&&a.status!=='recusado');
-  const kpi = [[new Set(validos.map(a=>a.produto_id)).size,'produtos editados'],[validos.filter(a=>a.tipo==='foto').length,'fotos tiradas'],[validos.filter(a=>a.tipo==='correcao').length,'correções'],[H.filter(a=>a.status==='pendente').length,'preços esperando você'],[Object.keys(pessoas).length,'pessoas ajudando']];
+  const link = EDT.modo==='link';
+  const kpi = [[new Set(validos.map(a=>a.produto_id)).size,'produtos editados'],[validos.filter(a=>a.tipo==='foto').length,'fotos tiradas'],[validos.filter(a=>a.tipo==='correcao').length,'correções'],[H.filter(a=>a.status==='pendente').length, link?'preços esperando aprovação':'preços esperando você']].concat(link?[]:[[Object.keys(pessoas).length,'pessoas ajudando']]);
   const tipos = {}; H.forEach(a=>{ const k = edCampo(a); tipos[k]=(tipos[k]||0)+1; });
   el.innerHTML = `<div class="ed-tela">
-    <div class="ed-topo"><h2>✏️ Editados no mutirão</h2><button onclick="flaEditados()"><i class="ti ti-refresh"></i></button><button onclick="edFechar()"><i class="ti ti-x"></i> Fechar</button></div>
+    <div class="ed-topo"><h2>✏️ Editados no mutirão</h2><button onclick="EDT.modo==='link'?flEditados():flaEditados()"><i class="ti ti-refresh"></i></button><button onclick="edFechar()"><i class="ti ti-x"></i> Fechar</button></div>
     <div class="ed-wrap">
       <div class="ed-kpis">${kpi.map(([v,t],i)=>`<div class="ed-kpi" style="--i:${i}"><b data-conta="${v}">0</b><span>${t}</span></div>`).join('')}</div>
-      <div class="ed-pessoas"><button class="ed-p ${!EDT.pessoa?'on':''}" onclick="EDT.pessoa='';edPintar()"><span class="ed-av" style="background:#222">★</span><span>Todas<small>${validos.length} edições</small></span></button>
-        ${Object.entries(pessoas).sort((a,b)=>b[1].n-a[1].n).map(([n,x])=>`<button class="ed-p ${EDT.pessoa===n?'on':''}" onclick="EDT.pessoa=EDT.pessoa===${esc(JSON.stringify(n))}?'':${esc(JSON.stringify(n))};edPintar()">${edAv(n)}<span>${esc(n)}<small>${x.prods.size} produto(s) · ${x.n} edições</small></span></button>`).join('')}</div>
+      <div class="ed-pessoas"><button class="ed-p ${!EDT.pessoa?'on':''}" onclick="EDT.pessoa='';edPintar()"><span class="ed-av" style="background:#222">★</span><span>Todas${link?'':`<small>${validos.length} edições</small>`}</span></button>
+        ${Object.entries(pessoas).sort((a,b)=>b[1].n-a[1].n).map(([n,x])=>`<button class="ed-p ${EDT.pessoa===n?'on':''}" onclick="EDT.pessoa=EDT.pessoa===${esc(JSON.stringify(n))}?'':${esc(JSON.stringify(n))};edPintar()">${edAv(n)}<span>${esc(n)}${link?'':`<small>${x.prods.size} produto(s) · ${x.n} edições</small>`}</span></button>`).join('')}</div>
       <div class="ed-tipos">${[['','Tudo'],['foto','📷 Fotos'],['nome','Nome'],['codigo','Código'],['categoria','Categoria'],['preco','💲 Preço'],['ok','👍 Está certo']].filter(([k])=>!k||tipos[k]).map(([k,n])=>`<button class="${EDT.tipo===k?'on':''}" onclick="EDT.tipo='${k}';edPintar()">${n}${k?` · ${tipos[k]}`:''}</button>`).join('')}
         <input class="inp" style="flex:1;min-width:180px;max-width:320px;border-radius:99px" placeholder="Buscar produto…" value="${esc(EDT.q)}" oninput="EDT.q=this.value;clearTimeout(window._edT);window._edT=setTimeout(edPintar,250)"></div>
       ${!cards.length?`<div class="ed-vazio">Nenhuma edição ${EDT.pessoa?'de '+esc(EDT.pessoa)+' ':''}por aqui ainda.</div>`:`<div class="ed-grade">${cards.slice(0,300).map(([id,ev],i)=>edCardHtml(id, ev, i)).join('')}</div>`}
@@ -566,16 +575,16 @@ function edAbrir(id, re){
     ${u?`<img class="ft" src="${esc(u)}" alt="">`:''}
     <div style="padding:14px 16px">
       <div class="linha" style="gap:6px;flex-wrap:wrap;font-size:13px;color:#555;margin-bottom:6px"><span>${esc(p.codigo||'sem código')}</span>·<span>${esc(p.categoria||'sem categoria')}</span>·<b>${brl2(p.preco||0)}</b></div>
-      <div class="linha" style="gap:6px;margin-bottom:14px"><button class="ed-bt" onclick="edFecharTudo();catAbrir('${id}')"><i class="ti ti-camera"></i> Foto</button><button class="ed-bt" onclick="edFecharTudo();admPdvProduto('${id}')"><i class="ti ti-pencil"></i> Editar produto</button></div>
+      <div class="linha" style="gap:6px;margin-bottom:14px">${EDT.modo==='link'?`<button class="ed-bt" style="background:#D4121B;color:#fff" onclick="edFechar();flAbrir('${id}')"><i class="ti ti-pencil"></i> Corrigir este produto</button>`:`<button class="ed-bt" onclick="edFecharTudo();catAbrir('${id}')"><i class="ti ti-camera"></i> Foto</button><button class="ed-bt" onclick="edFecharTudo();admPdvProduto('${id}')"><i class="ti ti-pencil"></i> Editar produto</button>`}</div>
       <h4 style="margin:0 0 10px">Linha do tempo</h4>
       <div class="ed-linha">${ev.map((a,i)=>{ const k = edCampo(a), cancel = a.status==='desfeito'||a.status==='recusado';
         return `<div class="ed-ev ${cancel?'cancel':''}" style="--i:${i}"><span class="dot">${edAv(a.por)}</span>
           <div class="q"><b>${esc(a.por)}</b> ${k==='foto'?(a.antes?'trocou a foto':'tirou a foto'):k==='ok'?`marcou "está certo assim" (${esc((FL_AVISOS[a.campo]||{}).t||a.campo)})`:`mudou <b style="color:${ED_COR[k]}">${ED_NOME[k]||k}</b>`} · ${edHa(a.quando)} <span style="color:#aaa">(${esc(String(a.quando).slice(8,10)+'/'+String(a.quando).slice(5,7)+' '+String(a.quando).slice(11,16))})</span></div>
           ${k!=='ok'?`<div class="ed-mud">${k==='foto'?`<div class="ed-fotos">${edValor(a,a.antes)}<span style="font-size:20px">→</span>${edValor(a,a.depois)}</div>`:`<span class="de">${edValor(a,a.antes)}</span> → <span class="para">${edValor(a,a.depois)}</span>`}</div>`:''}
-          ${a.status==='pendente'?`<div style="font-size:12px;font-weight:800;color:#8a5d00;margin-top:5px">⏳ esperando aprovação</div><button class="ed-bt" onclick="edRevisar('${esc(a.id)}',true)">✅ Aprovar</button> <button class="ed-bt vermelho" onclick="edRevisar('${esc(a.id)}',false)">✖ Recusar</button>`:''}
+          ${a.status==='pendente'?`<div style="font-size:12px;font-weight:800;color:#8a5d00;margin-top:5px">⏳ esperando aprovação</div>${EDT.modo==='link'?'':`<button class="ed-bt" onclick="edRevisar('${esc(a.id)}',true)">✅ Aprovar</button> <button class="ed-bt vermelho" onclick="edRevisar('${esc(a.id)}',false)">✖ Recusar</button>`}`:''}
           ${a.status==='aprovado'?'<div style="font-size:12px;color:#1b7a45;font-weight:800;margin-top:4px">✅ aprovado</div>':''}
           ${cancel?`<div style="font-size:12px;color:#888;margin-top:4px">${a.status==='desfeito'?'↩ desfeito':'✖ recusado'}${a.revisado_por?' por '+esc(a.revisado_por):''}</div>`:''}
-          ${k!=='ok' && (a.status==='feito'||a.status==='aprovado')?`<button class="ed-bt vermelho" onclick="edDesfazer('${esc(a.id)}')"><i class="ti ti-arrow-back-up"></i> Desfazer</button>`:''}
+          ${EDT.modo!=='link' && k!=='ok' && (a.status==='feito'||a.status==='aprovado')?`<button class="ed-bt vermelho" onclick="edDesfazer('${esc(a.id)}')"><i class="ti ti-arrow-back-up"></i> Desfazer</button>`:''}
         </div>`; }).join('')}</div>
     </div></div></div>`;
 }

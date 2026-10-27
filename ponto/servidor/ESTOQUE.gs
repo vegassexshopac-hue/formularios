@@ -387,7 +387,7 @@ function estFotosPublico_(req) {
   if (!ch || String(req.chave || '') !== ch) throw new Error('Esse link de fotos não está mais ativo. Peça o link novo para a administração.');
   var op = String(req.op || 'lista');
   var por = String(req.por || '').trim().slice(0, 40);
-  if (op !== 'lista' && !por) throw new Error('Toque no seu nome antes');
+  if (op !== 'lista' && op !== 'editados' && !por) throw new Error('Toque no seu nome antes');
   var achar = function () { var p = ler_('Produtos').filter(function (x) { return x.id === String(req.produto_id || ''); })[0]; if (!p) throw new Error('Produto não encontrado'); return p; };
   if (op === 'salvar') {
     var p0 = achar(), fotoAntes = estFotosMapa_()[p0.id] || '';
@@ -428,6 +428,9 @@ function estFotosPublico_(req) {
       log_(por + ' (link)', 'arrumou produto', p.nome + ' · ' + feitos.concat(pendentes).join(', '));
       return { ok: true, feitos: feitos, pendentes: pendentes };
     });
+  }
+  if (op === 'editados') {   // o que já foi mexido no mutirão (para conferir e corrigir) — sem contagem por pessoa
+    return { ok: true, historico: ler_('Arrumacao').map(function (a) { return { id: a.id, quando: a.quando, por: a.por, produto_id: a.produto_id, produto: a.produto, tipo: a.tipo, campo: a.campo, antes: a.antes, depois: a.depois, status: a.status }; }).reverse().slice(0, 2000) };
   }
   if (op === 'ok') {
     return comTrava_(function () {
