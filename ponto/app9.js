@@ -80,5 +80,7 @@ itensBusca = function itensBusca(){
 document.write('<script src="app10.js?v=10"><\/script><script src="app11.js?v=10"><\/script>');
 /* v13: fotos dos produtos + tela Produtos (catálogo, tirar foto, produto novo, link #produtos) */
 document.write('<script src="app13.js?v=13"><\/script>');
+/* v14: entrada nova (bater o ponto × entrar no portal) e portal no endereço principal, sem /ponto */
+document.write('<script src="app14.js?v=14"><\/script>');
 /* v12: layout novo — tema claro, menu lateral agrupado e movimento (app12.js carrega o tema.css) */
 document.write('<script src="app12.js?v=12"><\/script>');
