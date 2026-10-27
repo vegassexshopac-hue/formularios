@@ -311,7 +311,7 @@ estCatalogo = function(){
   if(!estAdmin()) return h;
   if(!FLA.carregado){ FLA.carregado = true; setTimeout(flaCarregar, 50); }
   const n = (FLA.pend||[]).length;
-  const extra = `<button class="btn" onclick="flAdmin()" title="Link do mutirão (sem PIN)"><i class="ti ti-camera-share"></i> Link sem PIN</button><button class="btn" onclick="flaPainel()" title="O que já foi feito e o que falta"><i class="ti ti-chart-bar"></i> Painel do mutirão</button><button class="btn" onclick="flaHistorico()" title="Quem editou o quê no mutirão"><i class="ti ti-history"></i> Histórico</button>${(()=>{ const n = pdvD().produtos.filter(p=>p.ativo!==false && nsMaiusculoFL(p.nome)).length; return n?`<button class="btn" onclick="flaMaiusculas()"><i class="ti ti-letter-case"></i> Arrumar maiúsculas (${n})</button>`:''; })()}${n?`<button class="btn ouro" onclick="flaPrecos()"><i class="ti ti-currency-real"></i> ${n} preço(s) para aprovar</button>`:''}<button class="btn ouro" onclick="novoProduto()">`;
+  const extra = `<button class="btn" onclick="flAdmin()" title="Link do mutirão (sem PIN)"><i class="ti ti-camera-share"></i> Link sem PIN</button><button class="btn" onclick="flaPainel()" title="O que já foi feito e o que falta"><i class="ti ti-chart-bar"></i> Painel do mutirão</button><button class="btn ouro" onclick="flaEditados()" title="Produtos editados: quem fez, o que mudou, desfazer"><i class="ti ti-edit"></i> Editados</button><button class="btn" onclick="flaHistorico()" title="Lista completa de edições"><i class="ti ti-history"></i> Histórico (lista)</button>${(()=>{ const n = pdvD().produtos.filter(p=>p.ativo!==false && nsMaiusculoFL(p.nome)).length; return n?`<button class="btn" onclick="flaMaiusculas()"><i class="ti ti-letter-case"></i> Arrumar maiúsculas (${n})</button>`:''; })()}${n?`<button class="btn ouro" onclick="flaPrecos()"><i class="ti ti-currency-real"></i> ${n} preço(s) para aprovar</button>`:''}<button class="btn ouro" onclick="novoProduto()">`;
   return h.replace('<button class="btn ouro" onclick="novoProduto()">', extra);
 };
 function flaPrecos(){
@@ -443,3 +443,151 @@ function flaPainelPintar(){
       <p class="apagado" style="font-size:12px;margin:12px 0 0">Quem fez cada edição: botão <b>Histórico</b>.</p>
     </div></div></div>`;
 }
+
+/* ═════════ ✏️ EDITADOS NO MUTIRÃO (administração) — cartões por produto, quem fez, linha do tempo, desfazer ═════════ */
+(function(){ const st = document.createElement('style'); st.textContent = `
+.ed-tela{position:fixed;inset:0;z-index:8000;background:var(--fundo,#f6f3f2);overflow:auto;animation:edEntra .35s cubic-bezier(.2,.8,.2,1)}
+@keyframes edEntra{from{opacity:0;transform:translateY(24px)}}
+.ed-topo{position:sticky;top:0;z-index:2;background:linear-gradient(135deg,#D4121B,#a80d14);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 6px 20px rgba(120,0,0,.25)}
+.ed-topo h2{margin:0;font-size:18px;flex:1}.ed-topo button{border:0;background:rgba(255,255,255,.18);color:#fff;border-radius:12px;padding:8px 12px;font:inherit;font-weight:700;cursor:pointer}
+.ed-wrap{max-width:1180px;margin:0 auto;padding:16px}
+.ed-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.ed-kpi{background:#fff;border-radius:16px;padding:14px;box-shadow:0 2px 12px rgba(0,0,0,.05);animation:edPop .5s cubic-bezier(.2,1.4,.4,1) both;animation-delay:calc(var(--i)*70ms)}
+.ed-kpi b{display:block;font-size:30px;line-height:1.1;color:#D4121B}.ed-kpi span{font-size:12.5px;color:#666}
+@keyframes edPop{from{opacity:0;transform:scale(.85) translateY(10px)}}
+.ed-pessoas{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px}
+.ed-p{flex:0 0 auto;display:flex;align-items:center;gap:8px;background:#fff;border:2px solid transparent;border-radius:99px;padding:5px 14px 5px 5px;cursor:pointer;font:inherit;box-shadow:0 2px 8px rgba(0,0,0,.05);transition:.2s}
+.ed-p:hover{transform:translateY(-2px)}.ed-p.on{border-color:#D4121B;background:#fff5f5}
+.ed-av{width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;flex:0 0 auto}
+.ed-p small{display:block;font-size:11px;color:#777;line-height:1}
+.ed-tipos{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 14px}
+.ed-tipos button{border:1.5px solid rgba(0,0,0,.1);background:#fff;border-radius:99px;padding:6px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.ed-tipos button.on{background:#222;color:#fff;border-color:#222}
+.ed-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.ed-card{position:relative;background:#fff;border-radius:18px;overflow:hidden;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.06);animation:edCard .45s cubic-bezier(.2,.9,.3,1.1) both;animation-delay:calc(min(var(--i),24)*35ms);transition:transform .2s, box-shadow .2s;text-align:left;border:0;padding:0;font:inherit;color:#222}
+.ed-card:hover{transform:translateY(-4px);box-shadow:0 10px 26px rgba(0,0,0,.12)}
+@keyframes edCard{from{opacity:0;transform:translateY(18px) scale(.96)}}
+.ed-card .ft{width:100%;aspect-ratio:4/3;object-fit:cover;background:#f2eeee;display:block}
+.ed-card .sem{width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;background:#f6f0ef;color:#bbb;font-size:34px}
+.ed-card .co{padding:10px 12px 12px}
+.ed-card b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13.5px;line-height:1.25}
+.ed-tags{display:flex;flex-wrap:wrap;gap:4px;margin:7px 0}
+.ed-tag{font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:99px;color:#fff}
+.ed-quem{display:flex;align-items:center;gap:6px;font-size:12px;color:#666}
+.ed-quem .ed-av{width:24px;height:24px;font-size:10px;margin-left:-6px;border:2px solid #fff}.ed-quem .ed-av:first-child{margin-left:0}
+.ed-card .pend{position:absolute;top:10px;left:10px;background:#F5B524;color:#222;font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px;box-shadow:0 2px 8px rgba(0,0,0,.15);animation:edPulsa 1.6s infinite}
+.ed-card .desf{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px}
+@keyframes edPulsa{50%{transform:scale(1.08)}}
+.ed-lado{position:fixed;inset:0;z-index:8500;background:rgba(20,8,8,.45);display:flex;justify-content:flex-end;animation:edFade .25s}
+@keyframes edFade{from{opacity:0}}
+.ed-painel{width:min(520px,100%);height:100%;background:#fff;overflow:auto;box-shadow:-10px 0 40px rgba(0,0,0,.2);animation:edDesliza .35s cubic-bezier(.2,.9,.2,1)}
+@keyframes edDesliza{from{transform:translateX(100%)}}
+.ed-painel .ft{width:100%;max-height:300px;object-fit:contain;background:#f3efee;display:block}
+.ed-linha{position:relative;margin:6px 0 0 14px;padding-left:22px;border-left:3px solid #f0e3e2}
+.ed-ev{position:relative;margin:0 0 16px;animation:edEv .4s both;animation-delay:calc(var(--i)*60ms)}
+@keyframes edEv{from{opacity:0;transform:translateX(16px)}}
+.ed-ev .dot{position:absolute;left:-36px;top:0}
+.ed-ev .q{font-size:12.5px;color:#666}.ed-ev .q b{color:#222}
+.ed-mud{margin-top:5px;background:#faf7f6;border-radius:12px;padding:8px 10px;font-size:13.5px}
+.ed-mud .de{text-decoration:line-through;color:#999}.ed-mud .para{font-weight:800;color:#1b7a45;background:rgba(47,179,107,.12);border-radius:6px;padding:0 4px}
+.ed-fotos{display:flex;gap:8px;align-items:center}.ed-fotos img{width:84px;height:84px;object-fit:cover;border-radius:10px;background:#eee}
+.ed-ev.cancel{opacity:.5}
+.ed-bt{border:0;border-radius:10px;padding:7px 12px;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer;background:#f1eeee;color:#222;margin-top:6px}
+.ed-bt.vermelho{background:#fde8e8;color:#b30f17}
+.ed-vazio{text-align:center;color:#888;padding:60px 10px;font-size:15px}
+@media (prefers-reduced-motion:reduce){.ed-tela,.ed-kpi,.ed-card,.ed-painel,.ed-ev,.ed-lado,.ed-card .pend{animation:none!important}}
+`; document.head.appendChild(st); })();
+
+const ED_COR = {foto:'#7b5cff', nome:'#0e9f6e', codigo:'#2563eb', categoria:'#d97706', preco:'#D4121B', ok:'#6b7280'};
+const ED_NOME = {foto:'Foto', nome:'Nome', codigo:'Código', categoria:'Categoria', preco:'Preço', ok:'Está certo'};
+const ED_PALETA = ['#D4121B','#7b5cff','#0e9f6e','#d97706','#2563eb','#db2777','#0891b2','#65a30d','#9333ea','#ea580c'];
+function edCorPessoa(n){ let h = 0; for(const c of String(n||'')) h = (h*31 + c.charCodeAt(0)) >>> 0; return ED_PALETA[h % ED_PALETA.length]; }
+function edAv(n){ return `<span class="ed-av" style="background:${edCorPessoa(n)}" title="${esc(n)}">${esc(iniciais(n))}</span>`; }
+function edHa(q){ const t = new Date(String(q).replace(' ','T')+'-05:00').getTime(), m = Math.max(0, Math.round((Date.now()-t)/60000));
+  return m<1?'agora':m<60?`há ${m} min`:m<1440?`há ${Math.round(m/60)} h`:`há ${Math.round(m/1440)} d`; }
+function edCampo(a){ return a.tipo==='foto' ? 'foto' : a.tipo==='ok' ? 'ok' : a.campo; }
+var EDT = null;
+async function flaEditados(){
+  if(!EDT) EDT = {pessoa:'', tipo:'', q:'', aberto:null};
+  try{ toast('Carregando…'); const r = await api('admEstoque', {...S.adm.cred, op:'arrPainel'}); EDT.L = r.produtos||[]; EDT.H = r.historico||[]; }
+  catch(e){ toast(e.message, true); return; }
+  EDT.porId = {}; EDT.L.forEach(p=>EDT.porId[p.id]=p);
+  edPintar();
+}
+function edFiltrados(){
+  return EDT.H.filter(a=>(!EDT.pessoa || a.por===EDT.pessoa) && (!EDT.tipo || edCampo(a)===EDT.tipo));
+}
+function edPintar(){
+  let el = document.getElementById('ed-tela'); if(!el){ el = document.createElement('div'); el.id = 'ed-tela'; document.body.appendChild(el); }
+  const H = EDT.H, F = edFiltrados();
+  const grupos = new Map(); F.forEach(a=>{ if(!grupos.has(a.produto_id)) grupos.set(a.produto_id, []); grupos.get(a.produto_id).push(a); });
+  const q = semAcento(EDT.q.trim());
+  const cards = [...grupos.entries()].filter(([id,ev])=>!q || semAcento((EDT.porId[id]?.nome||ev[0].produto)).includes(q));
+  const pessoas = {}; H.forEach(a=>{ const n = a.por||'?'; pessoas[n] = pessoas[n]||{n:0, prods:new Set()}; if(a.status!=='desfeito'&&a.status!=='recusado'){ pessoas[n].n++; pessoas[n].prods.add(a.produto_id); } });
+  const validos = H.filter(a=>a.status!=='desfeito'&&a.status!=='recusado');
+  const kpi = [[new Set(validos.map(a=>a.produto_id)).size,'produtos editados'],[validos.filter(a=>a.tipo==='foto').length,'fotos tiradas'],[validos.filter(a=>a.tipo==='correcao').length,'correções'],[H.filter(a=>a.status==='pendente').length,'preços esperando você'],[Object.keys(pessoas).length,'pessoas ajudando']];
+  const tipos = {}; H.forEach(a=>{ const k = edCampo(a); tipos[k]=(tipos[k]||0)+1; });
+  el.innerHTML = `<div class="ed-tela">
+    <div class="ed-topo"><h2>✏️ Editados no mutirão</h2><button onclick="flaEditados()"><i class="ti ti-refresh"></i></button><button onclick="edFechar()"><i class="ti ti-x"></i> Fechar</button></div>
+    <div class="ed-wrap">
+      <div class="ed-kpis">${kpi.map(([v,t],i)=>`<div class="ed-kpi" style="--i:${i}"><b data-conta="${v}">0</b><span>${t}</span></div>`).join('')}</div>
+      <div class="ed-pessoas"><button class="ed-p ${!EDT.pessoa?'on':''}" onclick="EDT.pessoa='';edPintar()"><span class="ed-av" style="background:#222">★</span><span>Todas<small>${validos.length} edições</small></span></button>
+        ${Object.entries(pessoas).sort((a,b)=>b[1].n-a[1].n).map(([n,x])=>`<button class="ed-p ${EDT.pessoa===n?'on':''}" onclick="EDT.pessoa=EDT.pessoa===${esc(JSON.stringify(n))}?'':${esc(JSON.stringify(n))};edPintar()">${edAv(n)}<span>${esc(n)}<small>${x.prods.size} produto(s) · ${x.n} edições</small></span></button>`).join('')}</div>
+      <div class="ed-tipos">${[['','Tudo'],['foto','📷 Fotos'],['nome','Nome'],['codigo','Código'],['categoria','Categoria'],['preco','💲 Preço'],['ok','👍 Está certo']].filter(([k])=>!k||tipos[k]).map(([k,n])=>`<button class="${EDT.tipo===k?'on':''}" onclick="EDT.tipo='${k}';edPintar()">${n}${k?` · ${tipos[k]}`:''}</button>`).join('')}
+        <input class="inp" style="flex:1;min-width:180px;max-width:320px;border-radius:99px" placeholder="Buscar produto…" value="${esc(EDT.q)}" oninput="EDT.q=this.value;clearTimeout(window._edT);window._edT=setTimeout(edPintar,250)"></div>
+      ${!cards.length?`<div class="ed-vazio">Nenhuma edição ${EDT.pessoa?'de '+esc(EDT.pessoa)+' ':''}por aqui ainda.</div>`:`<div class="ed-grade">${cards.slice(0,300).map(([id,ev],i)=>edCardHtml(id, ev, i)).join('')}</div>`}
+    </div></div>`;
+  el.querySelectorAll('[data-conta]').forEach(b=>{ const fim = Number(b.dataset.conta)||0, t0 = performance.now(); const passo = t=>{ const k = Math.min(1,(t-t0)/700); b.textContent = Math.round(fim*(1-Math.pow(1-k,3))); if(k<1) requestAnimationFrame(passo); }; requestAnimationFrame(passo); });
+  if(EDT.aberto) edAbrir(EDT.aberto, true);
+}
+function edCardHtml(id, ev, i){
+  const p = EDT.porId[id] || {nome: ev[0].produto}, u = p.foto ? fotoUrl(p, 320) : '';
+  const campos = [...new Set(ev.filter(a=>a.status!=='desfeito'&&a.status!=='recusado').map(edCampo))];
+  const quem = [...new Set(ev.map(a=>a.por))];
+  const pend = ev.some(a=>a.status==='pendente'), todosDesf = ev.every(a=>a.status==='desfeito'||a.status==='recusado');
+  return `<button class="ed-card" style="--i:${i}" onclick="edAbrir('${id}')">
+    ${pend?'<span class="pend">💲 preço p/ aprovar</span>':''}${todosDesf?'<span class="desf">↩ desfeito</span>':''}
+    ${u?`<img class="ft" src="${esc(u)}" loading="lazy" alt="">`:'<div class="sem">📷</div>'}
+    <div class="co"><b>${esc(p.nome)}</b>
+      <div class="ed-tags">${campos.map(k=>`<span class="ed-tag" style="background:${ED_COR[k]||'#888'}">${ED_NOME[k]||k}</span>`).join('')}</div>
+      <div class="ed-quem">${quem.slice(0,4).map(edAv).join('')}<span>${esc(quem.length===1?quem[0]:quem.length+' pessoas')} · ${edHa(ev[0].quando)}</span></div></div></button>`;
+}
+function edValor(a, v){
+  if(edCampo(a)==='foto') return v ? `<img src="${esc(fotoUrl({foto:v},240))}" alt="">` : '<span style="color:#999">sem foto</span>';
+  if(a.campo==='preco') return brl2(Number(v)||0);
+  return v ? esc(v) : '<i style="color:#999">vazio</i>';
+}
+function edAbrir(id, re){
+  EDT.aberto = id;
+  const p = EDT.porId[id] || {}, ev = EDT.H.filter(a=>a.produto_id===id), u = p.foto ? fotoUrl(p, 640) : '';
+  let el = document.getElementById('ed-lado'); if(!el){ el = document.createElement('div'); el.id = 'ed-lado'; document.body.appendChild(el); }
+  el.innerHTML = `<div class="ed-lado" onclick="if(event.target===this)edFecharLado()" ${re?'style="animation:none"':''}><div class="ed-painel" ${re?'style="animation:none"':''}>
+    <div class="ed-topo" style="position:sticky"><h2 style="font-size:15px">${esc(p.nome || ev[0]?.produto || '')}</h2><button onclick="edFecharLado()"><i class="ti ti-x"></i></button></div>
+    ${u?`<img class="ft" src="${esc(u)}" alt="">`:''}
+    <div style="padding:14px 16px">
+      <div class="linha" style="gap:6px;flex-wrap:wrap;font-size:13px;color:#555;margin-bottom:6px"><span>${esc(p.codigo||'sem código')}</span>·<span>${esc(p.categoria||'sem categoria')}</span>·<b>${brl2(p.preco||0)}</b></div>
+      <div class="linha" style="gap:6px;margin-bottom:14px"><button class="ed-bt" onclick="edFecharTudo();catAbrir('${id}')"><i class="ti ti-camera"></i> Foto</button><button class="ed-bt" onclick="edFecharTudo();admPdvProduto('${id}')"><i class="ti ti-pencil"></i> Editar produto</button></div>
+      <h4 style="margin:0 0 10px">Linha do tempo</h4>
+      <div class="ed-linha">${ev.map((a,i)=>{ const k = edCampo(a), cancel = a.status==='desfeito'||a.status==='recusado';
+        return `<div class="ed-ev ${cancel?'cancel':''}" style="--i:${i}"><span class="dot">${edAv(a.por)}</span>
+          <div class="q"><b>${esc(a.por)}</b> ${k==='foto'?(a.antes?'trocou a foto':'tirou a foto'):k==='ok'?`marcou "está certo assim" (${esc((FL_AVISOS[a.campo]||{}).t||a.campo)})`:`mudou <b style="color:${ED_COR[k]}">${ED_NOME[k]||k}</b>`} · ${edHa(a.quando)} <span style="color:#aaa">(${esc(String(a.quando).slice(8,10)+'/'+String(a.quando).slice(5,7)+' '+String(a.quando).slice(11,16))})</span></div>
+          ${k!=='ok'?`<div class="ed-mud">${k==='foto'?`<div class="ed-fotos">${edValor(a,a.antes)}<span style="font-size:20px">→</span>${edValor(a,a.depois)}</div>`:`<span class="de">${edValor(a,a.antes)}</span> → <span class="para">${edValor(a,a.depois)}</span>`}</div>`:''}
+          ${a.status==='pendente'?`<div style="font-size:12px;font-weight:800;color:#8a5d00;margin-top:5px">⏳ esperando aprovação</div><button class="ed-bt" onclick="edRevisar('${esc(a.id)}',true)">✅ Aprovar</button> <button class="ed-bt vermelho" onclick="edRevisar('${esc(a.id)}',false)">✖ Recusar</button>`:''}
+          ${a.status==='aprovado'?'<div style="font-size:12px;color:#1b7a45;font-weight:800;margin-top:4px">✅ aprovado</div>':''}
+          ${cancel?`<div style="font-size:12px;color:#888;margin-top:4px">${a.status==='desfeito'?'↩ desfeito':'✖ recusado'}${a.revisado_por?' por '+esc(a.revisado_por):''}</div>`:''}
+          ${k!=='ok' && (a.status==='feito'||a.status==='aprovado')?`<button class="ed-bt vermelho" onclick="edDesfazer('${esc(a.id)}')"><i class="ti ti-arrow-back-up"></i> Desfazer</button>`:''}
+        </div>`; }).join('')}</div>
+    </div></div></div>`;
+}
+function edFecharLado(){ EDT.aberto = null; const el = document.getElementById('ed-lado'); if(el) el.innerHTML = ''; }
+function edFechar(){ edFecharLado(); const el = document.getElementById('ed-tela'); if(el) el.innerHTML = ''; }
+function edFecharTudo(){ edFechar(); }
+async function edDesfazer(id){
+  try{ const r = await api('admEstoque', {...S.adm.cred, op:'arrDesfazer', id}); toast('Desfeito ✔'); try{ S.adm.dados = await api('admDados', S.adm.cred); }catch(e){} await flaEditados(); }
+  catch(e){ toast(e.message, true); }
+}
+async function edRevisar(id, aprovar){
+  try{ await api('admEstoque', {...S.adm.cred, op:'arrRevisar', id, aprovar}); toast(aprovar?'Preço aprovado ✔':'Recusado'); try{ S.adm.dados = await api('admDados', S.adm.cred); }catch(e){} await flaEditados(); }
+  catch(e){ toast(e.message, true); }
+}
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && document.getElementById('ed-tela')?.innerHTML){ if(EDT?.aberto) edFecharLado(); else edFechar(); } });
