@@ -303,6 +303,7 @@ function estOp_(req, por, admin) {
     return { ok: true, conferencia: { itens: (r.itens || []).map(function (i) { return { n: Number(i.n) || 0, visto: i.visto == null ? null : estNum_(i.visto), obs: String(i.obs || '').slice(0, 160) }; }),
                                       extras: (r.extras || []).slice(0, 30).map(function (x) { return { desc: String(x.desc || '').slice(0, 120), qtd: estNum_(x.qtd) }; }), resumo: String(r.resumo || '').slice(0, 300) } };
   }
+  if (op === 'fotosLink') { if (!admin) throw new Error('Só a administração'); return estFotosLink_(req); }
   if (op === 'confirmar') return { entrada: estConfirmar_(req, por) };
   if (op === 'contar') return { contagem: estContar_(req, por) };
   if (op === 'contagem') return { contagem: estContagemTotais_(String(req.id || '')) };
@@ -341,8 +342,41 @@ function estOp_(req, por, admin) {
   throw new Error('Ação desconhecida');
 }
 
+/* ───────── LINK DE FOTOS SEM PIN (v15) ─────────
+   Administração › Estoque › Produtos › "Link sem PIN" gera uma chave (Config › fotos_chave). Quem abrir
+   …/#fotos=CHAVE vê só a lista de produtos SEM foto (nome, código, categoria — sem preço nem estoque),
+   diz quem é e vai tirando as fotos pelo celular. Desligar o link = apagar a chave. */
+function estFotosChave_() { return String(cfg_('fotos_chave') || '').trim(); }
+function estFotosLink_(req) {
+  if (req.desligar) { setCfg_('fotos_chave', ''); log_('Administração', 'link de fotos', 'desligado'); return { chave: '' }; }
+  var ch = estFotosChave_();
+  if (!ch || req.novo) {
+    var al = 'abcdefghjkmnpqrstuvwxyz23456789', n = ''; for (var i = 0; i < 10; i++) n += al.charAt(Math.floor(Math.random() * al.length));
+    ch = n; setCfg_('fotos_chave', ch); log_('Administração', 'link de fotos', req.novo ? 'chave nova' : 'ligado');
+  }
+  return { chave: ch };
+}
+function estFotosPublico_(req) {
+  var ch = estFotosChave_();
+  if (!ch || String(req.chave || '') !== ch) throw new Error('Esse link de fotos não está mais ativo. Peça o link novo para a administração.');
+  var op = String(req.op || 'lista');
+  if (op === 'salvar') {
+    var por = String(req.por || '').trim().slice(0, 40) || 'Link de fotos';
+    var url = estFotoSalvar_(req, por + ' (link)');
+    return { ok: true, foto: url };
+  }
+  var fotos = estFotosMapa_();
+  var lista = ler_('Produtos').filter(function (p) { return p.ativo !== 'NÃO'; }).map(function (p) {
+    return { id: p.id, nome: p.nome, codigo: p.codigo || p.sku || '', categoria: p.categoria || '', foto: fotos[p.id] || '' };
+  });
+  var com = lista.filter(function (p) { return p.foto; }).length;
+  return { ok: true, total: lista.length, com: com, produtos: lista.filter(function (p) { return !p.foto; }),
+           nomes: colabs_().filter(function (c) { return c.ativa === 'SIM'; }).map(function (c) { return String(c.nome).split(' ')[0]; }) };
+}
+
 var _estRodar = rodar_;
 rodar_ = function (req) {
+  if (req && req.a === 'fotos') { try { return estFotosPublico_(req); } catch (e) { return { ok: false, erro: String(e && e.message || e) }; } }
   if (req && req.a === 'estoque') {
     try {
       var c = checarColab_(req);
@@ -356,7 +390,7 @@ rodar_ = function (req) {
 };
 ADMIN.admEstoque = function (req) {
   var r = estOp_(req, 'Administração', true);
-  if (req.op === 'ler' || req.op === 'conferir' || req.op === 'contar' || req.op === 'contagem' || req.op === 'foto') { r.ok = true; return r; }
+  if (req.op === 'ler' || req.op === 'conferir' || req.op === 'contar' || req.op === 'contagem' || req.op === 'foto' || req.op === 'fotosLink') { r.ok = true; return r; }
   if (req.op === 'produtoNovo') { var d0 = ADMIN.admDados(req); d0.produtoFeito = r.produto; return d0; }
   var d = ADMIN.admDados(req);
   if (r.fotos) d.fotosFeitas = r.fotos;

@@ -82,5 +82,7 @@ document.write('<script src="app10.js?v=15"><\/script><script src="app11.js?v=15
 document.write('<script src="app13.js?v=13"><\/script>');
 /* v14: entrada nova (bater o ponto × entrar no portal) e portal no endereço principal, sem /ponto */
 document.write('<script src="app14.js?v=14"><\/script>');
+/* v15: link de fotos sem PIN (app15.js) — antes do app12, que fica por último */
+document.write('<script src="app15.js?v=15"><\/script>');
 /* v12: layout novo — tema claro, menu lateral agrupado e movimento (app12.js carrega o tema.css) */
 document.write('<script src="app12.js?v=12"><\/script>');
