@@ -237,8 +237,9 @@ function estLinhaTransf(t){
 }
 async function estTransfEnviar(){
   const b = $('#btn-trf'); b.disabled = true; b.innerHTML = '<i class="ti ti-loader-2"></i> Gravando…';
-  try{ const d = await estApi('transferir', {de:TRF.de, para:TRF.para, itens:TRF.itens, obs:TRF.obs}); estAposSalvar(d);
-    toast(d.transfFeita?.status==='em_transito' ? 'Enviada ✔ Fica em trânsito até receberem lá' : 'Transferido ✔'); TRF.itens = []; TRF.obs = ''; render(); }
+  TRF.uid = TRF.uid || ('t'+Date.now()+Math.floor(Math.random()*1e4));
+  try{ const d = await estApi('transferir', {uid:TRF.uid, de:TRF.de, para:TRF.para, itens:TRF.itens, obs:TRF.obs}); estAposSalvar(d);
+    toast(d.transfFeita?.status==='em_transito' ? 'Enviada ✔ Fica em trânsito até receberem lá' : 'Transferido ✔'); TRF.itens = []; TRF.obs = ''; TRF.uid = null; render(); }
   catch(e){ toast(e.message, true); render(); }
 }
 let RCB = null;
@@ -281,7 +282,8 @@ function estSaidaTela(){
 }
 async function estSaidaEnviar(){
   const b = $('#btn-sai'); b.disabled = true;
-  try{ const d = await estApi('saida', {local:SAI.local, motivo:SAI.motivo, itens:SAI.itens, obs:SAI.obs}); estAposSalvar(d); SAI.itens = []; SAI.obs = ''; render(); toast('Saída registrada ✔'); }
+  SAI.uid = SAI.uid || ('s'+Date.now()+Math.floor(Math.random()*1e4));
+  try{ const d = await estApi('saida', {uid:SAI.uid, local:SAI.local, motivo:SAI.motivo, itens:SAI.itens, obs:SAI.obs}); estAposSalvar(d); SAI.itens = []; SAI.obs = ''; SAI.uid = null; render(); toast('Saída registrada ✔'); }
   catch(e){ toast(e.message, true); b.disabled = false; }
 }
 

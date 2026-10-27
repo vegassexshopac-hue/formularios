@@ -166,12 +166,12 @@ async function estArquivos(inp, tipo){
   }catch(e){ EST.passo = EST.nota ? 'conferir' : 'inicio'; EST.erro = e.message; estPintar(); }
 }
 function estAbrirNota(nota, origem){
-  EST.nota = nota; EST.origem = origem; EST.conf = null; EST.passo = 'conferir';
+  EST.nota = nota; EST.origem = origem; EST.conf = null; EST.passo = 'conferir'; EST.uid = null;
   EST.itens = nota.itens.map((it, n)=>{ const m = estCasar(it, nota.cnpj);
     return {...it, n:n+1, qtd_nota:it.qtd, qtd:it.qtd, produto_id:m.produto_id, como:m.como, criar: m.produto_id ? null : {nome:estNomeBonito(it.desc), preco:estSugerirPreco(it.vunit), categoria:''}}; });
   estPintar();
 }
-function estManual(){ EST.nota = {fornecedor:'', cnpj:'', numero:'', emissao:'', chave:'', valor_total:0, itens:[], legibilidade:'manual'}; EST.origem = 'manual'; EST.itens = []; EST.passo = 'conferir'; estPintar(); estBuscarProduto(-1); }
+function estManual(){ EST.nota = {fornecedor:'', cnpj:'', numero:'', emissao:'', chave:'', valor_total:0, itens:[], legibilidade:'manual'}; EST.origem = 'manual'; EST.itens = []; EST.passo = 'conferir'; EST.uid = null; estPintar(); estBuscarProduto(-1); }
 
 /* ───────── telas ───────── */
 function estTela(){
@@ -326,13 +326,14 @@ async function estConfirmar(){
   if(semPreco.length && !confirm(semPreco.length+' produto(s) novo(s) sem preço de venda: eles entram no estoque, mas ficam ocultos no PDV até a administração colocar o preço. Continuar?')) return;
   const b = $('#btn-est-ok'); if(b){ b.disabled = true; b.innerHTML = '<i class="ti ti-loader-2"></i> Gravando…'; }
   const N = EST.nota;
-  const entrada = {loja:EST.loja, fornecedor:N.fornecedor, cnpj:N.cnpj, numero:N.numero, chave_nfe:N.chave, emissao:N.emissao, valor_total:N.valor_total, origem:EST.origem, obs:EST.obs,
+  EST.uid = EST.uid || ('e'+Date.now()+Math.floor(Math.random()*1e4));   // mesmo uid se clicar de novo depois de um erro de rede → o servidor não soma 2×
+  const entrada = {uid:EST.uid, loja:EST.loja, fornecedor:N.fornecedor, cnpj:N.cnpj, numero:N.numero, chave_nfe:N.chave, emissao:N.emissao, valor_total:N.valor_total, origem:EST.origem, obs:EST.obs,
     itens: EST.itens.map(x=>({cod:x.cod, ean:x.ean, desc:x.desc, un:x.un, qtd_nota:estN(x.qtd_nota), qtd:estN(x.qtd), vunit:x.vunit, produto_id:x.produto_id||'', visto: EST.conf?.itens.find(c=>c.n===x.n)?.visto ?? null,
       criar: x.produto_id ? null : {...x.criar, codigo:x.ean, preco: estN(x.criar?.preco) ? String(estN(x.criar.preco)) : ''}}))};
   try{
     const d = await estApi('confirmar', {entrada});
     if(estAdmin()) S.adm.dados = d; else S.sess.dados = d;
-    EST.feito = d.entradaFeita; EST.passo = 'feito'; EST.erro = '';
+    EST.feito = d.entradaFeita; EST.passo = 'feito'; EST.erro = ''; EST.uid = null;
     estPintar(); try{ chuvaConfete(); }catch(e){}
   }catch(e){ EST.erro = e.message; estPintar(); }
 }

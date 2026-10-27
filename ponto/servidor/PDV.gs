@@ -15,6 +15,15 @@ ABAS.VendasPDV = ['id', 'numero', 'criada_em', 'data', 'hora', 'loja', 'colabora
                   'status', 'cancelada_em', 'cancelada_por', 'motivo_cancel'];
 
 var PDV_FORMAS = ['pix', 'dinheiro', 'debito', 'credito', 'misto'];
+/* Trava única do sistema (reentrante): duas lojas vendendo/recebendo ao mesmo tempo não se atropelam.
+   Quem já está dentro da trava pode chamar de novo sem travar. */
+var _travaNivel = 0;
+function comTrava_(fn) {
+  if (_travaNivel > 0) return fn();
+  var lock = LockService.getScriptLock(); lock.waitLock(25000);
+  _travaNivel++;
+  try { return fn(); } finally { _travaNivel--; lock.releaseLock(); }
+}
 var PDV_PADRAO = { desconto_max: 15, cancelar_min: 15 };
 CONFIG_PADRAO.push(['pdv', JSON.stringify(PDV_PADRAO), 'Regras do PDV (JSON): desconto_max em % e minutos para a vendedora desfazer a própria venda']);
 
@@ -94,7 +103,8 @@ function pdvAgregar_(data, loja, colab, delta, por) {
   gravar_('Vendas', v);
 }
 
-function pdvVender_(c, req) {
+function pdvVender_(c, req) { return comTrava_(function () { return pdvVenderDentro_(c, req); }); }
+function pdvVenderDentro_(c, req) {
   var cfg = pdvCfg_();
   var uid = String(req.uid || '').replace(/[^\w-]/g, '').slice(0, 40);
   if (uid) {                                   // reenvio da mesma venda (internet caiu) não duplica
@@ -154,10 +164,15 @@ function pdvDesfazer_(c, req) {
 }
 
 function pdvCancelarLinha_(v, por, motivo) {
-  v.status = 'cancelada'; v.cancelada_em = agora_(); v.cancelada_por = por; v.motivo_cancel = motivo;
-  gravar_('VendasPDV', v);
-  pdvAgregar_(v.data, v.loja, { id: v.colaboradora_id, nome: v.colaboradora }, -(Number(v.total) || 0), por + ' (cancelou PDV #' + v.numero + ')');
-  log_(por, 'pdv cancelar', '#' + v.numero + ' R$ ' + v.total + ' · ' + motivo);
+  comTrava_(function () {
+    var atual = ler_('VendasPDV').filter(function (x) { return x.id === v.id; })[0] || v;   // relê dentro da trava: cancelar 2× ao mesmo tempo não tira da meta 2×
+    if (atual.status === 'cancelada') throw new Error('Essa venda já foi cancelada');
+    atual.status = 'cancelada'; atual.cancelada_em = agora_(); atual.cancelada_por = por; atual.motivo_cancel = motivo;
+    gravar_('VendasPDV', atual);
+    for (var k in atual) v[k] = atual[k];
+    pdvAgregar_(v.data, v.loja, { id: v.colaboradora_id, nome: v.colaboradora }, -(Number(v.total) || 0), por + ' (cancelou PDV #' + v.numero + ')');
+    log_(por, 'pdv cancelar', '#' + v.numero + ' R$ ' + v.total + ' · ' + motivo);
+  });
 }
 
 /* ───────── administração ───────── */

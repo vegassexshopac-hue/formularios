@@ -87,13 +87,12 @@ ADMIN.admDados = function (req) {
 
 /* ───────── movimentar (tudo de uma vez, com trava para duas lojas ao mesmo tempo) ─────────
    lista: [{produto_id, produto, loja, delta}] ou [{..., definir: N}] (saldo inicial / ajuste)  */
-function estMovimentar_(lista, tipo, ref, por, obs) {
+function estMovimentar_(lista, tipo, ref, por, obs, uid) {
   if (!lista.length) return [];
-  var trava = LockService.getScriptLock(); trava.waitLock(20000);
-  try {
+  return comTrava_(function () {
     var sh = aba_('Estoque'), cab = cabecalho_('Estoque', sh), atuais = ler_('Estoque'), porChave = {};
     atuais.forEach(function (r) { porChave[r.chave] = r; });
-    var agora = agora_(), hoje = hoje_(), base = new Date().getTime() + '' + Math.floor(Math.random() * 1e4), movs = [];
+    var agora = agora_(), hoje = hoje_(), base = uid || (new Date().getTime() + '' + Math.floor(Math.random() * 1e4)), movs = [];
     lista.forEach(function (m, n) {
       var chave = m.produto_id + '|' + m.loja;
       var r = porChave[chave];
@@ -111,7 +110,7 @@ function estMovimentar_(lista, tipo, ref, por, obs) {
     var shM = aba_('MovEstoque'), cabM = cabecalho_('MovEstoque', shM);
     shM.getRange(shM.getLastRow() + 1, 1, movs.length, cabM.length).setNumberFormat('@').setValues(movs.map(function (m) { return linha_('MovEstoque', m, cabM); }));
     return movs;
-  } finally { trava.releaseLock(); }
+  });
 }
 
 /* ───────── IA: lê a nota (foto ou PDF) e confere a foto dos produtos ───────── */
@@ -188,8 +187,15 @@ function estNotaLimpa_(n) {
 }
 
 /* ───────── confirmar a entrada ───────── */
-function estConfirmar_(req, por) {
+function estUid_(u) { return String(u || '').replace(/[^\w-]/g, '').slice(0, 40); }
+function estConfirmar_(req, por) { return comTrava_(function () { return estConfirmarDentro_(req, por); }); }
+function estConfirmarDentro_(req, por) {
   var e = req.entrada || {}, lojas = estLojas_();
+  var uid = estUid_(e.uid || req.uid);
+  if (uid) {                                   // reenvio da mesma entrada (internet caiu, clicou de novo) não soma 2×
+    var jaUid = ler_('Entradas').filter(function (x) { return x.id === 'E' + uid; })[0];
+    if (jaUid) { var r0 = estEntrada_(jaUid); r0.repetida = true; return r0; }
+  }
   if (!lojas[e.loja]) throw new Error('Escolha a loja que recebeu');
   var itens = Array.isArray(e.itens) ? e.itens.slice(0, 400) : [];
   if (!itens.length) throw new Error('Nenhum item na entrada');
@@ -221,7 +227,7 @@ function estConfirmar_(req, por) {
              visto: i.visto == null || i.visto === '' ? null : estNum_(i.visto), novo: !!i.criar };
   });
   var divs = limpos.filter(function (i) { return i.qtd !== i.qtd_nota; }).map(function (i) { return { produto: i.produto, nota: i.qtd_nota, recebido: i.qtd }; });
-  var id = 'E' + base;
+  var id = uid ? 'E' + uid : 'E' + base;
   var ent = { id: id, criada_em: agora, loja: e.loja, fornecedor: String(e.fornecedor || '').slice(0, 120), cnpj: cnpj, numero: numero, chave_nfe: chaveNfe,
               emissao: /^\d{4}-\d{2}-\d{2}$/.test(e.emissao || '') ? e.emissao : '', valor_total: String(estNum_(e.valor_total) || limpos.reduce(function (s, i) { return s + i.vunit * i.qtd_nota; }, 0)),
               qtd_total: String(limpos.reduce(function (s, i) { return s + i.qtd; }, 0)), itens: JSON.stringify(limpos), origem: String(e.origem || 'manual').slice(0, 20),
@@ -255,7 +261,8 @@ function estConfirmar_(req, por) {
   return estEntrada_(ent);
 }
 
-function estCancelarEntrada_(id, motivo, por) {
+function estCancelarEntrada_(id, motivo, por) { return comTrava_(function () { return estCancelarEntradaDentro_(id, motivo, por); }); }
+function estCancelarEntradaDentro_(id, motivo, por) {
   var e = ler_('Entradas').filter(function (x) { return x.id === id; })[0];
   if (!e) throw new Error('Entrada não encontrada');
   if (e.status !== 'confirmada') throw new Error('Essa entrada já foi cancelada');
@@ -299,9 +306,9 @@ function estOp_(req, por, admin) {
   if (op === 'confirmar') return { entrada: estConfirmar_(req, por) };
   if (op === 'contar') return { contagem: estContar_(req, por) };
   if (op === 'contagem') return { contagem: estContagemTotais_(String(req.id || '')) };
-  if (op === 'transferir') return { transferencia: estTransferir_(req, por) };
+  if (op === 'transferir') return { transferencia: estTransferir_(req, por, admin) };
   if (op === 'receberTransf') return { transferencia: estReceberTransf_(req, por) };
-  if (op === 'saida') { estSaida_(req, por); return {}; }
+  if (op === 'saida') { estSaida_(req, por, admin); return {}; }
   if (op === 'vincular') { estVincular_(req, por); return { ok: true, vinculos: estPacote_(false).vinculos }; }
   if (op === 'foto') return { ok: true, foto: estFotoSalvar_(req, por) };
   if (op === 'produtoNovo') return { ok: true, produto: estProdutoNovo_(req, por) };
@@ -360,31 +367,38 @@ ADMIN.admEstoque = function (req) {
 
 /* ───────── baixa automática quando vende pelo PDV (liga em Administração › Estoque › Configurar) ───────── */
 var _estPdvVender = pdvVender_;
-pdvVender_ = function (c, req) {
+pdvVender_ = function (c, req) { return comTrava_(function () { return estPdvVenderDentro_(c, req); }); };
+function estPdvVenderDentro_(c, req) {
   var d = _estPdvVender(c, req);
   try {
     if (estCfg_().baixa_pdv && d && d.pdvVenda && !d.pdvRepetida) {
       var v = d.pdvVenda, soma = {};
       var pr = estPrateleiraDe_(v.loja);
       (v.itens || []).forEach(function (i) { if (i.id) { soma[i.id] = soma[i.id] || { produto_id: i.id, produto: i.nome, loja: pr, delta: 0 }; soma[i.id].delta -= i.qtd; } });
-      estMovimentar_(Object.keys(soma).map(function (k) { return soma[k]; }), 'venda', 'PDV #' + v.numero, c.nome);
+      var negativos = estMovimentar_(Object.keys(soma).map(function (k) { return soma[k]; }), 'venda', estRefVenda_(v), c.nome)
+        .filter(function (m) { return estNum_(m.saldo) < 0; }).map(function (m) { return m.produto; });
       d.estoque = estPacote_(false);
+      if (negativos.length) d.estoqueAviso = 'Estoque ficou negativo: ' + negativos.slice(0, 3).join(', ') + (negativos.length > 3 ? ' e mais ' + (negativos.length - 3) : '') + '. Confira a prateleira.';
     }
-  } catch (e) { log_('Sistema', 'erro baixa estoque', String(e && e.message || e)); }
+  } catch (e) { log_('Sistema', 'erro baixa estoque', String(e && e.message || e)); d.estoqueErro = 'A venda foi gravada, mas o estoque NÃO baixou (' + String(e && e.message || e).slice(0, 80) + '). Avise a administração.'; }
   return d;
-};
+}
+/* ref do movimento da venda: inclui o id (único) — o número pode repetir em meses diferentes */
+function estRefVenda_(v) { return 'PDV #' + v.numero + ' · ' + v.id; }
 var _estPdvCancelar = pdvCancelarLinha_;
 pdvCancelarLinha_ = function (v, por, motivo) {
-  _estPdvCancelar(v, por, motivo);
-  try {
-    var pr = estPrateleiraDe_(v.loja);
-    var ja = ler_('MovEstoque').some(function (m) { return m.tipo === 'venda' && m.ref === 'PDV #' + v.numero && m.data === v.data && m.loja === pr; });
-    if (!ja) return;                                   // só devolve se essa venda tinha dado baixa
-    var itens = []; try { itens = JSON.parse(v.itens || '[]'); } catch (x) {}
-    var soma = {};
-    itens.forEach(function (i) { if (i.id) { soma[i.id] = soma[i.id] || { produto_id: i.id, produto: i.nome, loja: pr, delta: 0 }; soma[i.id].delta += i.qtd; } });
-    estMovimentar_(Object.keys(soma).map(function (k) { return soma[k]; }), 'venda_cancelada', 'PDV #' + v.numero, por, motivo);
-  } catch (e) { log_('Sistema', 'erro devolver estoque', String(e && e.message || e)); }
+  comTrava_(function () {
+    _estPdvCancelar(v, por, motivo);
+    try {
+      var pr = estPrateleiraDe_(v.loja), ref = estRefVenda_(v);
+      var ja = ler_('MovEstoque').some(function (m) { return m.tipo === 'venda' && (m.ref === ref || (m.ref === 'PDV #' + v.numero && m.data === v.data && m.loja === pr)); });
+      if (!ja) return;                                   // só devolve se essa venda tinha dado baixa
+      var itens = []; try { itens = JSON.parse(v.itens || '[]'); } catch (x) {}
+      var soma = {};
+      itens.forEach(function (i) { if (i.id) { soma[i.id] = soma[i.id] || { produto_id: i.id, produto: i.nome, loja: pr, delta: 0 }; soma[i.id].delta += i.qtd; } });
+      estMovimentar_(Object.keys(soma).map(function (k) { return soma[k]; }), 'venda_cancelada', ref, por, motivo);
+    } catch (e) { log_('Sistema', 'erro devolver estoque', String(e && e.message || e)); }
+  });
 };
 
 
@@ -423,11 +437,10 @@ function estContagemAbrir_(req, por) {
 }
 /** leituras: [{uid, produto_id, delta}] — uid evita contar duas vezes se a internet cair e o aparelho reenviar. */
 function estContar_(req, por) {
-  var c = estContagemAchar_(String(req.contagem_id || ''), true);
   var lista = Array.isArray(req.leituras) ? req.leituras.slice(0, 500) : [];
   var cat = {}; ler_('Produtos').forEach(function (p) { cat[p.id] = 1; });
-  var trava = LockService.getScriptLock(); trava.waitLock(20000);
-  try {
+  var c = comTrava_(function () {
+    var c = estContagemAchar_(String(req.contagem_id || ''), true);   // confere dentro da trava: fechou enquanto o lote vinha → recusa (não some em silêncio)
     var ja = {}; ler_('ContagemLeituras').forEach(function (l) { if (l.contagem_id === c.id) ja[l.id] = 1; });
     var novas = [], agora = agora_();
     lista.forEach(function (l) {
@@ -439,11 +452,13 @@ function estContar_(req, por) {
       var sh = aba_('ContagemLeituras'), cab = cabecalho_('ContagemLeituras', sh);
       sh.getRange(sh.getLastRow() + 1, 1, novas.length, cab.length).setNumberFormat('@').setValues(novas.map(function (x) { return linha_('ContagemLeituras', x, cab); }));
     }
-  } finally { trava.releaseLock(); }
+    return c;
+  });
   return estContagemTotais_(c.id);
 }
 /** Fecha: o saldo do local vira o contado. Produto não contado: zera (zerar:true) ou mantém o saldo antigo. */
-function estContagemFechar_(req, por) {
+function estContagemFechar_(req, por) { return comTrava_(function () { return estContagemFecharDentro_(req, por); }); }
+function estContagemFecharDentro_(req, por) {
   var c = estContagemAchar_(String(req.id || ''), true), t = estContagemTotais_(c.id).totais;
   var cat = {}; ler_('Produtos').forEach(function (p) { cat[p.id] = p; });
   var atuais = {}; estSaldos_().forEach(function (s) { if (s.loja === c.local) atuais[s.produto_id] = s.qtd; });
@@ -498,23 +513,36 @@ function estItensValidos_(itens) {
   if (!l.length) throw new Error('Nenhum item com quantidade');
   return l;
 }
-function estTransferir_(req, por) {
+/* O que tem de fato no local (para não deixar tirar mais do que existe) */
+function estConferirSaldo_(itens, local, admin) {
+  var atual = {}; estSaldos_().forEach(function (s) { if (s.loja === local) atual[s.produto_id] = s.qtd; });
+  var faltam = itens.filter(function (i) { return i.qtd > (atual[i.produto_id] || 0); });
+  if (faltam.length && !admin) throw new Error('Não tem essa quantidade em ' + ((estLocaisMapa_()[local] || {}).nome || local) + ': ' +
+    faltam.slice(0, 3).map(function (i) { return i.produto + ' (tem ' + (atual[i.produto_id] || 0) + ', pediu ' + i.qtd + ')'; }).join(', ') + (faltam.length > 3 ? ' e mais ' + (faltam.length - 3) : '') + '. Confira a contagem ou peça para a administração ajustar.');
+  return faltam;
+}
+function estTransferir_(req, por, admin) { return comTrava_(function () { return estTransferirDentro_(req, por, admin); }); }
+function estTransferirDentro_(req, por, admin) {
   var locais = estLocaisMapa_(), de = String(req.de || ''), para = String(req.para || '');
+  var uid = estUid_(req.uid);
+  if (uid) { var ja = ler_('Transferencias').filter(function (x) { return x.id === 'T' + uid; })[0]; if (ja) { var r0 = estTransf_(ja); r0.repetida = true; return r0; } }
   if (!locais[de] || !locais[para]) throw new Error('Escolha de onde sai e para onde vai');
   if (de === para) throw new Error('Origem e destino são o mesmo local');
   var itens = estItensValidos_(req.itens);
+  estConferirSaldo_(itens, de, admin);
   var mesmaLoja = locais[de].loja === locais[para].loja;
-  var t = { id: 'T' + new Date().getTime() + Math.floor(Math.random() * 1e3), criada_em: agora_(), de: de, para: para, itens: JSON.stringify(itens),
+  var t = { id: uid ? 'T' + uid : 'T' + new Date().getTime() + Math.floor(Math.random() * 1e3), criada_em: agora_(), de: de, para: para, itens: JSON.stringify(itens),
             qtd_total: String(itens.reduce(function (s, i) { return s + i.qtd; }, 0)), status: mesmaLoja ? 'concluida' : 'em_transito', por: por,
             recebida_em: mesmaLoja ? agora_() : '', recebida_por: mesmaLoja ? por : '', divergencias: '[]', obs: String(req.obs || '').slice(0, 200) };
   var ref = locais[de].nome + ' → ' + locais[para].nome;
+  gravar_('Transferencias', t);                       // grava ANTES de movimentar: se a baixa falhar, a transferência fica registrada
   estMovimentar_(itens.map(function (i) { return { produto_id: i.produto_id, produto: i.produto, loja: de, delta: -i.qtd }; }), 'transf_saida', ref, por, t.obs);
   if (mesmaLoja) estMovimentar_(itens.map(function (i) { return { produto_id: i.produto_id, produto: i.produto, loja: para, delta: i.qtd }; }), 'transf_entrada', ref, por, t.obs);
-  gravar_('Transferencias', t);
   log_(por, 'transferência', ref + ' · ' + t.qtd_total + ' peças · ' + t.status);
   return estTransf_(t);
 }
-function estReceberTransf_(req, por) {
+function estReceberTransf_(req, por) { return comTrava_(function () { return estReceberTransfDentro_(req, por); }); }
+function estReceberTransfDentro_(req, por) {
   var t = ler_('Transferencias').filter(function (x) { return x.id === req.id; })[0];
   if (!t) throw new Error('Transferência não encontrada');
   if (t.status !== 'em_transito') throw new Error('Essa transferência já foi recebida ou cancelada');
@@ -522,7 +550,7 @@ function estReceberTransf_(req, por) {
   (Array.isArray(req.itens) ? req.itens : []).forEach(function (i) { receb[i.produto_id] = estNum_(i.qtd); });
   var divs = [], mov = [];
   enviados.forEach(function (i) {
-    var q = receb[i.produto_id] != null ? Math.max(0, receb[i.produto_id]) : i.qtd;
+    var q = receb[i.produto_id] != null ? Math.max(0, Math.min(i.qtd, receb[i.produto_id])) : i.qtd;   // não dá para receber mais do que saiu
     if (q !== i.qtd) divs.push({ produto: i.produto, enviado: i.qtd, recebido: q });
     if (q > 0) mov.push({ produto_id: i.produto_id, produto: i.produto, loja: t.para, delta: q });
   });
@@ -533,7 +561,8 @@ function estReceberTransf_(req, por) {
   log_(por, 'transferência recebida', ref + (divs.length ? ' · ' + divs.length + ' divergência(s)' : ''));
   return estTransf_(t);
 }
-function estCancelarTransf_(req, por) {
+function estCancelarTransf_(req, por) { return comTrava_(function () { return estCancelarTransfDentro_(req, por); }); }
+function estCancelarTransfDentro_(req, por) {
   var t = ler_('Transferencias').filter(function (x) { return x.id === req.id; })[0];
   if (!t) throw new Error('Transferência não encontrada');
   if (t.status !== 'em_transito') throw new Error('Só dá para cancelar a que ainda está em trânsito');
@@ -545,13 +574,17 @@ function estCancelarTransf_(req, por) {
 }
 
 /* ═════════════ SAÍDA (sem venda) ═════════════ */
-function estSaida_(req, por) {
+function estSaida_(req, por, admin) { return comTrava_(function () { return estSaidaDentro_(req, por, admin); }); }
+function estSaidaDentro_(req, por, admin) {
   var locais = estLocaisMapa_(), local = String(req.local || '');
   if (!locais[local]) throw new Error('Escolha o local');
   var motivo = String(req.motivo || '').trim();
   if (!motivo) throw new Error('Escolha o motivo da saída');
+  var uid = estUid_(req.uid);
+  if (uid && ler_('MovEstoque').some(function (m) { return m.tipo === 'saida' && m.id.indexOf('M' + uid + '-') === 0; })) return;   // reenvio não tira 2×
   var itens = estItensValidos_(req.itens);
-  estMovimentar_(itens.map(function (i) { return { produto_id: i.produto_id, produto: i.produto, loja: local, delta: -i.qtd }; }), 'saida', motivo, por, String(req.obs || '').slice(0, 200));
+  estConferirSaldo_(itens, local, admin);
+  estMovimentar_(itens.map(function (i) { return { produto_id: i.produto_id, produto: i.produto, loja: local, delta: -i.qtd }; }), 'saida', motivo, por, String(req.obs || '').slice(0, 200), uid);
   log_(por, 'saída estoque', locais[local].nome + ' · ' + motivo + ' · ' + itens.length + ' produto(s)');
 }
 function estSalvarLocais_(req) {
@@ -594,10 +627,7 @@ pdvProdutos_ = function (admin) {
   return l;
 };
 function estFotoUrlOk_(u) { return /^https:\/\/([a-z0-9-]+\.mitiendanube\.com|drive\.google\.com|lh3\.googleusercontent\.com)\//.test(String(u || '')); }
-function estComTrava_(fn) {
-  var lock = LockService.getScriptLock(); lock.waitLock(25000);
-  try { return fn(); } finally { lock.releaseLock(); }
-}
+function estComTrava_(fn) { return comTrava_(fn); }
 /* mapa {produto_id: url}; manter = não troca a foto que a equipe tirou */
 function estFotosGravar_(mapa, origem, por, manter) {
   var sh = aba_('FotosProdutos'), cab = cabecalho_('FotosProdutos', sh), atuais = ler_('FotosProdutos'), porId = {}, n = 0, agora = agora_();

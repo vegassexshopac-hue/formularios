@@ -228,6 +228,8 @@ async function pdvFinalizar(){
     pdvGuardar();
     render();
     pdvCelebrar(venda, antes, minhaPosicao(S.sess.eid), cli);
+    if(d.estoqueErro) setTimeout(()=>toast(d.estoqueErro, true), 1500);
+    else if(d.estoqueAviso) setTimeout(()=>toast('⚠️ '+d.estoqueAviso), 1500);
   }catch(e){
     PDV.env = false; pdvPintarComanda();
     toast(erroRede(e) ? 'Sem internet: a venda NÃO foi gravada. Toque em Finalizar de novo quando voltar (não duplica).' : e.message, true);

@@ -75,7 +75,7 @@ const S = {
   pin: null,
   ocupado: false,
   offset: 0,
-  fila: LS.get('lv_fila', []),
+  fila: LS.get('lv_fila', []).map(f=>{ const {pin, pinHash, ...r} = f; r.uid = r.uid || ('F'+Date.now()+Math.floor(Math.random()*1e4)); return r; }),   // limpa PIN de filas antigas
   primeiraVez: true,
 };
 let timerVolta = null;
@@ -177,17 +177,28 @@ function bancoTotal(colab, mapa, regras){
 }
 
 /* ──────────── fila offline (só no computador autorizado) ──────────── */
-function salvarFila(){ LS.set('lv_fila', S.fila); }
+/* A fila guardada no computador NUNCA leva o PIN (nem o hash): a credencial fica só na memória desta aba.
+   Se a página recarregar antes de enviar, a marcação espera a colaboradora digitar o PIN de novo (aí vai). */
+const FILA_CRED = {};
+function salvarFila(){ LS.set('lv_fila', S.fila.map(f=>{ const {pin, pinHash, ...resto} = f; return resto; })); }
+function emprestarCredFila(eid, cred){ S.fila.forEach(f=>{ if(f.eid===eid && !FILA_CRED[f.uid]) FILA_CRED[f.uid]=cred; }); }
+let filaEnviando = false;
 async function enviarFila(){
-  if(!S.fila.length || !navigator.onLine) return;
-  const resta = [];
-  for(const f of S.fila){
-    try{ await api('bater', {...f, token:S.aparelho?.token}); }
-    catch(e){ if(erroRede(e)) resta.push(f); else toast('Marcação sem internet de '+f.nome+' recusada: '+e.message, true); }
-  }
+  if(!S.fila.length || !navigator.onLine || filaEnviando) return;
+  filaEnviando = true;
+  const resta = []; let semPin = 0;
+  try{
+    for(const f of S.fila){
+      const cred = FILA_CRED[f.uid];
+      if(!cred){ resta.push(f); semPin++; continue; }
+      try{ await api('bater', {...f, ...cred, token:S.aparelho?.token}); delete FILA_CRED[f.uid]; }
+      catch(e){ if(erroRede(e)) resta.push(f); else toast('Marcação sem internet de '+f.nome+' recusada: '+e.message, true); }
+    }
+  } finally { filaEnviando = false; }
   const enviadas = S.fila.length - resta.length;
   S.fila = resta; salvarFila();
   if(enviadas) toast(enviadas+' marcação(ões) feitas sem internet foram enviadas ✔');
+  if(semPin && navigator.onLine && !S.filaAvisou){ S.filaAvisou = true; toast(semPin+' marcação(ões) guardada(s) aguardam a colaboradora digitar o PIN para serem enviadas.'); }
   if(S.tela==='inicio') render();
 }
 window.addEventListener('online', enviarFila);
@@ -203,7 +214,7 @@ function render(){
   if(S.tela==='admin') app.innerHTML = telaAdmin();
   else if(S.tela==='portal') app.innerHTML = telaPortal();
   else if(S.tela==='bater'){ app.innerHTML = telaBater(); iniciarCamera(); }
-  else if(S.tela==='sucesso'){ app.innerHTML = telaSucesso(); timerVolta = setTimeout(sair, 7000); }
+  else if(S.tela==='sucesso'){ app.innerHTML = telaSucesso(); if(!(S.ultimo?.campo==='saida' && S.sess?.dados)) timerVolta = setTimeout(sair, 7000); }   // na saída do dia a tela fica 90 s (telaSucesso arma)
   else app.innerHTML = telaInicio();
   tickRelogio();
   try{ if(S.tela!=='inicio' && (!history.state || history.state.lv!==S.tela)) history.pushState({lv:S.tela}, ''); }catch(e){}
@@ -375,6 +386,7 @@ async function tecla(k){
       const cred = await credencial('pin', p.buf);
       const d = await api('entrar', {eid:p.alvo, ...cred});
       S.sess = {eid:p.alvo, cred, dados:d};
+      emprestarCredFila(p.alvo, cred); enviarFila();
       S.pin=null; renderPin(); S.portalTab='inicio'; S.portalMes=mesDe(d.hoje);
       S.tela = modoLoja() ? 'bater' : 'portal'; render();
     }
@@ -383,6 +395,7 @@ async function tecla(k){
       const c = S.boot.colaboradoras.find(x=>x.id===p.alvo);
       const cred = await credencial('pin', p.buf);
       S.sess = {eid:p.alvo, cred, dados:null, offline:true, nome:c.nome};
+      emprestarCredFila(p.alvo, cred);
       S.pin=null; renderPin(); S.tela='bater'; render(); return;
     }
     p.ocupado=false; p.buf=''; p.erro=e.message; renderPin();

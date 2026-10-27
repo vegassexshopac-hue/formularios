@@ -17,10 +17,10 @@ async function bater(campo){
   const b = $('#btn-bater'); if(b){ b.disabled=true; b.innerHTML='<span class="gira"></span> Registrando…'; }
   const d = agoraServidor();
   const foto = fotoAgora();
-  const pedido = {eid:s.eid, ...s.cred, campo, token:S.aparelho?.token};
+  const pedido = {eid:s.eid, campo, token:S.aparelho?.token};
   try{
     if(s.offline) throw new TypeError('offline');
-    const j = await api('bater', {...pedido, foto});
+    const j = await api('bater', {...pedido, ...s.cred, foto});
     const i = s.dados.pontos.findIndex(p=>p.data===j.ponto.data);
     if(i>=0) s.dados.pontos[i]=j.ponto; else s.dados.pontos.push(j.ponto);
     S.ultimo = {campo, hora:j.hora, nome:s.dados.colaboradora.nome, offline:false, foto:!!(j.ponto.fotos && JSON.parse(j.ponto.fotos||'{}')[campo])};
@@ -28,7 +28,9 @@ async function bater(campo){
   }catch(e){
     if(erroRede(e)){
       const nome = s.dados ? s.dados.colaboradora.nome : s.nome;
-      S.fila.push({...pedido, offline:true, horaAparelho:pad(d.getHours())+':'+pad(d.getMinutes()), dataAparelho:isoD(d), nome});
+      const uid = 'F'+Date.now()+Math.floor(Math.random()*1e4);
+      FILA_CRED[uid] = s.cred;                          // credencial só na memória; no disco vai sem PIN
+      S.fila.push({...pedido, uid, offline:true, horaAparelho:pad(d.getHours())+':'+pad(d.getMinutes()), dataAparelho:isoD(d), nome});
       salvarFila();
       S.ultimo = {campo, hora:pad(d.getHours())+':'+pad(d.getMinutes()), nome, offline:true};
       S.tela='sucesso';
