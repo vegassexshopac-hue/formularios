@@ -84,5 +84,7 @@ document.write('<script src="app13.js?v=13"><\/script>');
 document.write('<script src="app14.js?v=14"><\/script>');
 /* v15: link de fotos sem PIN (app15.js) — antes do app12, que fica por último */
 document.write('<script src="app15.js?v=15"><\/script>');
+/* v16: Nuvemshop — conectar o site (API), importar produtos, estoque e pedidos (Administração › Nuvemshop) */
+document.write('<script src="app16.js?v=16"><\/script>');
 /* v12: layout novo — tema claro, menu lateral agrupado e movimento (app12.js carrega o tema.css) */
 document.write('<script src="app12.js?v=12"><\/script>');
