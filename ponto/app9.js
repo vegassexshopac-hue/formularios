@@ -88,5 +88,7 @@ document.write('<script src="app15.js?v=15j"><\/script>');
 document.write('<script src="app16.js?v=16"><\/script>');
 /* v15d: catálogo do site — categorias, nomes, descrição e preços pelo CSV da Nuvemshop (app17.js) */
 document.write('<script src="app17.js?v=17b"><\/script>');
+/* v18: Contagens com passo a passo, detalhes, corrigir produto, desfazer e apagar (app18.js) */
+document.write('<script src="app18.js?v=18a"><\/script>');
 /* v12: layout novo — tema claro, menu lateral agrupado e movimento (app12.js carrega o tema.css) */
 document.write('<script src="app12.js?v=12"><\/script>');

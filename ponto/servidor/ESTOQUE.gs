@@ -37,7 +37,7 @@ function estPrateleiraDe_(loja) { var l = estLocaisLista_().filter(function (x) 
 var EST_PADRAO = { baixa_pdv: true, ia_provedor: 'anthropic', ia_modelo: '' };
 var EST_MODELOS = { anthropic: 'claude-sonnet-5-5', gemini: 'gemini-2.5-flash' };
 var EST_TIPOS = { entrada: 'Entrada (nota)', saldo_inicial: 'Saldo inicial', ajuste: 'Ajuste', venda: 'Venda PDV', venda_cancelada: 'Venda cancelada', entrada_cancelada: 'Entrada cancelada',
-                  contagem: 'Contagem', transf_saida: 'Transferência (saiu)', transf_entrada: 'Transferência (entrou)', transf_cancelada: 'Transferência cancelada', saida: 'Saída' };
+                  contagem: 'Contagem', transf_saida: 'Transferência (saiu)', transf_entrada: 'Transferência (entrou)', transf_cancelada: 'Transferência cancelada', saida: 'Saída', contagem_desfeita: 'Contagem desfeita' };
 CONFIG_PADRAO.push(['estoque', JSON.stringify(EST_PADRAO), 'Estoque (JSON): baixa_pdv = dá baixa ao vender no PDV · ia_provedor = anthropic | gemini · ia_modelo (opcional)']);
 
 function estCfg_() {
@@ -325,6 +325,10 @@ function estOp_(req, por, admin) {
   if (op === 'contagemAbrir') return { contagem: estContagemAbrir_(req, por) };
   if (op === 'contagemFechar') { estContagemFechar_(req, por); return {}; }
   if (op === 'contagemCancelar') { estContagemCancelar_(req, por); return {}; }
+  if (op === 'contagemDetalhe') { var dt = estContagemDetalhe_(req); dt.semPacote = true; return dt; }
+  if (op === 'contagemDesfazer') { estContagemDesfazer_(req, por); return {}; }
+  if (op === 'contagemApagar') { estContagemApagar_(req, por); return {}; }
+  if (op === 'contagemAjustar') { var aj = estContagemAjustar_(req, por); return { contagem: aj, semPacote: true }; }
   if (op === 'cancelarTransf') { estCancelarTransf_(req, por); return {}; }
   if (op === 'locais') { estSalvarLocais_(req); return {}; }
   if (op === 'cancelar') { estCancelarEntrada_(req.id, req.motivo, por); return {}; }
@@ -575,7 +579,7 @@ rodar_ = function (req) {
 };
 ADMIN.admEstoque = function (req) {
   var r = estOp_(req, 'Administração', true);
-  if (req.op === 'ler' || req.op === 'conferir' || req.op === 'contar' || req.op === 'contagem' || req.op === 'foto' || req.op === 'fotosLink' || req.op === 'arrPendentes' || req.op === 'arrRevisar' || req.op === 'catalogoLote' || req.op === 'arrHistorico' || req.op === 'arrDesfazer' || req.op === 'arrPainel') { r.ok = true; return r; }
+  if (req.op === 'ler' || req.op === 'conferir' || req.op === 'contar' || req.op === 'contagem' || req.op === 'foto' || req.op === 'fotosLink' || req.op === 'arrPendentes' || req.op === 'arrRevisar' || req.op === 'catalogoLote' || req.op === 'arrHistorico' || req.op === 'arrDesfazer' || req.op === 'arrPainel' || r.semPacote) { delete r.semPacote; r.ok = true; return r; }
   if (req.op === 'produtoNovo') { var d0 = ADMIN.admDados(req); d0.produtoFeito = r.produto; return d0; }
   var d = ADMIN.admDados(req);
   if (r.fotos) d.fotosFeitas = r.fotos;
@@ -626,8 +630,94 @@ pdvCancelarLinha_ = function (v, por, motivo) {
    cada aparelho manda as leituras em lotes (sem duplicar se reenviar). A administração revisa sistema × contado e fecha:
    aí o saldo do local vira o número contado. */
 function estContagensPacote_(admin) {
-  var abertas = ler_('Contagens').filter(function (c) { return c.status === 'aberta' || (admin && String(c.fechada_em).slice(0, 10) >= diaMais_(-60)); });
-  return abertas.map(function (c) { var o = limpar_(c); try { o.resumo = JSON.parse(c.resumo || '{}'); } catch (e) { o.resumo = {}; } return o; }).reverse();
+  var abertas = ler_('Contagens').filter(function (c) { return c.status === 'aberta' || (admin && c.status !== 'apagada' && String(c.fechada_em).slice(0, 10) >= diaMais_(-60)); });
+  var st = {};   // andamento das abertas: produtos, peças, quem está contando, última leitura
+  if (abertas.some(function (c) { return c.status === 'aberta'; })) ler_('ContagemLeituras').forEach(function (l) {
+    var x = st[l.contagem_id] || (st[l.contagem_id] = { tot: {}, pessoas: {}, ultima: '', leituras: 0 });
+    x.tot[l.produto_id] = (x.tot[l.produto_id] || 0) + estNum_(l.delta); x.leituras++;
+    var nm = String(l.por || '').replace(/ \((link|desfez|ajuste)\)$/, ''); x.pessoas[nm] = 1;
+    if (String(l.quando) > x.ultima) x.ultima = String(l.quando);
+  });
+  return abertas.map(function (c) {
+    var o = limpar_(c); try { o.resumo = JSON.parse(c.resumo || '{}'); } catch (e) { o.resumo = {}; }
+    if (c.status === 'aberta') { var x = st[c.id] || { tot: {}, pessoas: {}, ultima: '', leituras: 0 }, ks = Object.keys(x.tot);
+      o.andamento = { produtos: ks.length, pecas: ks.reduce(function (s, k) { return s + Math.max(0, x.tot[k]); }, 0), pessoas: Object.keys(x.pessoas), ultima: x.ultima, leituras: x.leituras }; }
+    return o;
+  }).reverse();
+}
+/* Movimentos de estoque que o fechamento da contagem gerou (novas: id MK<contagem>-n; antigas: mesmo nome, mesmo dia, até a hora do fechamento). */
+function estContagemMovs_(c) {
+  var pref = 'MK' + c.id + '-', fim = String(c.fechada_em || ''), dia = fim.slice(0, 10);
+  var movs = ler_('MovEstoque').filter(function (m) { return m.tipo === 'contagem' && String(m.id).indexOf(pref) === 0; });
+  if (!movs.length && fim) movs = ler_('MovEstoque').filter(function (m) { return m.tipo === 'contagem' && m.ref === c.nome && m.loja === c.local && String(m.id).indexOf('MK') !== 0 && String(m.quando).slice(0, 10) === dia && String(m.quando) <= fim; });
+  return movs;
+}
+/** Detalhe de uma contagem: produto a produto (sistema antes, contado, diferença) e quem contou. */
+function estContagemDetalhe_(req) {
+  var c = estContagemAchar_(String(req.id || ''), false), quem = {}, n = 0, pessoas = {};
+  ler_('ContagemLeituras').forEach(function (l) {
+    if (l.contagem_id !== c.id) return; n++;
+    var nm = String(l.por || '').replace(/ \((link|desfez|ajuste)\)$/, '');
+    (quem[l.produto_id] = quem[l.produto_id] || {})[nm] = 1; pessoas[nm] = (pessoas[nm] || 0) + 1;
+  });
+  var cat = {}; ler_('Produtos').forEach(function (p) { cat[p.id] = p.nome; });
+  var itens = [];
+  if (c.status === 'fechada' || c.status === 'desfeita') {
+    estContagemMovs_(c).forEach(function (m) { var q = estNum_(m.qtd), sd = estNum_(m.saldo);
+      itens.push({ produto_id: m.produto_id, produto: cat[m.produto_id] || m.produto, antes: Math.round((sd - q) * 1000) / 1000, contado: sd, dif: q, obs: m.obs || '' }); });
+  } else {
+    var t = estContagemTotais_(c.id).totais, sal = {}; estSaldos_().forEach(function (s) { if (s.loja === c.local) sal[s.produto_id] = s.qtd; });
+    Object.keys(t).forEach(function (pid) { var a = sal[pid] || 0, q = Math.max(0, t[pid]); itens.push({ produto_id: pid, produto: cat[pid] || pid, antes: a, contado: q, dif: Math.round((q - a) * 1000) / 1000 }); });
+  }
+  itens.forEach(function (i) { i.quem = Object.keys(quem[i.produto_id] || {}); });
+  var o = limpar_(c); try { o.resumo = JSON.parse(c.resumo || '{}'); } catch (e) { o.resumo = {}; }
+  return { contagem: o, itens: itens, pessoas: pessoas, leituras: n };
+}
+/** Desfaz uma contagem fechada: devolve ao estoque a diferença que ela fez (o que vendeu/entrou depois continua). apagar: some da lista. */
+function estContagemDesfazer_(req, por) { return comTrava_(function () {
+  var c = estContagemAchar_(String(req.id || ''), false);
+  if (c.status !== 'fechada') throw new Error('Só dá para desfazer uma contagem fechada');
+  var depois = ler_('Contagens').filter(function (x) { return x.id !== c.id && x.local === c.local && x.status === 'fechada' && String(x.fechada_em) > String(c.fechada_em); });
+  if (depois.length) throw new Error('Depois dessa, a contagem "' + depois[0].nome + '" já foi fechada no mesmo local. Desfaça primeiro a mais recente.');
+  var lista = estContagemMovs_(c).filter(function (m) { return estNum_(m.qtd) !== 0; }).map(function (m) {
+    return { produto_id: m.produto_id, produto: m.produto, loja: m.loja, delta: -estNum_(m.qtd), obs: 'desfez a contagem' }; });
+  if (lista.length) estMovimentar_(lista, 'contagem_desfeita', c.nome, por, '', 'KD' + c.id);
+  c.status = req.apagar ? 'apagada' : 'desfeita'; c.obs = ('Desfeita por ' + por + ' em ' + agora_() + (c.obs ? ' · ' + c.obs : '')).slice(0, 200);
+  gravar_('Contagens', c);
+  log_(por, 'contagem desfeita', c.nome + ' · ' + lista.length + ' produto(s)' + (req.apagar ? ' · apagada' : ''));
+  return { produtos: lista.length };
+}); }
+/** Tira da lista: aberta → cancela (nada muda no estoque); cancelada/desfeita → só esconde. Fechada precisa desfazer (apagar:true faz junto). */
+function estContagemApagar_(req, por) {
+  var c = estContagemAchar_(String(req.id || ''), false);
+  if (c.status === 'fechada') return estContagemDesfazer_({ id: c.id, apagar: true }, por);
+  return comTrava_(function () {
+    var c2 = estContagemAchar_(c.id, false);
+    if (c2.status === 'aberta') { c2.fechada_em = agora_(); c2.fechada_por = por; }
+    c2.status = 'apagada'; gravar_('Contagens', c2); log_(por, 'contagem apagada', c2.nome);
+    return {};
+  });
+}
+/** Corrige um produto numa contagem aberta: qtd = número certo; qtd null = tira o produto da contagem (como se ninguém tivesse contado). */
+function estContagemAjustar_(req, por) {
+  var pid = String(req.produto_id || ''), cid = String(req.id || '');
+  comTrava_(function () {
+    var c = estContagemAchar_(cid, true);
+    if (req.qtd === null || req.qtd === '' || req.qtd == null) {
+      var sh = aba_('ContagemLeituras'), cab = cabecalho_('ContagemLeituras', sh), todas = ler_('ContagemLeituras');
+      var fica = todas.filter(function (l) { return !(l.contagem_id === c.id && l.produto_id === pid); });
+      if (fica.length === todas.length) return;
+      if (sh.getLastRow() > 1) sh.getRange(2, 1, sh.getLastRow() - 1, cab.length).clearContent();
+      if (fica.length) sh.getRange(2, 1, fica.length, cab.length).setNumberFormat('@').setValues(fica.map(function (x) { return linha_('ContagemLeituras', x, cab); }));
+      log_(por, 'contagem: produto retirado', c.nome + ' · ' + pid);
+      return;
+    }
+    var q = estNum_(req.qtd); if (q < 0 || q > 100000) throw new Error('Quantidade inválida');
+    var t = estContagemTotais_(c.id).totais, d = Math.round((q - (t[pid] || 0)) * 1000) / 1000;
+    if (d === 0 && t[pid] != null) return;
+    estContar_({ contagem_id: c.id, leituras: [{ uid: 'A' + new Date().getTime() + Math.floor(Math.random() * 1e4), produto_id: pid, delta: d, zero: d === 0 }] }, por + ' (ajuste)');
+  });
+  return estContagemTotais_(cid);
 }
 function estContagemAchar_(id, aberta) {
   var c = ler_('Contagens').filter(function (x) { return x.id === id; })[0];
@@ -694,7 +784,7 @@ function estContagemFecharDentro_(req, por) {
     lista.push({ produto_id: pid, produto: cat[pid].nome, loja: c.local, definir: 0, obs: 'não contado' }); zerados++;
   });
   if (!lista.length) throw new Error('Nada contado ainda');
-  estMovimentar_(lista, 'contagem', c.nome, por, '');
+  estMovimentar_(lista, 'contagem', c.nome, por, '', 'K' + c.id);
   c.status = 'fechada'; c.fechada_em = agora_(); c.fechada_por = por;
   c.resumo = JSON.stringify({ produtos: Object.keys(t).length, pecas: Object.keys(t).reduce(function (s, k) { return s + Math.max(0, t[k]); }, 0), sobra: sobra, falta: falta, iguais: iguais, zerados: zerados });
   gravar_('Contagens', c);
