@@ -89,36 +89,53 @@ function nsParecido(nome, site){
 }
 
 /* cruza o catálogo do portal com o site e monta as mudanças */
+function nsIndexNome(site){
+  if(site._porNome2) return site._porNome2;
+  const ix = {};
+  site.linhas.forEach(L=>{
+    const kp = nsN(L.pai.nome); if(!ix[kp]) ix[kp] = {L: L.pai.linhas[0], exato: L.pai.linhas.length===1};
+    if(L.varia){ const kv = nsN(L.pai.nome+' '+L.varia); if(!ix[kv] || !ix[kv].exato) ix[kv] = {L, exato:true}; }
+  });
+  return site._porNome2 = ix;
+}
 function nsCruzar(site){
-  const P = pdvD().produtos, res = [];
+  const P = pdvD().produtos, res = [], ixNome = nsIndexNome(site);
   const contaPai = new Map();
   P.forEach(p=>{
-    let L = null, como = '';
-    for(const k of [p.codigo, p.sku].filter(Boolean)){ if(site.porCod[k]){ L = site.porCod[k]; como = 'código'; break; } }
-    if(!L){ const n = nsN(p.nome).replace(/\b(\d{2,4})$/,'').trim(); L = site.porNome[nsN(p.nome)] || site.porNome[n] || null; if(L) como = 'nome'; }
+    let L = null, como = '', exato = false;
+    for(const k of [p.codigo, p.sku].filter(Boolean)){ if(site.porCod[k]){ L = site.porCod[k]; como = 'código'; exato = true; break; } }
+    if(!L){
+      const n1 = nsN(p.nome), n2 = n1.replace(/\b\d{2,4}$/,'').trim();
+      const h = ixNome[n1] || ixNome[n2];
+      if(h){ L = h.L; como = 'nome'; exato = h.exato && (ixNome[n1] === h); }
+    }
     let pai = L ? L.pai : null, nota = 1;
-    if(!pai){ const z = nsParecido(p.nome, site); if(z){ pai = z.pai; L = z.pai.linhas[0]; como = 'parecido'; nota = z.nota; } }
+    if(!pai){ const z = nsParecido(p.nome, site); if(z){ pai = z.pai; L = null; como = 'parecido'; nota = z.nota; } }
     if(pai) contaPai.set(pai, (contaPai.get(pai)||0)+1);
-    res.push({p, L, pai, como, nota});
+    res.push({p, L, pai, como, nota, exato});
   });
-  res.forEach(r=>{
+  return res.map(r=>{
     const p = r.p, m = {id:p.id, nome:p.nome, como:r.como, nota:r.nota, mud:{}};
     if(r.pai){
       if(r.pai.categoria && r.pai.categoria !== (p.categoria||'')) m.mud.categoria = r.pai.categoria;
       if(nsMaiusculo(p.nome)){
         let novo = r.pai.nome;
-        const variaDoPortal = r.L && r.L.varia && contaPai.get(r.pai) > 1;
-        if(variaDoPortal) novo += ' · ' + nsTitulo(r.L.varia);
-        else if(contaPai.get(r.pai) > 1){ const resto = nsN(p.nome).replace(nsN(r.pai.nome),'').trim(); if(resto) novo += ' · ' + nsTitulo(resto); }
+        if(contaPai.get(r.pai) > 1 || r.pai.linhas.length > 1){
+          if(r.exato && r.L && r.L.varia) novo += ' · ' + nsTitulo(r.L.varia);
+          else {
+            const tirar = new Set(nsN(r.pai.nome).split(' '));
+            const resto = nsN(p.nome).split(' ').filter(w=>w && !tirar.has(w)).join(' ');
+            if(resto) novo += ' · ' + nsTitulo(resto);
+          }
+        }
         if(novo !== p.nome) m.mud.nome = novo;
       }
       if(r.pai.descricao) m.mud.descricao = r.pai.descricao;
-      const precoSite = r.L && r.L.preco > 0 ? r.L.preco : 0;
+      const precoSite = r.exato && r.L && r.L.preco > 0 ? r.L.preco : (r.pai.linhas.length===1 ? r.pai.linhas[0].preco : 0);
       if(p.preco >= 1000 && precoSite > 0 && precoSite < 1000 && Math.abs(precoSite - p.preco) > .004) m.mud.preco = precoSite;
     } else if(nsMaiusculo(p.nome)){ m.semSite = true; m.mud.nomeTitulo = nsTitulo(p.nome); }
-    res.push && (r.m = m);
+    return m;
   });
-  return res.map(r=>r.m);
 }
 
 var NSC = null;   // {arquivo, site, itens, op:{categoria,nome,descricao,preco,titulo,parecidos}, fora:Set, ver}
