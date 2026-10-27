@@ -83,7 +83,7 @@ document.write('<script src="app13.js?v=13"><\/script>');
 /* v14: entrada nova (bater o ponto × entrar no portal) e portal no endereço principal, sem /ponto */
 document.write('<script src="app14.js?v=14"><\/script>');
 /* v15: link de fotos sem PIN (app15.js) — antes do app12, que fica por último */
-document.write('<script src="app15.js?v=15h"><\/script>');
+document.write('<script src="app15.js?v=15i"><\/script>');
 /* v16: Nuvemshop — conectar o site (API), importar produtos, estoque e pedidos (Administração › Nuvemshop) */
 document.write('<script src="app16.js?v=16"><\/script>');
 /* v15d: catálogo do site — categorias, nomes, descrição e preços pelo CSV da Nuvemshop (app17.js) */

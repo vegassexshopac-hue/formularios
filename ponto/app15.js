@@ -447,15 +447,15 @@ function flaPainelPintar(){
 
 /* ═════════ ✏️ EDITADOS NO MUTIRÃO (administração) — cartões por produto, quem fez, linha do tempo, desfazer ═════════ */
 (function(){ const st = document.createElement('style'); st.textContent = `
-.ed-tela{position:fixed;inset:0;z-index:8000;background:var(--fundo,#f6f3f2);overflow:auto;animation:edEntra .35s cubic-bezier(.2,.8,.2,1)}
-@keyframes edEntra{from{opacity:0;transform:translateY(24px)}}
+.ed-tela{position:fixed;inset:0;z-index:8000;background:#f6f3f2;overflow:auto;animation:edEntra .35s cubic-bezier(.2,.8,.2,1)}
+@keyframes edEntra{from{transform:translateY(24px)}}
 .ed-topo{position:sticky;top:0;z-index:2;background:linear-gradient(135deg,#D4121B,#a80d14);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 6px 20px rgba(120,0,0,.25)}
 .ed-topo h2{margin:0;font-size:18px;flex:1}.ed-topo button{border:0;background:rgba(255,255,255,.18);color:#fff;border-radius:12px;padding:8px 12px;font:inherit;font-weight:700;cursor:pointer}
 .ed-wrap{max-width:1180px;margin:0 auto;padding:16px}
 .ed-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
 .ed-kpi{background:#fff;border-radius:16px;padding:14px;box-shadow:0 2px 12px rgba(0,0,0,.05);animation:edPop .5s cubic-bezier(.2,1.4,.4,1) both;animation-delay:calc(var(--i)*70ms)}
 .ed-kpi b{display:block;font-size:30px;line-height:1.1;color:#D4121B}.ed-kpi span{font-size:12.5px;color:#666}
-@keyframes edPop{from{opacity:0;transform:scale(.85) translateY(10px)}}
+@keyframes edPop{from{transform:scale(.85) translateY(10px)}}
 .ed-pessoas{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px}
 .ed-p{flex:0 0 auto;display:flex;align-items:center;gap:8px;background:#fff;border:2px solid transparent;border-radius:99px;padding:5px 14px 5px 5px;cursor:pointer;font:inherit;box-shadow:0 2px 8px rgba(0,0,0,.05);transition:.2s}
 .ed-p:hover{transform:translateY(-2px)}.ed-p.on{border-color:#D4121B;background:#fff5f5}
@@ -467,7 +467,7 @@ function flaPainelPintar(){
 .ed-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px}
 .ed-card{position:relative;background:#fff;border-radius:18px;overflow:hidden;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.06);animation:edCard .45s cubic-bezier(.2,.9,.3,1.1) both;animation-delay:calc(min(var(--i),24)*35ms);transition:transform .2s, box-shadow .2s;text-align:left;border:0;padding:0;font:inherit;color:#222}
 .ed-card:hover{transform:translateY(-4px);box-shadow:0 10px 26px rgba(0,0,0,.12)}
-@keyframes edCard{from{opacity:0;transform:translateY(18px) scale(.96)}}
+@keyframes edCard{from{transform:translateY(18px) scale(.96)}}
 .ed-card .ft{width:100%;aspect-ratio:4/3;object-fit:cover;background:#f2eeee;display:block}
 .ed-card .sem{width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;background:#f6f0ef;color:#bbb;font-size:34px}
 .ed-card .co{padding:10px 12px 12px}
@@ -486,7 +486,7 @@ function flaPainelPintar(){
 .ed-painel .ft{width:100%;max-height:300px;object-fit:contain;background:#f3efee;display:block}
 .ed-linha{position:relative;margin:6px 0 0 14px;padding-left:22px;border-left:3px solid #f0e3e2}
 .ed-ev{position:relative;margin:0 0 16px;animation:edEv .4s both;animation-delay:calc(var(--i)*60ms)}
-@keyframes edEv{from{opacity:0;transform:translateX(16px)}}
+@keyframes edEv{from{transform:translateX(16px)}}
 .ed-ev .dot{position:absolute;left:-36px;top:0}
 .ed-ev .q{font-size:12.5px;color:#666}.ed-ev .q b{color:#222}
 .ed-mud{margin-top:5px;background:#faf7f6;border-radius:12px;padding:8px 10px;font-size:13.5px}
