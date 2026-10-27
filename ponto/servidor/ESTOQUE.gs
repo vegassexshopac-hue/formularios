@@ -387,7 +387,7 @@ function estFotosPublico_(req) {
   if (!ch || String(req.chave || '') !== ch) throw new Error('Esse link de fotos não está mais ativo. Peça o link novo para a administração.');
   var op = String(req.op || 'lista');
   var por = String(req.por || '').trim().slice(0, 40);
-  if (op !== 'lista' && op !== 'editados' && !por) throw new Error('Toque no seu nome antes');
+  if (op !== 'lista' && op !== 'editados' && op !== 'contagem' && !por) throw new Error('Toque no seu nome antes');
   var achar = function () { var p = ler_('Produtos').filter(function (x) { return x.id === String(req.produto_id || ''); })[0]; if (!p) throw new Error('Produto não encontrado'); return p; };
   if (op === 'salvar') {
     var p0 = achar(), fotoAntes = estFotosMapa_()[p0.id] || '';
@@ -429,6 +429,24 @@ function estFotosPublico_(req) {
       return { ok: true, feitos: feitos, pendentes: pendentes };
     });
   }
+  if (op === 'contagem') {   // quanto já foi contado em cada produto (e por quem) na contagem escolhida
+    var cid = String(req.contagem_id || ''), ct = estContagemTotais_(cid), quem = {};
+    ler_('ContagemLeituras').forEach(function (l) { if (l.contagem_id === cid) quem[l.produto_id] = { por: String(l.por || '').replace(/ \(link\)$/, ''), quando: l.quando }; });
+    return { ok: true, contagem: { id: ct.id, nome: ct.nome, local: ct.local, status: ct.status }, totais: ct.totais, quem: quem };
+  }
+  if (op === 'contar') {     // grava a quantidade TOTAL do produto naquele local (vira uma leitura de diferença)
+    var q = Number(req.qtd);
+    if (!(q >= 0) || q > 100000 || Math.round(q) !== q) throw new Error('Quantidade inválida');
+    return comTrava_(function () {
+      var p = achar(), cid2 = String(req.contagem_id || '');
+      var c = estContagemAchar_(cid2, true), antes = estContagemTotais_(cid2).totais[p.id] || 0, delta = q - antes;
+      var jaTem = estContagemTotais_(cid2).totais[p.id] != null;
+      if (delta !== 0 || !jaTem) estContar_({ contagem_id: cid2, leituras: [{ uid: 'L' + new Date().getTime() + Math.floor(Math.random() * 1e4), produto_id: p.id, delta: delta, zero: delta === 0 }] }, por + ' (link)');
+      var locais = estLocaisMapa_();
+      estArrRegistrar_({ por: por, produto_id: p.id, produto: p.nome, tipo: 'contagem', campo: 'estoque', antes: String(antes), depois: String(q) + ' · ' + ((locais[c.local] || {}).nome || c.local) + ' · ' + cid2 });
+      return { ok: true, total: q };
+    });
+  }
   if (op === 'editados') {   // o que já foi mexido no mutirão (para conferir e corrigir) — sem contagem por pessoa
     return { ok: true, historico: ler_('Arrumacao').map(function (a) { return { id: a.id, quando: a.quando, por: a.por, produto_id: a.produto_id, produto: a.produto, tipo: a.tipo, campo: a.campo, antes: a.antes, depois: a.depois, status: a.status }; }).reverse().slice(0, 2000) };
   }
@@ -440,8 +458,9 @@ function estFotosPublico_(req) {
       return { ok: true };
     });
   }
-  var lista = estArrLista_(), com = lista.filter(function (p) { return p.foto; }).length;
-  return { ok: true, total: lista.length, com: com, produtos: lista, todos: 1,
+  var lista = estArrLista_(), com = lista.filter(function (p) { return p.foto; }).length, locais = estLocaisMapa_();
+  var contagens = ler_('Contagens').filter(function (c) { return c.status === 'aberta'; }).map(function (c) { return { id: c.id, nome: c.nome, local: c.local, localNome: (locais[c.local] || {}).nome || c.local }; });
+  return { ok: true, total: lista.length, com: com, produtos: lista, todos: 1, contagens: contagens,
            nomes: colabs_().filter(function (c) { return c.ativa === 'SIM'; }).map(function (c) { return String(c.nome).split(' ')[0]; }) };
 }
 function estArrLista_() {
@@ -488,7 +507,7 @@ function estArrHistorico_() {
   var porPessoa = {};
   L.forEach(function (a) { var n = a.por || '?'; var x = porPessoa[n] = porPessoa[n] || { nome: n, fotos: 0, correcoes: 0, precos: 0, ok: 0, desfeitos: 0 };
     if (a.status === 'desfeito' || a.status === 'recusado') x.desfeitos++;
-    if (a.tipo === 'foto') x.fotos++; else if (a.tipo === 'ok') x.ok++; else if (a.campo === 'preco') x.precos++; else x.correcoes++; });
+    if (a.tipo === 'foto') x.fotos++; else if (a.tipo === 'ok') x.ok++; else if (a.tipo === 'contagem') x.contagens = (x.contagens || 0) + 1; else if (a.campo === 'preco') x.precos++; else x.correcoes++; });
   return { historico: L, pessoas: Object.keys(porPessoa).map(function (k) { return porPessoa[k]; }) };
 }
 function estArrDesfazer_(req) {
@@ -500,6 +519,13 @@ function estArrDesfazer_(req) {
     if (a.tipo === 'foto') {
       var m = {}; m[a.produto_id] = a.antes || '';
       estFotosGravar_(m, a.antes ? 'equipe' : '', 'Administração (desfez)', false);
+    } else if (a.tipo === 'contagem') {
+      var partes = String(a.depois || '').split(' · '), cidD = partes[partes.length - 1] || '', qD = Number(partes[0]) || 0;
+      var cD = estContagemAchar_(cidD, true);   // só desfaz com a contagem ainda aberta
+      var atualD = estContagemTotais_(cidD).totais[a.produto_id] || 0;
+      if (atualD !== qD && !req.forcar) throw new Error('Esse produto já foi contado de novo depois (agora: ' + atualD + '). Confira antes de desfazer.');
+      var dD = (Number(a.antes) || 0) - atualD;
+      if (dD !== 0) estContar_({ contagem_id: cidD, leituras: [{ uid: 'D' + new Date().getTime() + Math.floor(Math.random() * 1e4), produto_id: a.produto_id, delta: dD }] }, 'Administração (desfez)');
     } else if (a.tipo === 'correcao') {
       var p = ler_('Produtos').filter(function (x) { return x.id === a.produto_id; })[0];
       if (!p) throw new Error('Produto não encontrado');
@@ -638,7 +664,7 @@ function estContar_(req, por) {
     var novas = [], agora = agora_();
     lista.forEach(function (l) {
       var uid = String(l.uid || '').replace(/[^\w-]/g, '').slice(0, 50), d = estNum_(l.delta);
-      if (!uid || ja[uid] || !cat[l.produto_id] || !d || Math.abs(d) > 100000) return;
+      if (!uid || ja[uid] || !cat[l.produto_id] || (!d && !l.zero) || Math.abs(d) > 100000) return;   // zero: "contei e não tem nenhum"
       ja[uid] = 1; novas.push({ id: uid, contagem_id: c.id, produto_id: l.produto_id, delta: String(d), por: por, quando: agora });
     });
     if (novas.length) {

@@ -71,6 +71,16 @@
 .fl-avl div span{flex:1}
 .fl-avl button{border:1px solid rgba(0,0,0,.15);background:#fff;border-radius:99px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
 .fl-dica{font-size:12px;color:#777;margin-top:4px}
+.cam-veu{z-index:9600!important}
+.fl-cnt{position:absolute;left:12px;top:12px;z-index:1;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:99px;background:rgba(0,0,0,.6);color:#fff}
+.fl-cnt.ok{background:#2fb36b}
+.fl-locais{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.fl-locais button{border:1.5px solid rgba(0,0,0,.12);background:#fff;border-radius:14px;padding:10px 14px;font:inherit;font-weight:800;font-size:14px;cursor:pointer;color:#222}
+.fl-locais button.on{background:#222;color:#fff;border-color:#222}
+.fl-qtd{display:flex;align-items:center;gap:8px;margin-top:6px}
+.fl-qtd button{width:52px;height:52px;border-radius:14px;border:0;background:#f1eeee;font-size:26px;font-weight:800;cursor:pointer}
+.fl-qtd input{flex:1;height:52px;text-align:center;font-size:26px;font-weight:800;border:1.5px solid rgba(0,0,0,.14);border-radius:14px;min-width:0}
+.fl-contbox{margin-top:14px;padding:12px;border-radius:14px;background:#f4f8ff;border:1.5px solid #cfe0ff}
 .fl-falta{display:flex;flex-direction:column;gap:5px;margin-top:10px}
 .fl-falta button{position:relative;display:flex;justify-content:space-between;gap:8px;border:0;background:#faf5f3;border-radius:10px;padding:7px 10px;font:inherit;font-size:13px;color:#333;cursor:pointer;overflow:hidden;text-align:left}
 .fl-falta button span,.fl-falta button b{position:relative;z-index:1}
@@ -143,6 +153,9 @@ async function flCarregar(){
   try{
     const r = await api('fotos', {chave: FL.chave, op: 'lista'});
     FL.lista = r.produtos || []; FL.total = r.total || FL.lista.length; FL.nomes = r.nomes || []; FL.erro = '';
+    FL.contagens = r.contagens || [];
+    if(!FL.contagens.some(c=>c.id===FL.cid)) FL.cid = FL.contagens.length===1 ? FL.contagens[0].id : (FL.contagens.find(c=>c.id===LS.get('lv_cont_link',''))||{}).id || '';
+    if(FL.cid) await flCarregarContagem(true);
     flRecalcular();
   }catch(e){ FL.erro = e.message; }
   FL.carregando = false; flPintar();
@@ -152,6 +165,21 @@ function flCalcular(L){
   L.forEach(p=>{ const n = flNorm(p.nome); D.dupNome[n] = (D.dupNome[n]||0)+1; if(p.codigo) D.dupCod[p.codigo] = (D.dupCod[p.codigo]||0)+1; });
   L.forEach(p=>{ p._av = flAvisos(p, D); });
   return D;
+}
+async function flCarregarContagem(silencioso){
+  if(!FL.cid){ FL.ct = null; return; }
+  try{ const r = await api('fotos', {chave: FL.chave, op:'contagem', contagem_id: FL.cid}); FL.ct = {totais: r.totais||{}, quem: r.quem||{}}; }
+  catch(e){ FL.ct = null; if(!silencioso) toast(e.message, true); }
+}
+async function flEscolherLocal(id){ FL.cid = FL.cid===id ? '' : id; LS.set('lv_cont_link', FL.cid); FL.ct = null; flPintar(); if(FL.cid){ await flCarregarContagem(); if(FL.filtro==='naocontados' || !FL.filtro) {} } flPintar(); }
+function flContado(p){ return FL.ct && FL.ct.totais[p.id] != null; }
+function flAcharCodigo(cod){ cod = String(cod||'').trim(); if(!cod) return null; const low = cod.toLowerCase();
+  return FL.lista.find(x=>x.codigo===cod) || FL.lista.find(x=>x.sku && x.sku.toLowerCase()===low) || (/^0\d{8,13}$/.test(cod) ? FL.lista.find(x=>x.codigo===cod.replace(/^0+/,'')) : null); }
+function flCamera(){
+  if(flPrecisaNome()) return;
+  if(typeof estCamera!=='function'){ toast('Câmera indisponível neste aparelho — use a busca', true); return; }
+  estCamera(cod=>{ try{ estCameraFechar(); }catch(e){} const p = flAcharCodigo(cod);
+    if(p){ try{ estBip(true); }catch(e){} flAbrir(p.id); } else { try{ estBip(false); }catch(e){} toast('Código '+cod+' não está no catálogo. Avise a administração.', true); } }, 'Achar produto pelo código');
 }
 function flRecalcular(){ const D = flCalcular(FL.lista); FL.dupNome = D.dupNome; FL.dupCod = D.dupCod; }
 function flContas(){
@@ -165,6 +193,8 @@ function flFiltrada(){
   if(FL.filtro==='arrumar') l = l.filter(p=>p._av.length && (!FL.aviso || p._av.includes(FL.aviso)));
   else if(FL.filtro==='sem_foto') l = l.filter(p=>!p.foto);
   else if(FL.filtro==='prontos') l = l.filter(p=>!p._av.length);
+  else if(FL.filtro==='naocontados') l = l.filter(p=>!flContado(p));
+  else if(FL.filtro==='contados') l = l.filter(p=>flContado(p));
   return l.sort((a,b)=>(a.categoria||'~').localeCompare(b.categoria||'~') || a.nome.localeCompare(b.nome));
 }
 
@@ -188,12 +218,13 @@ function flPintar(){
       <div class="fl-nomes">${FL.nomes.map(n=>`<button class="${FL.por===n?'on':''}" onclick="flPor(${esc(JSON.stringify(n))})">${esc(n)}</button>`).join('')}<button onclick="flPorOutro()">Outro…</button></div>
       ${!FL.por?`<p style="margin:10px 0 0;font-size:13px;color:#D4121B;font-weight:700">Toque no seu nome para começar.</p>`:''}`:''}
     </div>
+    ${flContagemHtml()}
     <div class="fl-card">
       <h3>Toque no produto para arrumar</h3>
       <p class="fl-dica" style="margin:0">Com calma e capricho: foto com fundo claro e produto inteiro; confira nome, código, categoria e preço. Na dúvida, deixe para a administração. Preço novo vai para a administração aprovar.</p>
-      <input class="fl-busca" style="margin-top:10px" placeholder="Buscar por nome ou código…" value="${esc(FL.q)}" oninput="FL.q=this.value;FL.lim=150;flPintarLista()">
+      <div style="display:flex;gap:8px;margin-top:10px"><input class="fl-busca" style="flex:1" placeholder="Buscar por nome ou código…" value="${esc(FL.q)}" oninput="FL.q=this.value;FL.lim=150;flPintarLista()"><button class="fl-bt sec" title="Ler o código de barras pela câmera" onclick="flCamera()"><i class="ti ti-barcode"></i></button></div>
       <button class="fl-bt ouro" style="width:100%;margin-top:10px" onclick="flEditados()"><i class="ti ti-edit"></i> Ver os já editados (quem fez e o que mudou)</button>
-      <div class="fl-chips">${[['arrumar','⚠️ Para arrumar',c.arrumar],['sem_foto','📷 Sem foto',c.sem_foto],['prontos','✅ Prontos',c.prontos],['todos','Todos',c.todos]].map(([k,n,v])=>`<button class="${FL.filtro===k?'on':''}" onclick="FL.filtro='${k}';FL.lim=150;flPintar()">${n} (${v})</button>`).join('')}</div>
+      <div class="fl-chips">${[['arrumar','⚠️ Para arrumar',c.arrumar],['sem_foto','📷 Sem foto',c.sem_foto]].concat(FL.ct?[['naocontados','📦 Não contados',FL.lista.filter(p=>!flContado(p)).length],['contados','📦 Contados',FL.lista.filter(flContado).length]]:[]).concat([['prontos','✅ Prontos',c.prontos],['todos','Todos',c.todos]]).map(([k,n,v])=>`<button class="${FL.filtro===k?'on':''}" onclick="FL.filtro='${k}';FL.lim=150;flPintar()">${n} (${v})</button>`).join('')}</div>
       ${FL.filtro==='arrumar'?`<select class="fl-sel" onchange="FL.aviso=this.value;FL.lim=150;flPintarLista()"><option value="">Todos os problemas</option>${Object.keys(FL_AVISOS).filter(k=>c.por[k]).map(k=>`<option value="${k}" ${FL.aviso===k?'selected':''}>${FL_AVISOS[k].t} (${c.por[k]})</option>`).join('')}</select>`:''}
     </div>
     <div id="fl-lista">${flListaHtml()}</div>
@@ -215,6 +246,7 @@ function flItemHtml(p){
   return `<button class="fl-item ${p._av.length?'':'pronto'}" onclick="flAbrir('${p.id}')">
     ${!p._av.length?'<span class="ok">✓</span>':''}
     ${u?`<img class="ft" src="${esc(u)}" loading="lazy" alt="" onerror="this.outerHTML='<span class=&quot;semft&quot;><i class=&quot;ti ti-photo-off&quot;></i>foto não abriu</span>'">`:`<span class="semft"><i class="ti ${env?'ti-loader-2':'ti-camera-plus'}"></i>${env?'Enviando…':'Tirar foto'}</span>`}
+    ${FL.ct?`<span class="fl-cnt ${flContado(p)?'ok':''}">📦 ${flContado(p)?FL.ct.totais[p.id]+' contado(s)':'não contado'}</span>`:''}
     <b>${esc(p.nome)}</b><small>${esc(p.codigo||p.sku||'sem código')} · ${p.preco>0?brl2(p.preco):'sem preço'}</small>
     ${p._av.filter(k=>k!=='sem_foto').length||p.precoPendente?`<span class="fl-av">${p._av.filter(k=>k!=='sem_foto').map(k=>`<span class="${FL_AVISOS[k].am?'am':''}">${FL_AVISOS[k].c}</span>`).join('')}${p.precoPendente?`<span class="am">preço em aprovação</span>`:''}</span>`:''}
   </button>`;
@@ -243,6 +275,7 @@ function flModal(){
     ${u?`<img class="fl-fg" src="${esc(u)}" alt="">`:`<div class="fl-fv" onclick="flFoto()"><i class="ti ${env?'ti-loader-2':'ti-camera-plus'}"></i>${env?'Enviando a foto…':'Tirar foto'}</div>`}
     <button class="fl-bt ouro" style="width:100%;margin-top:8px" onclick="flFoto()" ${env?'disabled':''}><i class="ti ti-camera"></i> ${p.foto?'Trocar a foto':'Tirar foto'}</button>
     ${p._av.length?`<div class="fl-avl">${p._av.map(k=>`<div><span>⚠️ ${FL_AVISOS[k].t}</span>${k!=='sem_foto'?`<button onclick="flOk('${k}')">está certo assim</button>`:''}</div>`).join('')}</div>`:`<div class="fl-avl"><div style="background:rgba(47,179,107,.1);color:#1f7a49"><span>✅ Tudo certo com este produto</span></div></div>`}
+    ${flContagemModal(p)}
     <label class="fl-lb">Nome do produto</label>
     <div class="fl-lin"><input class="fl-inp" id="flp-nome" value="${esc(FLP.nome)}" oninput="FLP.nome=this.value"><button class="fl-bt sec" title="Arrumar maiúsculas" onclick="FLP.nome=flTitulo(FLP.nome);$('#flp-nome').value=FLP.nome">Aa</button></div>
     <label class="fl-lb">Código de barras / código</label>
@@ -353,7 +386,7 @@ async function flAdmin(acao){
 }
 
 /* ───────── Histórico do mutirão (conferência interna) ───────── */
-const FLA_CAMPO = {foto:'📷 Foto', nome:'Nome', codigo:'Código', categoria:'Categoria', preco:'💲 Preço'};
+const FLA_CAMPO = {estoque:'📦 Contagem', foto:'📷 Foto', nome:'Nome', codigo:'Código', categoria:'Categoria', preco:'💲 Preço'};
 const FLA_ST = {feito:'', pendente:'⏳ aguardando aprovação', aprovado:'✅ aprovado', recusado:'✖ recusado', desfeito:'↩ desfeito'};
 async function flaHistorico(rec){
   if(!FLA.hist || rec){ try{ toast('Carregando o histórico…'); const r = await api('admEstoque', {...S.adm.cred, op:'arrHistorico'}); FLA.hist = r.historico || []; FLA.pessoas = r.pessoas || []; }catch(e){ toast(e.message, true); return; } }
@@ -362,7 +395,7 @@ async function flaHistorico(rec){
 function flaHistPintar(){
   const H = (FLA.hist||[]).filter(a=>(!FLA.fPessoa || a.por===FLA.fPessoa) && (!FLA.fTipo || (FLA.fTipo==='foto'?a.tipo==='foto':FLA.fTipo==='ok'?a.tipo==='ok':FLA.fTipo==='preco'?a.campo==='preco':(a.tipo==='correcao'&&a.campo!=='preco'))) && (!FLA.fStatus || a.status===FLA.fStatus));
   const quando = q => String(q).slice(8,10)+'/'+String(q).slice(5,7)+' '+String(q).slice(11,16);
-  const val = (a,v) => a.campo==='foto' ? (v?`<img src="${esc(fotoUrl({foto:v},120))}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;vertical-align:middle;background:#f3f3f3">`:'<span class="apagado">sem foto</span>') : a.campo==='preco' ? brl2(Number(v)||0) : (v?esc(v):'<span class="apagado">vazio</span>');
+  const val = (a,v) => a.tipo==='contagem' ? esc(String(v||'0').split(' · ')[0])+' peça(s)' : a.campo==='foto' ? (v?`<img src="${esc(fotoUrl({foto:v},120))}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;vertical-align:middle;background:#f3f3f3">`:'<span class="apagado">sem foto</span>') : a.campo==='preco' ? brl2(Number(v)||0) : (v?esc(v):'<span class="apagado">vazio</span>');
   const linha = a => `<tr style="${a.status==='desfeito'||a.status==='recusado'?'opacity:.5':''}"><td style="white-space:nowrap" class="suave">${quando(a.quando)}</td><td><b>${esc(a.por)}</b></td>
     <td><div style="font-weight:700">${esc(a.produto)}</div>${a.tipo==='ok'?`<span class="suave">marcou "está certo assim": ${esc(a.campo)}</span>`:`<span class="suave">${FLA_CAMPO[a.campo]||esc(a.campo)}:</span> ${val(a,a.antes)} → <b>${val(a,a.depois)}</b>`}
       ${FLA_ST[a.status]?`<div class="apagado" style="font-size:12px">${FLA_ST[a.status]}${a.revisado_por?' · '+esc(a.revisado_por):''}</div>`:''}</td>
@@ -435,7 +468,7 @@ function flaPainelPintar(){
       <h4 style="margin:16px 0 4px">O que falta, por tipo</h4>
       ${Object.keys(FL_AVISOS).filter(k=>por[k]).map(k=>flaBarra(FL_AVISOS[k].t, por[k], tot, '#D4121B')).join('') || '<p class="suave">Nada faltando 🎉</p>'}
       <h4 style="margin:16px 0 4px">O que já foi feito no mutirão</h4>
-      <div class="ns-res">${[['foto','📷 fotos'],['nome','✏️ nomes'],['codigo','🔢 códigos'],['categoria','🏷️ categorias'],['preco','💲 preços'],['ok','👍 "está certo"']].map(([k,n])=>`<div><b>${feitosPor[k]||0}</b>${n}</div>`).join('')}</div>
+      <div class="ns-res">${[['foto','📷 fotos'],['estoque','📦 contagens'],['nome','✏️ nomes'],['codigo','🔢 códigos'],['categoria','🏷️ categorias'],['preco','💲 preços'],['ok','👍 "está certo"']].map(([k,n])=>`<div><b>${feitosPor[k]||0}</b>${n}</div>`).join('')}</div>
       <h4 style="margin:16px 0 4px">Prontos por categoria</h4>
       ${Object.entries(cats).sort((a,b)=>b[1].t-a[1].t).map(([k,v])=>flaBarra(esc(k), v.ok, v.t, '#2fb36b')).join('')}
       <h4 style="margin:16px 0 6px">Edições por dia (14 dias)</h4>
@@ -499,14 +532,14 @@ function flaPainelPintar(){
 @media (prefers-reduced-motion:reduce){.ed-tela,.ed-kpi,.ed-card,.ed-painel,.ed-ev,.ed-lado,.ed-card .pend{animation:none!important}}
 `; document.head.appendChild(st); })();
 
-const ED_COR = {foto:'#7b5cff', nome:'#0e9f6e', codigo:'#2563eb', categoria:'#d97706', preco:'#D4121B', ok:'#6b7280'};
-const ED_NOME = {foto:'Foto', nome:'Nome', codigo:'Código', categoria:'Categoria', preco:'Preço', ok:'Está certo'};
+const ED_COR = {estoque:'#2563eb', foto:'#7b5cff', nome:'#0e9f6e', codigo:'#2563eb', categoria:'#d97706', preco:'#D4121B', ok:'#6b7280'};
+const ED_NOME = {estoque:'Contagem', foto:'Foto', nome:'Nome', codigo:'Código', categoria:'Categoria', preco:'Preço', ok:'Está certo'};
 const ED_PALETA = ['#D4121B','#7b5cff','#0e9f6e','#d97706','#2563eb','#db2777','#0891b2','#65a30d','#9333ea','#ea580c'];
 function edCorPessoa(n){ let h = 0; for(const c of String(n||'')) h = (h*31 + c.charCodeAt(0)) >>> 0; return ED_PALETA[h % ED_PALETA.length]; }
 function edAv(n){ return `<span class="ed-av" style="background:${edCorPessoa(n)}" title="${esc(n)}">${esc(iniciais(n))}</span>`; }
 function edHa(q){ const t = new Date(String(q).replace(' ','T')+'-05:00').getTime(), m = Math.max(0, Math.round((Date.now()-t)/60000));
   return m<1?'agora':m<60?`há ${m} min`:m<1440?`há ${Math.round(m/60)} h`:`há ${Math.round(m/1440)} d`; }
-function edCampo(a){ return a.tipo==='foto' ? 'foto' : a.tipo==='ok' ? 'ok' : a.campo; }
+function edCampo(a){ return a.tipo==='foto' ? 'foto' : a.tipo==='ok' ? 'ok' : a.tipo==='contagem' ? 'estoque' : a.campo; }
 var EDT = null;
 async function flEditados(){
   EDT = Object.assign(EDT||{pessoa:'', tipo:'', q:'', aberto:null}, {modo:'link'});
@@ -542,7 +575,7 @@ function edPintar(){
       <div class="ed-kpis">${kpi.map(([v,t],i)=>`<div class="ed-kpi" style="--i:${i}"><b data-conta="${v}">0</b><span>${t}</span></div>`).join('')}</div>
       <div class="ed-pessoas"><button class="ed-p ${!EDT.pessoa?'on':''}" onclick="EDT.pessoa='';edPintar()"><span class="ed-av" style="background:#222">★</span><span>Todas${link?'':`<small>${validos.length} edições</small>`}</span></button>
         ${Object.entries(pessoas).sort((a,b)=>b[1].n-a[1].n).map(([n,x])=>`<button class="ed-p ${EDT.pessoa===n?'on':''}" onclick="EDT.pessoa=EDT.pessoa===${esc(JSON.stringify(n))}?'':${esc(JSON.stringify(n))};edPintar()">${edAv(n)}<span>${esc(n)}${link?'':`<small>${x.prods.size} produto(s) · ${x.n} edições</small>`}</span></button>`).join('')}</div>
-      <div class="ed-tipos">${[['','Tudo'],['foto','📷 Fotos'],['nome','Nome'],['codigo','Código'],['categoria','Categoria'],['preco','💲 Preço'],['ok','👍 Está certo']].filter(([k])=>!k||tipos[k]).map(([k,n])=>`<button class="${EDT.tipo===k?'on':''}" onclick="EDT.tipo='${k}';edPintar()">${n}${k?` · ${tipos[k]}`:''}</button>`).join('')}
+      <div class="ed-tipos">${[['','Tudo'],['foto','📷 Fotos'],['estoque','📦 Contagem'],['nome','Nome'],['codigo','Código'],['categoria','Categoria'],['preco','💲 Preço'],['ok','👍 Está certo']].filter(([k])=>!k||tipos[k]).map(([k,n])=>`<button class="${EDT.tipo===k?'on':''}" onclick="EDT.tipo='${k}';edPintar()">${n}${k?` · ${tipos[k]}`:''}</button>`).join('')}
         <input class="inp" style="flex:1;min-width:180px;max-width:320px;border-radius:99px" placeholder="Buscar produto…" value="${esc(EDT.q)}" oninput="EDT.q=this.value;clearTimeout(window._edT);window._edT=setTimeout(edPintar,250)"></div>
       ${!cards.length?`<div class="ed-vazio">Nenhuma edição ${EDT.pessoa?'de '+esc(EDT.pessoa)+' ':''}por aqui ainda.</div>`:`<div class="ed-grade">${cards.slice(0,300).map(([id,ev],i)=>edCardHtml(id, ev, i)).join('')}</div>`}
     </div></div>`;
@@ -564,6 +597,7 @@ function edCardHtml(id, ev, i){
 function edValor(a, v){
   if(edCampo(a)==='foto') return v ? `<img src="${esc(fotoUrl({foto:v},240))}" alt="">` : '<span style="color:#999">sem foto</span>';
   if(a.campo==='preco') return brl2(Number(v)||0);
+  if(a.tipo==='contagem'){ const pt = String(v||'').split(' · '); return esc(pt[0]||'0')+' peça(s)'+(pt.length>2?' <span style="color:#888">('+esc(pt.slice(1,-1).join(' · '))+')</span>':''); }
   return v ? esc(v) : '<i style="color:#999">vazio</i>';
 }
 function edAbrir(id, re){
@@ -579,7 +613,7 @@ function edAbrir(id, re){
       <h4 style="margin:0 0 10px">Linha do tempo</h4>
       <div class="ed-linha">${ev.map((a,i)=>{ const k = edCampo(a), cancel = a.status==='desfeito'||a.status==='recusado';
         return `<div class="ed-ev ${cancel?'cancel':''}" style="--i:${i}"><span class="dot">${edAv(a.por)}</span>
-          <div class="q"><b>${esc(a.por)}</b> ${k==='foto'?(a.antes?'trocou a foto':'tirou a foto'):k==='ok'?`marcou "está certo assim" (${esc((FL_AVISOS[a.campo]||{}).t||a.campo)})`:`mudou <b style="color:${ED_COR[k]}">${ED_NOME[k]||k}</b>`} · ${edHa(a.quando)} <span style="color:#aaa">(${esc(String(a.quando).slice(8,10)+'/'+String(a.quando).slice(5,7)+' '+String(a.quando).slice(11,16))})</span></div>
+          <div class="q"><b>${esc(a.por)}</b> ${k==='foto'?(a.antes?'trocou a foto':'tirou a foto'):k==='ok'?`marcou "está certo assim" (${esc((FL_AVISOS[a.campo]||{}).t||a.campo)})`:`${k==='estoque'?'contou o estoque':`mudou <b style="color:${ED_COR[k]}">${ED_NOME[k]||k}</b>`}`} · ${edHa(a.quando)} <span style="color:#aaa">(${esc(String(a.quando).slice(8,10)+'/'+String(a.quando).slice(5,7)+' '+String(a.quando).slice(11,16))})</span></div>
           ${k!=='ok'?`<div class="ed-mud">${k==='foto'?`<div class="ed-fotos">${edValor(a,a.antes)}<span style="font-size:20px">→</span>${edValor(a,a.depois)}</div>`:`<span class="de">${edValor(a,a.antes)}</span> → <span class="para">${edValor(a,a.depois)}</span>`}</div>`:''}
           ${a.status==='pendente'?`<div style="font-size:12px;font-weight:800;color:#8a5d00;margin-top:5px">⏳ esperando aprovação</div>${EDT.modo==='link'?'':`<button class="ed-bt" onclick="edRevisar('${esc(a.id)}',true)">✅ Aprovar</button> <button class="ed-bt vermelho" onclick="edRevisar('${esc(a.id)}',false)">✖ Recusar</button>`}`:''}
           ${a.status==='aprovado'?'<div style="font-size:12px;color:#1b7a45;font-weight:800;margin-top:4px">✅ aprovado</div>':''}
@@ -600,3 +634,38 @@ async function edRevisar(id, aprovar){
   catch(e){ toast(e.message, true); }
 }
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && document.getElementById('ed-tela')?.innerHTML){ if(EDT?.aberto) edFecharLado(); else edFechar(); } });
+
+/* ───────── contagem de estoque dentro do mutirão ───────── */
+function flContagemHtml(){
+  const C = FL.contagens || [];
+  if(!C.length) return `<div class="fl-card"><h3>📦 Contagem de estoque</h3><p class="fl-dica" style="margin:0">A administração ainda não abriu nenhuma contagem. Quando abrir, aparece aqui para vocês contarem junto com as fotos.</p></div>`;
+  const cont = FL.ct ? FL.lista.filter(flContado).length : 0, tot = FL.lista.length, pct = tot ? Math.round(cont/tot*100) : 0;
+  return `<div class="fl-card"><h3>📦 Contagem de estoque — onde você está contando?</h3>
+    <div class="fl-locais">${C.map(c=>`<button class="${FL.cid===c.id?'on':''}" onclick="flEscolherLocal('${c.id}')">${esc(c.localNome)}</button>`).join('')}</div>
+    ${FL.cid?(FL.ct?`<div class="fl-resumo" style="margin-top:10px"><span><b style="color:#222">${cont}</b> de ${tot} produtos contados aqui (${pct}%)</span></div><div class="fl-barra"><i style="width:${pct}%;background:linear-gradient(90deg,#60a5fa,#2563eb)"></i></div>
+      <p class="fl-dica" style="margin:0">Conte <b>tudo o que tem desse produto neste local</b> e digite o total. Se não tiver nenhum, salve <b>0</b>. O estoque só muda quando a administração fechar a contagem.</p>`:'<p class="fl-dica">Carregando a contagem…</p>'):'<p class="fl-dica" style="margin:8px 0 0">Toque no local onde você está para começar a contar.</p>'}
+  </div>`;
+}
+function flContagemModal(p){
+  if(!FL.cid || !FL.ct) return '';
+  const c = (FL.contagens||[]).find(x=>x.id===FL.cid) || {}, ja = FL.ct.totais[p.id], q = FL.ct.quem[p.id];
+  const v = FLP && FLP.qtd != null ? FLP.qtd : (ja != null ? String(ja) : '');
+  return `<div class="fl-contbox"><div style="font-weight:800;font-size:14px">📦 Quantas peças tem em <span style="color:#2563eb">${esc(c.localNome||'')}</span>?</div>
+    ${ja!=null?`<div class="fl-dica" style="margin:2px 0 0">Já contado: <b>${ja}</b>${q?` por ${esc(q.por)} · ${edHa(q.quando)}`:''}</div>`:''}
+    <div class="fl-qtd"><button onclick="flQtd(-1)">−</button><input id="flp-qtd" inputmode="numeric" value="${esc(v)}" placeholder="?" oninput="FLP.qtd=this.value.replace(/\\D/g,'');this.value=FLP.qtd"><button onclick="flQtd(1)">+</button></div>
+    <button class="fl-bt" style="width:100%;margin-top:8px;background:#2563eb;color:#fff" id="flp-cont" onclick="flSalvarContagem()"><i class="ti ti-check"></i> Salvar contagem</button></div>`;
+}
+function flQtd(d){ if(!FLP) return; const i = $('#flp-qtd'); const n = Math.max(0, (parseInt(i.value)||0) + d); FLP.qtd = String(n); i.value = FLP.qtd; }
+async function flSalvarContagem(){
+  if(flPrecisaNome() || !FLP) return;
+  const i = $('#flp-qtd'), v = String(i ? i.value : '').trim();
+  if(v===''){ toast('Digite quantas peças tem (0 se não tiver nenhuma)', true); return; }
+  const q = parseInt(v); if(!(q>=0)){ toast('Quantidade inválida', true); return; }
+  const b = $('#flp-cont'); if(b){ b.disabled = true; b.innerHTML = '<span class="gira"></span> Salvando…'; }
+  try{
+    await api('fotos', {chave: FL.chave, op:'contar', contagem_id: FL.cid, produto_id: FLP.id, qtd: q, por: FL.por});
+    FL.ct.totais[FLP.id] = q; FL.ct.quem[FLP.id] = {por: FL.por, quando: new Date(Date.now()-5*3600e3).toISOString().replace('T',' ').slice(0,19)};
+    FLP.qtd = null; flPonto(); try{ estBip(true); }catch(e){} toast('Contagem salva ✔ '+q+' peça(s)');
+    flModal(); flPintar();
+  }catch(e){ if(b){ b.disabled = false; b.innerHTML = '<i class="ti ti-check"></i> Salvar contagem'; } toast(erroRede(e)?'Sem internet — tente de novo':e.message, true); }
+}
