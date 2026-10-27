@@ -278,27 +278,28 @@ flModal = function(){
   _flModalV19();
   const mc = document.querySelector('#fl-m .fl-mc'); if(!mc || !FLP) return;
   if(novo){ mc.classList.add('abrindo'); FL._mAberto = FLP.id; }
-  const l = flFiltrada(), i = l.findIndex(x=>x.id===FLP.id);
+  if(!FL._ordem || !FL._ordem.includes(FLP.id)) FL._ordem = flFiltrada().map(x=>x.id);   // ordem guardada: o produto some da missão quando ganha a foto, mas a sequência continua
+  const l = FL._ordem.map(id=>({id})), i = FL._ordem.indexOf(FLP.id);
   const t = mc.querySelector('.fl-mt');
   if(t && i>=0 && l.length>1) t.insertAdjacentHTML('afterend', `<div class="fl-seq"><span>${i+1} de ${l.length} nesta lista</span><span class="b"><i style="width:${Math.round((i+1)/l.length*100)}%"></i></span></div>`);
   const ok = mc.querySelector('#flp-ok');
   if(ok){ const prox = flProximoId();
     ok.insertAdjacentHTML('afterend', `<div class="fl-prox">${prox?`<button class="fl-bt ouro" onclick="flSalvarProximo()"><i class="ti ti-player-track-next"></i> Salvar e próximo</button><button class="fl-bt sec" onclick="flPular()" title="Ir para o próximo sem salvar">Pular <i class="ti ti-arrow-right"></i></button>`:''}</div>`); }
 };
-function flProximoId(){ if(!FLP) return null; const l = flFiltrada(), i = l.findIndex(x=>x.id===FLP.id);
-  if(i<0) return l[0] && l[0].id !== FLP.id ? l[0].id : null; return (l[i+1] || null) && l[i+1].id; }
+function flProximoId(atual){ atual = atual || (FLP && FLP.id); if(!atual) return null;
+  const agora = new Set(flFiltrada().map(x=>x.id)), ordem = FL._ordem && FL._ordem.includes(atual) ? FL._ordem : [...agora], i = ordem.indexOf(atual);
+  return ordem.slice(i+1).find(id=>agora.has(id)) || [...agora].find(id=>id!==atual) || null; }
 function flPular(){ const n = flProximoId(); if(!n) return; flAbrir(n); }
 async function flSalvarProximo(){
   const atual = FLP && FLP.id; if(!atual) return;
-  const antes = flFiltrada().map(x=>x.id), i = antes.indexOf(atual);
-  const seguintes = antes.slice(i+1);
-  await flSalvar();
+  FL._seguindo = true;
+  try{ await flSalvar(); } finally { FL._seguindo = false; }
   if(FLP) return;   // deu erro: continua aberto
-  const l = new Set(flFiltrada().map(x=>x.id)), n = seguintes.find(id=>l.has(id)) || [...l].find(id=>id!==atual);
+  const n = flProximoId(atual);
   if(n) setTimeout(()=>flAbrir(n), 420); else toast('🎉 Acabou esta lista!');
 }
 const _flFecharV19 = flFechar;
-flFechar = function(){ FL && (FL._mAberto = null); return _flFecharV19.apply(this, arguments); };
+flFechar = function(){ if(FL){ FL._mAberto = null; if(!FL._seguindo) FL._ordem = null; } return _flFecharV19.apply(this, arguments); };
 
 /* ───────── comemoração quando um produto fica pronto ───────── */
 function flConfete(){
