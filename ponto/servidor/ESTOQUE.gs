@@ -304,6 +304,8 @@ function estOp_(req, por, admin) {
                                       extras: (r.extras || []).slice(0, 30).map(function (x) { return { desc: String(x.desc || '').slice(0, 120), qtd: estNum_(x.qtd) }; }), resumo: String(r.resumo || '').slice(0, 300) } };
   }
   if (op === 'fotosLink') { if (!admin) throw new Error('Só a administração'); return estFotosLink_(req); }
+  if (op === 'arrPendentes') { if (!admin) throw new Error('Só a administração'); return { pendentes: estArrPendentes_(), ranking: estArrRanking_() }; }
+  if (op === 'arrRevisar') { if (!admin) throw new Error('Só a administração'); return estArrRevisar_(req); }
   if (op === 'confirmar') return { entrada: estConfirmar_(req, por) };
   if (op === 'contar') return { contagem: estContar_(req, por) };
   if (op === 'contagem') return { contagem: estContagemTotais_(String(req.id || '')) };
@@ -356,22 +358,113 @@ function estFotosLink_(req) {
   }
   return { chave: ch };
 }
+/* ───────── MUTIRÃO DE ARRUMAÇÃO (v15c) — o mesmo link sem PIN ─────────
+   lista: todos os produtos ativos (foto, código, categoria, preço) + ranking de quem mais arrumou.
+   salvar: foto · corrigir: nome / código / categoria entram na hora; PREÇO vira pedido para a administração aprovar.
+   ok: "está certo assim" (some o aviso daquele produto). Tudo fica na aba Arrumacao (quem, o quê, antes → depois). */
+ABAS.Arrumacao = ['id', 'quando', 'por', 'produto_id', 'produto', 'tipo', 'campo', 'antes', 'depois', 'status', 'revisado_por', 'revisado_em'];
+function estArrRegistrar_(o) {
+  o.id = o.id || ('A' + new Date().getTime() + Math.floor(Math.random() * 1e4)); o.quando = agora_(); o.status = o.status || 'feito';
+  gravar_('Arrumacao', o); return o;
+}
+function estArrRanking_() {
+  var r = {};
+  ler_('Arrumacao').forEach(function (a) {
+    if (a.status === 'recusado' || a.tipo === 'ok') return;
+    var n = String(a.por || '').trim(); if (!n) return;
+    r[n] = r[n] || { nome: n, fotos: 0, correcoes: 0, pontos: 0 };
+    if (a.tipo === 'foto') r[n].fotos++; else r[n].correcoes++;
+    r[n].pontos++;
+  });
+  return Object.keys(r).map(function (k) { return r[k]; }).sort(function (x, y) { return y.pontos - x.pontos; });
+}
 function estFotosPublico_(req) {
   var ch = estFotosChave_();
   if (!ch || String(req.chave || '') !== ch) throw new Error('Esse link de fotos não está mais ativo. Peça o link novo para a administração.');
   var op = String(req.op || 'lista');
+  var por = String(req.por || '').trim().slice(0, 40);
+  if (op !== 'lista' && !por) throw new Error('Toque no seu nome antes');
+  var achar = function () { var p = ler_('Produtos').filter(function (x) { return x.id === String(req.produto_id || ''); })[0]; if (!p) throw new Error('Produto não encontrado'); return p; };
   if (op === 'salvar') {
-    var por = String(req.por || '').trim().slice(0, 40) || 'Link de fotos';
+    var p0 = achar();
     var url = estFotoSalvar_(req, por + ' (link)');
-    return { ok: true, foto: url };
+    comTrava_(function () { estArrRegistrar_({ por: por, produto_id: p0.id, produto: p0.nome, tipo: 'foto', campo: 'foto', antes: '', depois: url }); });
+    return { ok: true, foto: url, ranking: estArrRanking_() };
   }
-  var fotos = estFotosMapa_();
+  if (op === 'corrigir') {
+    return comTrava_(function () {
+      var p = achar(), c = req.campos || {}, feitos = [], pendentes = [];
+      var trocar = function (campo, valor, max) {
+        var v = String(valor == null ? '' : valor).replace(/\s+/g, ' ').trim().slice(0, max);
+        if (v === String(p[campo] || '')) return;
+        estArrRegistrar_({ por: por, produto_id: p.id, produto: p.nome, tipo: 'correcao', campo: campo, antes: String(p[campo] || ''), depois: v });
+        p[campo] = v; feitos.push(campo);
+      };
+      if ('nome' in c) { if (String(c.nome || '').trim().length < 3) throw new Error('Nome muito curto'); trocar('nome', c.nome, 120); }
+      if ('categoria' in c) trocar('categoria', c.categoria, 60);
+      if ('codigo' in c) {
+        var cod = String(c.codigo || '').replace(/\s/g, '').slice(0, 40);
+        if (cod && cod !== String(p.codigo || '')) {
+          var dono = ler_('Produtos').filter(function (x) { return x.id !== p.id && (x.codigo === cod || x.sku === cod); })[0];
+          if (dono) throw new Error('O código ' + cod + ' já é do produto "' + dono.nome + '"');
+        }
+        trocar('codigo', cod, 40);
+      }
+      if (feitos.length) { p.atualizado_em = agora_(); gravar_('Produtos', p); }
+      if ('preco' in c && String(c.preco).trim() !== '') {
+        var novo = valor_(c.preco), atual = Number(p.preco) || 0;
+        if (Math.abs(novo - atual) > 0.004) {
+          var ja = ler_('Arrumacao').filter(function (a) { return a.produto_id === p.id && a.campo === 'preco' && a.status === 'pendente'; })[0];
+          if (ja) { ja.depois = String(novo); ja.por = por; ja.quando = agora_(); gravar_('Arrumacao', ja); }
+          else estArrRegistrar_({ por: por, produto_id: p.id, produto: p.nome, tipo: 'correcao', campo: 'preco', antes: String(atual), depois: String(novo), status: 'pendente' });
+          pendentes.push('preco');
+        }
+      }
+      if (!feitos.length && !pendentes.length) throw new Error('Nada mudou');
+      log_(por + ' (link)', 'arrumou produto', p.nome + ' · ' + feitos.concat(pendentes).join(', '));
+      return { ok: true, feitos: feitos, pendentes: pendentes, ranking: estArrRanking_() };
+    });
+  }
+  if (op === 'ok') {
+    return comTrava_(function () {
+      var p = achar(), av = String(req.aviso || '').replace(/[^\w-]/g, '').slice(0, 30);
+      if (!av) throw new Error('Qual aviso?');
+      estArrRegistrar_({ por: por, produto_id: p.id, produto: p.nome, tipo: 'ok', campo: av, antes: '', depois: 'está certo' });
+      return { ok: true };
+    });
+  }
+  // lista
+  var fotos = estFotosMapa_(), okAvisos = {}, pend = {};
+  ler_('Arrumacao').forEach(function (a) {
+    if (a.tipo === 'ok') (okAvisos[a.produto_id] = okAvisos[a.produto_id] || []).push(a.campo);
+    if (a.campo === 'preco' && a.status === 'pendente') pend[a.produto_id] = Number(a.depois) || 0;
+  });
   var lista = ler_('Produtos').filter(function (p) { return p.ativo !== 'NÃO'; }).map(function (p) {
-    return { id: p.id, nome: p.nome, codigo: p.codigo || p.sku || '', categoria: p.categoria || '', foto: fotos[p.id] || '' };
+    return { id: p.id, nome: p.nome, codigo: p.codigo || '', sku: p.sku || '', categoria: p.categoria || '', preco: Number(p.preco) || 0,
+             foto: fotos[p.id] || '', ok: okAvisos[p.id] || [], precoPendente: pend[p.id] || 0 };
   });
   var com = lista.filter(function (p) { return p.foto; }).length;
-  return { ok: true, total: lista.length, com: com, produtos: lista.filter(function (p) { return !p.foto; }),
+  return { ok: true, total: lista.length, com: com, produtos: lista, todos: 1, ranking: estArrRanking_(),
            nomes: colabs_().filter(function (c) { return c.ativa === 'SIM'; }).map(function (c) { return String(c.nome).split(' ')[0]; }) };
+}
+/* administração: preços sugeridos pelo link (aprovar / recusar) */
+function estArrPendentes_() {
+  return ler_('Arrumacao').filter(function (a) { return a.campo === 'preco' && a.status === 'pendente'; }).map(limpar_);
+}
+function estArrRevisar_(req) {
+  return comTrava_(function () {
+    var a = ler_('Arrumacao').filter(function (x) { return x.id === req.id; })[0];
+    if (!a || a.status !== 'pendente') throw new Error('Esse pedido já foi resolvido');
+    if (req.aprovar) {
+      var p = ler_('Produtos').filter(function (x) { return x.id === a.produto_id; })[0];
+      if (!p) throw new Error('Produto não encontrado');
+      p.preco = String(valor_(req.preco != null && req.preco !== '' ? req.preco : a.depois)); p.atualizado_em = agora_(); gravar_('Produtos', p);
+      a.depois = p.preco; a.status = 'aprovado';
+    } else a.status = 'recusado';
+    a.revisado_por = 'Administração'; a.revisado_em = agora_(); gravar_('Arrumacao', a);
+    log_('Administração', 'preço do link ' + a.status, a.produto + ' · ' + a.antes + ' → ' + a.depois);
+    return { pendentes: estArrPendentes_() };
+  });
 }
 
 var _estRodar = rodar_;
@@ -390,7 +483,7 @@ rodar_ = function (req) {
 };
 ADMIN.admEstoque = function (req) {
   var r = estOp_(req, 'Administração', true);
-  if (req.op === 'ler' || req.op === 'conferir' || req.op === 'contar' || req.op === 'contagem' || req.op === 'foto' || req.op === 'fotosLink') { r.ok = true; return r; }
+  if (req.op === 'ler' || req.op === 'conferir' || req.op === 'contar' || req.op === 'contagem' || req.op === 'foto' || req.op === 'fotosLink' || req.op === 'arrPendentes' || req.op === 'arrRevisar') { r.ok = true; return r; }
   if (req.op === 'produtoNovo') { var d0 = ADMIN.admDados(req); d0.produtoFeito = r.produto; return d0; }
   var d = ADMIN.admDados(req);
   if (r.fotos) d.fotosFeitas = r.fotos;
