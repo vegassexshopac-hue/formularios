@@ -304,6 +304,7 @@ function estOp_(req, por, admin) {
                                       extras: (r.extras || []).slice(0, 30).map(function (x) { return { desc: String(x.desc || '').slice(0, 120), qtd: estNum_(x.qtd) }; }), resumo: String(r.resumo || '').slice(0, 300) } };
   }
   if (op === 'fotosLink') { if (!admin) throw new Error('Só a administração'); return estFotosLink_(req); }
+  if (op === 'catalogoLote') { if (!admin) throw new Error('Só a administração'); return estCatalogoLote_(req); }
   if (op === 'arrPendentes') { if (!admin) throw new Error('Só a administração'); return { pendentes: estArrPendentes_(), ranking: estArrRanking_() }; }
   if (op === 'arrRevisar') { if (!admin) throw new Error('Só a administração'); return estArrRevisar_(req); }
   if (op === 'confirmar') return { entrada: estConfirmar_(req, por) };
@@ -447,6 +448,33 @@ function estFotosPublico_(req) {
   return { ok: true, total: lista.length, com: com, produtos: lista, todos: 1, ranking: estArrRanking_(),
            nomes: colabs_().filter(function (c) { return c.ativa === 'SIM'; }).map(function (c) { return String(c.nome).split(' ')[0]; }) };
 }
+/* ───────── CATÁLOGO EM LOTE (v15d) — categorias, nomes, descrição e preços vindos do CSV da Nuvemshop ─────────
+   O navegador da administração lê o CSV, cruza com os produtos, mostra a prévia; aqui só grava o que foi aprovado.
+   lista: [{id, nome?, categoria?, descricao?, preco?}] — até 400 por chamada. */
+if (ABAS.Produtos.indexOf('descricao') < 0) ABAS.Produtos.push('descricao');
+function estCatalogoLote_(req) {
+  var lista = Array.isArray(req.lista) ? req.lista.slice(0, 400) : [];
+  if (!lista.length) throw new Error('Nada para gravar');
+  return comTrava_(function () {
+    var sh = aba_('Produtos'), cab = cabecalho_('Produtos', sh);
+    if (cab.indexOf('descricao') < 0 && typeof _cabs !== 'undefined') { _cabs.Produtos = null; cab = cabecalho_('Produtos', sh); }
+    var atuais = ler_('Produtos'), porId = {}, n = 0, agora = agora_();
+    atuais.forEach(function (p) { porId[p.id] = p; });
+    lista.forEach(function (i) {
+      var p = porId[i.id]; if (!p) return; var mudou = false;
+      if (i.nome != null && String(i.nome).trim().length >= 3) { p.nome = String(i.nome).replace(/\s+/g, ' ').trim().slice(0, 120); mudou = true; }
+      if (i.categoria != null) { p.categoria = String(i.categoria).trim().slice(0, 60); mudou = true; }
+      if (i.descricao != null) { p.descricao = String(i.descricao).replace(/\r/g, '').trim().slice(0, 3000); mudou = true; }
+      if (i.preco != null && i.preco !== '') { var v = valor_(i.preco); if (v > 0) { p.preco = String(v); mudou = true; } }
+      if (mudou) { p.atualizado_em = agora; n++; }
+    });
+    var linhas = atuais.map(function (p) { return linha_('Produtos', p, cab); });
+    if (sh.getLastRow() > 1) sh.getRange(2, 1, sh.getLastRow() - 1, cab.length).clearContent();
+    if (linhas.length) sh.getRange(2, 1, linhas.length, cab.length).setNumberFormat('@').setValues(linhas);
+    log_('Administração', 'catálogo em lote', n + ' produto(s) · ' + String(req.origem || 'CSV').slice(0, 40));
+    return { alterados: n };
+  });
+}
 /* administração: preços sugeridos pelo link (aprovar / recusar) */
 function estArrPendentes_() {
   return ler_('Arrumacao').filter(function (a) { return a.campo === 'preco' && a.status === 'pendente'; }).map(limpar_);
@@ -483,7 +511,7 @@ rodar_ = function (req) {
 };
 ADMIN.admEstoque = function (req) {
   var r = estOp_(req, 'Administração', true);
-  if (req.op === 'ler' || req.op === 'conferir' || req.op === 'contar' || req.op === 'contagem' || req.op === 'foto' || req.op === 'fotosLink' || req.op === 'arrPendentes' || req.op === 'arrRevisar') { r.ok = true; return r; }
+  if (req.op === 'ler' || req.op === 'conferir' || req.op === 'contar' || req.op === 'contagem' || req.op === 'foto' || req.op === 'fotosLink' || req.op === 'arrPendentes' || req.op === 'arrRevisar' || req.op === 'catalogoLote') { r.ok = true; return r; }
   if (req.op === 'produtoNovo') { var d0 = ADMIN.admDados(req); d0.produtoFeito = r.produto; return d0; }
   var d = ADMIN.admDados(req);
   if (r.fotos) d.fotosFeitas = r.fotos;

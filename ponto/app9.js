@@ -86,5 +86,7 @@ document.write('<script src="app14.js?v=14"><\/script>');
 document.write('<script src="app15.js?v=15c"><\/script>');
 /* v16: Nuvemshop — conectar o site (API), importar produtos, estoque e pedidos (Administração › Nuvemshop) */
 document.write('<script src="app16.js?v=16"><\/script>');
+/* v15d: catálogo do site — categorias, nomes, descrição e preços pelo CSV da Nuvemshop (app17.js) */
+document.write('<script src="app17.js?v=17"><\/script>');
 /* v12: layout novo — tema claro, menu lateral agrupado e movimento (app12.js carrega o tema.css) */
 document.write('<script src="app12.js?v=12"><\/script>');

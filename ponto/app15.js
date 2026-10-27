@@ -101,7 +101,7 @@ function flAvisos(p){
   if(cod && (FL.dupCod[cod]||0)>1) a.push('codigo_repetido');
   return a.filter(k=>!(p.ok||[]).includes(k));
 }
-function flTitulo(s){ return String(s||'').toLowerCase().replace(/(^|[\s\-\/(])([a-zà-ú])/g,(m,a,b)=>a+b.toUpperCase()).replace(/\b(De|Da|Do|Das|Dos|E|Com|Para|Em)\b/g, w=>w.toLowerCase()).replace(/\b(\d+)(Ml|G|Gr|Cm|Un)\b/g,(m,n,u)=>n+u.toLowerCase()); }
+function flTitulo(s){ return String(s||'').toLowerCase().replace(/(^|[\s\-\/(])([a-zà-ú])/g,(m,a,b)=>a+b.toUpperCase()).replace(/\b(De|Da|Do|Das|Dos|E|Com|Para|Em|No|Na|Nos|Nas|Ao)\b/g, w=>w.toLowerCase()).replace(/\b(\d+)(Ml|G|Gr|Cm|Un)\b/g,(m,n,u)=>n+u.toLowerCase()); }
 
 var FL = null;
 function flChaveDaUrl(){ const m = location.hash.match(/^#fotos=([a-z0-9]{6,20})$/i); return m ? m[1] : ''; }
