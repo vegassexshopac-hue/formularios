@@ -357,14 +357,22 @@ function estOp_(req, por, admin) {
    …/#fotos=CHAVE vê só a lista de produtos SEM foto (nome, código, categoria — sem preço nem estoque),
    diz quem é e vai tirando as fotos pelo celular. Desligar o link = apagar a chave. */
 function estFotosChave_() { return String(cfg_('fotos_chave') || '').trim(); }
+/* Config › fotos_contagem: '0' = a contagem de estoque NÃO aparece no link (só fotos, nome, código, categoria e preço).
+   Padrão ligada ('1'). A administração liga/desliga no modal "Link sem PIN" (v21). */
+function estFotosContagemOn_() { return String(cfg_('fotos_contagem') == null ? '1' : cfg_('fotos_contagem')).trim() !== '0'; }
 function estFotosLink_(req) {
-  if (req.desligar) { setCfg_('fotos_chave', ''); log_('Administração', 'link de fotos', 'desligado'); return { chave: '' }; }
+  if (req.contagem === 'ligar' || req.contagem === 'desligar') {
+    setCfg_('fotos_contagem', req.contagem === 'ligar' ? '1' : '0');
+    log_('Administração', 'contagem pelo link', req.contagem === 'ligar' ? 'ligada' : 'desligada');
+    return { chave: estFotosChave_(), contagem: estFotosContagemOn_() };
+  }
+  if (req.desligar) { setCfg_('fotos_chave', ''); log_('Administração', 'link de fotos', 'desligado'); return { chave: '', contagem: estFotosContagemOn_() }; }
   var ch = estFotosChave_();
   if (!ch || req.novo) {
     var al = 'abcdefghjkmnpqrstuvwxyz23456789', n = ''; for (var i = 0; i < 10; i++) n += al.charAt(Math.floor(Math.random() * al.length));
     ch = n; setCfg_('fotos_chave', ch); log_('Administração', 'link de fotos', req.novo ? 'chave nova' : 'ligado');
   }
-  return { chave: ch };
+  return { chave: ch, contagem: estFotosContagemOn_() };
 }
 /* ───────── MUTIRÃO DE ARRUMAÇÃO (v15c) — o mesmo link sem PIN ─────────
    lista: todos os produtos ativos (foto, código, categoria, preço) (sem ranking: o histórico de quem fez o quê fica só na administração).
@@ -433,6 +441,7 @@ function estFotosPublico_(req) {
       return { ok: true, feitos: feitos, pendentes: pendentes };
     });
   }
+  if ((op === 'contagem' || op === 'contar') && !estFotosContagemOn_()) throw new Error('A contagem de estoque pelo link está desligada por enquanto. Primeiro vamos arrumar fotos, nomes e categorias.');
   if (op === 'contagem') {   // quanto já foi contado em cada produto (e por quem) na contagem escolhida
     var cid = String(req.contagem_id || ''), ct = estContagemTotais_(cid), quem = {};
     ler_('ContagemLeituras').forEach(function (l) { if (l.contagem_id === cid) quem[l.produto_id] = { por: String(l.por || '').replace(/ \(link\)$/, ''), quando: l.quando }; });
@@ -463,8 +472,9 @@ function estFotosPublico_(req) {
     });
   }
   var lista = estArrLista_(), com = lista.filter(function (p) { return p.foto; }).length, locais = estLocaisMapa_();
-  var contagens = ler_('Contagens').filter(function (c) { return c.status === 'aberta'; }).map(function (c) { return { id: c.id, nome: c.nome, local: c.local, localNome: (locais[c.local] || {}).nome || c.local }; });
-  return { ok: true, total: lista.length, com: com, produtos: lista, todos: 1, contagens: contagens,
+  var contOn = estFotosContagemOn_();
+  var contagens = !contOn ? [] : ler_('Contagens').filter(function (c) { return c.status === 'aberta'; }).map(function (c) { return { id: c.id, nome: c.nome, local: c.local, localNome: (locais[c.local] || {}).nome || c.local }; });
+  return { ok: true, total: lista.length, com: com, produtos: lista, todos: 1, contagens: contagens, contagem_on: contOn,
            nomes: colabs_().filter(function (c) { return c.ativa === 'SIM'; }).map(function (c) { return String(c.nome).split(' ')[0]; }) };
 }
 function estArrLista_() {

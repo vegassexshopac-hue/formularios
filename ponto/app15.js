@@ -77,6 +77,17 @@
 .fl-locais{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .fl-locais button{border:1.5px solid rgba(0,0,0,.12);background:#fff;border-radius:14px;padding:10px 14px;font:inherit;font-weight:800;font-size:14px;cursor:pointer;color:#222}
 .fl-locais button.on{background:#222;color:#fff;border-color:#222}
+/* interruptor ligar/desligar (modal "Link sem PIN") — animado para ficar claro que é clicável */
+.fl-sw-row{display:flex;gap:12px;align-items:center;border:1.5px solid rgba(0,0,0,.1);border-radius:16px;padding:12px 14px;cursor:pointer;user-select:none;background:#fff;transition:transform .15s, box-shadow .15s, border-color .15s;margin-top:12px}
+.fl-sw-row:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(0,0,0,.08)}.fl-sw-row:active{transform:scale(.98)}
+.fl-sw-row.on{border-color:rgba(37,99,235,.5);background:#f3f7ff}
+.fl-sw-row small{display:block;color:#777;font-size:12px;margin-top:2px;line-height:1.3}
+.fl-sw-row .st{margin-left:auto;font-size:12px;font-weight:900;color:#999;white-space:nowrap}.fl-sw-row.on .st{color:#2563eb}
+.fl-sw{flex:none;width:48px;height:28px;border-radius:99px;background:#d6d6d6;position:relative;transition:background .25s;box-shadow:inset 0 1px 3px rgba(0,0,0,.15)}
+.fl-sw i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.fl-sw.on{background:#2563eb}.fl-sw.on i{transform:translateX(20px)}
+@keyframes flSwPulsa{0%{box-shadow:0 0 0 0 rgba(37,99,235,.45)}100%{box-shadow:0 0 0 12px rgba(37,99,235,0)}}
+.fl-sw.on{animation:flSwPulsa .6s ease-out}
 .fl-qtd{display:flex;align-items:center;gap:8px;margin-top:6px}
 .fl-qtd button{width:52px;height:52px;border-radius:14px;border:0;background:#f1eeee;font-size:26px;font-weight:800;cursor:pointer}
 .fl-qtd input{flex:1;height:52px;text-align:center;font-size:26px;font-weight:800;border:1.5px solid rgba(0,0,0,.14);border-radius:14px;min-width:0}
@@ -153,7 +164,8 @@ async function flCarregar(){
   try{
     const r = await api('fotos', {chave: FL.chave, op: 'lista'});
     FL.lista = r.produtos || []; FL.total = r.total || FL.lista.length; FL.nomes = r.nomes || []; FL.erro = '';
-    FL.contagens = r.contagens || [];
+    FL.contagens = r.contagens || []; FL.contagemOn = r.contagem_on !== false;
+    if(!FL.contagemOn){ FL.cid = ''; FL.ct = null; if(FL.filtro==='naocontados'||FL.filtro==='contados') FL.filtro = 'arrumar'; }
     if(!FL.contagens.some(c=>c.id===FL.cid)) FL.cid = FL.contagens.length===1 ? FL.contagens[0].id : (FL.contagens.find(c=>c.id===LS.get('lv_cont_link',''))||{}).id || '';
     if(FL.cid) await flCarregarContagem(true);
     flRecalcular();
@@ -367,9 +379,12 @@ async function flaRevisar(id, aprovar){
 }
 function flCopiar(){ const i = $('#modal .inp'); if(!i) return; i.select(); navigator.clipboard.writeText(i.value).then(()=>toast('Link copiado ✔ — mande no grupo'), ()=>toast('Selecione e copie o link', true)); }
 async function flAdmin(acao){
-  let chave;
-  try{ toast('Um instante…'); const r = await api('admEstoque', {...S.adm.cred, op:'fotosLink', novo: acao==='novo', desligar: acao==='desligar'}); chave = r.chave; }
+  let chave, cont;
+  try{ toast('Um instante…'); const r = await api('admEstoque', {...S.adm.cred, op:'fotosLink', novo: acao==='novo', desligar: acao==='desligar', contagem: acao==='contagem_ligar'?'ligar':acao==='contagem_desligar'?'desligar':''}); chave = r.chave; cont = r.contagem !== false;
+    if(acao==='contagem_ligar') toast('Contagem ligada ✔ — quem abrir o link já vê o cartão de contagem'); if(acao==='contagem_desligar') toast('Contagem desligada — o link mostra só fotos, nome, código, categoria e preço'); }
   catch(e){ toast(e.message, true); return; }
+  const swHtml = `<div class="fl-sw-row ${cont?'on':''}" role="switch" aria-checked="${cont?'true':'false'}" onclick="flAdmin('${cont?'contagem_desligar':'contagem_ligar'}')"><span class="fl-sw ${cont?'on':''}"><i></i></span>
+      <div><b>📦 Contagem de estoque no link</b><small>${cont?'Ligada: aparece o cartão “onde você está contando?” e a missão “Contar estoque”.':'Desligada: o link mostra só fotos, nome, código, categoria e preço. Ligue quando for a hora do balanço.'}</small></div><span class="st">${cont?'LIGADA':'DESLIGADA'}</span></div>`;
   const link = chave ? location.origin + location.pathname + '#fotos=' + chave : '';
   const msg = `📸 *Mutirão dos produtos — Las Vegas* ✨\n\nMeninas, vamos deixar o catálogo impecável, com calma e capricho 💛\n\n1️⃣ Toquem no link e escolham o nome de vocês\n2️⃣ Abram *⚠️ Para arrumar*\n3️⃣ Toquem no produto: tirem a foto (fundo claro, produto inteiro) e confiram nome, código, categoria e preço\n\n✨ Sem pressa: o importante é ficar *certinho*. Na dúvida, deixa que a administração confere.\n\n${link}`;
   $('#modal').innerHTML = `<div class="veu" onclick="if(event.target===this)fecharModal()"><div class="modal" style="max-width:520px">
@@ -380,7 +395,9 @@ async function flAdmin(acao){
       <div class="g2"><button class="btn ouro" onclick="flCopiar()"><i class="ti ti-copy"></i> Copiar link</button>
         <a class="btn" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener"><i class="ti ti-brand-whatsapp"></i> Mandar no WhatsApp</a></div>
       <div class="g2" style="margin-top:8px"><button class="btn p" onclick="flAdmin('novo')"><i class="ti ti-refresh"></i> Gerar link novo</button><button class="btn p" onclick="flAdmin('desligar')"><i class="ti ti-link-off"></i> Desligar o link</button></div>
-      <p class="apagado" style="font-size:12px;margin:10px 0 0">Gerar link novo ou desligar faz o link antigo parar de funcionar na hora.</p>`
+      <p class="apagado" style="font-size:12px;margin:10px 0 0">Gerar link novo ou desligar faz o link antigo parar de funcionar na hora.</p>
+      ${swHtml}
+      <p class="apagado" style="font-size:12px;margin:8px 0 0">Vale na hora para quem já está com o link aberto (ao atualizar a lista). O link continua o mesmo.</p>`
       :`<p class="suave" style="margin:0 0 12px">O link está <b>desligado</b>. Ninguém consegue mexer nos produtos por ele.</p><button class="btn ouro largo" onclick="flAdmin('novo')"><i class="ti ti-link"></i> Ligar e gerar o link</button>`}
     </div></div></div>`;
 }
@@ -637,6 +654,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape' && document.getEle
 
 /* ───────── contagem de estoque dentro do mutirão ───────── */
 function flContagemHtml(){
+  if(FL.contagemOn===false) return '';   // a administração desligou a contagem no link (Config › fotos_contagem)
   const C = FL.contagens || [];
   if(!C.length) return `<div class="fl-card"><h3>📦 Contagem de estoque</h3><p class="fl-dica" style="margin:0">A administração ainda não abriu nenhuma contagem. Quando abrir, aparece aqui para vocês contarem junto com as fotos.</p></div>`;
   const cont = FL.ct ? FL.lista.filter(flContado).length : 0, tot = FL.lista.length, pct = tot ? Math.round(cont/tot*100) : 0;

@@ -237,7 +237,7 @@ flPintar = function flPintar(){
           <span class="ic">${m.ic}</span><b>${m.t}</b><span class="n" data-n="${m.n}">${m.n?m.n:'✓'}</span><small>${m.n?m.d:'Tudo feito! 🎉'}</small><span class="mb"><i></i></span></button>`).join('')}
         ${FL.ct?`<button class="fl-missao ${FL.filtro==='naocontados'?'on':''} ${naoCont?'':'feita'}" style="--c:#2563eb;--c-f:#e8f0ff;--p:${c.todos?Math.max(3,Math.round((c.todos-naoCont)/c.todos*100)):100}%" onclick="flMissao('contar')"><span class="ic">📦</span><b>Contar estoque</b><span class="n" data-n="${naoCont}">${naoCont||'✓'}</span><small>${naoCont?'Conte o total e salve':'Tudo contado! 🎉'}</small><span class="mb"><i></i></span></button>`:''}
       </div>
-      ${(FL.contagens||[]).length ? flContagemHtml() : `<div class="fl-cont-mini">📦 Contagem de estoque: a administração ainda não abriu nenhuma. Quando abrir, aparece aqui.</div>`}
+      ${FL.contagemOn===false ? '' : (FL.contagens||[]).length ? flContagemHtml() : `<div class="fl-cont-mini">📦 Contagem de estoque: a administração ainda não abriu nenhuma. Quando abrir, aparece aqui.</div>`}
     </div>
     <div class="fl-fixa" id="fl-fixa">
       <div class="lin"><input class="fl-busca" style="flex:1" placeholder="Buscar por nome ou código…" value="${esc(FL.q)}" oninput="FL.q=this.value;FL.lim=150;flPintarLista();flAtualizaMostra()"><button class="cam" title="Ler o código de barras pela câmera" onclick="flCamera()"><i class="ti ti-barcode"></i></button></div>
