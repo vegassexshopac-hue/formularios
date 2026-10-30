@@ -53,9 +53,9 @@ function fotoVer(id){
 }
 
 /* ───────── tirar / escolher foto (celular abre a câmera) ───────── */
-function fotoEscolher(){
+function fotoEscolher(galeria){   // galeria=true: escolhe uma foto já salva no aparelho (sem abrir a câmera)
   return new Promise((res)=>{
-    const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; i.setAttribute('capture','environment'); i.style.display = 'none';
+    const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; if(!galeria) i.setAttribute('capture','environment'); i.style.display = 'none';
     i.onchange = async ()=>{ const f = i.files[0]; i.remove(); if(!f) return res(null); try{ res(await fotoReduzir(f)); }catch(e){ toast('Não consegui ler essa foto', true); res(null); } };
     document.body.appendChild(i); i.click();
   });
@@ -160,7 +160,7 @@ function novoProduto(pre={}){
   novoPintar();
 }
 function novoPintar(){
-  const cats = [...new Set(pdvD().produtos.map(x=>x.categoria).filter(Boolean))].sort();
+  const cats = [...new Set(pdvD().produtos.flatMap(catsDe))].sort();
   $('#modal').innerHTML = `<div class="veu" onclick="if(event.target===this)fecharModal()"><div class="modal">
     <div class="modal-t"><h3 class="cresce">➕ Produto novo</h3><button class="icone" onclick="fecharModal()"><i class="ti ti-x"></i></button></div>
     <div class="modal-c">

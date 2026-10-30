@@ -273,8 +273,8 @@ function opCompras(){
 }
 function opComprasTela(){
   const L = opCompras(), q = semAcento(S.adm.cpQ||''), cat = S.adm.cpCat||'';
-  const cats = [...new Set(L.map(x=>x.p.categoria||'Sem categoria'))].sort();
-  const vis = L.filter(x=>(!cat || (x.p.categoria||'Sem categoria')===cat) && (!q || semAcento(x.p.nome+' '+(x.p.codigo||'')+' '+(x.p.sku||'')).includes(q)));
+  const cats = [...new Set(L.flatMap(x=>{ const c = catsDe(x.p); return c.length ? c : ['Sem categoria']; }))].sort();
+  const vis = L.filter(x=>(!cat || (catsDe(x.p).length ? catsDe(x.p).includes(cat) : cat==='Sem categoria')) && (!q || semAcento(x.p.nome+' '+(x.p.codigo||'')+' '+(x.p.sku||'')).includes(q)));
   const locais = typeof estLocais==='function' ? estLocais() : [];
   if(!(estD().saldos||[]).length) return `<div class="cartao pad"><p class="suave" style="margin:0">A lista de compra aparece depois do levantamento (contagem) do estoque.</p></div>`;
   return `<div class="op-passos"><div class="op-passo"><span class="n">1</span><b>Mínimo por produto</b>Cada produto tem um mínimo por local. Use "Mínimo automático" para calcular pelas vendas.</div><div class="op-passo"><span class="n">2</span><b>Alerta</b>Entra aqui o que está no mínimo ou abaixo (somando todos os locais) e o que zerou mas vende.</div><div class="op-passo"><span class="n">3</span><b>Pedido</b>A quantidade sugerida cobre 2× o mínimo ou o que vendeu em 30 dias. Copie e mande pro fornecedor.</div></div>
@@ -285,19 +285,19 @@ function opComprasTela(){
       <button class="btn pri" onclick="opComprasCopiar()"><i class="ti ti-brand-whatsapp"></i> Copiar pedido</button><button class="btn" onclick="opComprasCsv()"><i class="ti ti-download"></i> CSV</button><button class="btn" onclick="opMinimoAuto()"><i class="ti ti-wand"></i> Mínimo automático</button></div>
     ${!vis.length?'<div class="cartao pad"><h2 style="margin:0 0 4px;font-size:19px">✅ Nada para comprar</h2><p class="suave" style="margin:0">Nenhum produto no mínimo ou abaixo. Se a lista parece vazia demais, cadastre os mínimos (Mínimo automático).</p></div>':`
     <div class="tabela"><table><thead><tr><th>Produto</th><th>Categoria</th>${locais.map(l=>`<th class="esconde-p">${esc(l.nome)}</th>`).join('')}<th>Total</th><th>Mínimo</th><th>Vendeu 30d</th><th>Comprar</th></tr></thead><tbody>
-      ${vis.slice(0,300).map(x=>`<tr class="clica" onclick="typeof admEstAjuste==='function'?admEstAjuste('${x.p.id}'):0"><td>${emojiDe(x.p)} ${esc(x.p.nome)} ${x.qtd<=0?'<span class="selo bad">zerado</span>':''}</td><td class="apagado">${esc(x.p.categoria||'')}</td>${locais.map(l=>`<td class="n num esconde-p">${estFmt(x.locais[l.id]||0)}</td>`).join('')}<td class="n num" style="${x.qtd<=0?'color:var(--bad);font-weight:700':''}">${estFmt(x.qtd)}</td><td class="n num">${x.min||'—'}</td><td class="n num">${x.vend||''}</td><td class="n num"><b>${x.sugerir}</b></td></tr>`).join('')}
+      ${vis.slice(0,300).map(x=>`<tr class="clica" onclick="typeof admEstAjuste==='function'?admEstAjuste('${x.p.id}'):0"><td>${emojiDe(x.p)} ${esc(x.p.nome)} ${x.qtd<=0?'<span class="selo bad">zerado</span>':''}</td><td class="apagado">${esc(catsTexto(x.p))}</td>${locais.map(l=>`<td class="n num esconde-p">${estFmt(x.locais[l.id]||0)}</td>`).join('')}<td class="n num" style="${x.qtd<=0?'color:var(--bad);font-weight:700':''}">${estFmt(x.qtd)}</td><td class="n num">${x.min||'—'}</td><td class="n num">${x.vend||''}</td><td class="n num"><b>${x.sugerir}</b></td></tr>`).join('')}
       ${vis.length>300?`<tr><td colspan="9" class="apagado">… e mais ${vis.length-300}. Use a busca.</td></tr>`:''}</tbody></table></div>`}`;
 }
-function opComprasVis(){ const q = semAcento(S.adm.cpQ||''), cat = S.adm.cpCat||''; return opCompras().filter(x=>(!cat || (x.p.categoria||'Sem categoria')===cat) && (!q || semAcento(x.p.nome+' '+(x.p.codigo||'')).includes(q))); }
+function opComprasVis(){ const q = semAcento(S.adm.cpQ||''), cat = S.adm.cpCat||''; return opCompras().filter(x=>(!cat || (catsDe(x.p).length ? catsDe(x.p).includes(cat) : cat==='Sem categoria')) && (!q || semAcento(x.p.nome+' '+(x.p.codigo||'')).includes(q))); }
 function opComprasCopiar(){
   const L = opComprasVis(); if(!L.length) return toast('Nada na lista', true);
-  const porCat = {}; L.forEach(x=>{ const c = x.p.categoria||'Outros'; (porCat[c]=porCat[c]||[]).push(x); });
+  const porCat = {}; L.forEach(x=>{ const c = catsDe(x.p)[0]||'Outros'; (porCat[c]=porCat[c]||[]).push(x); });
   const t = [`*🛒 Pedido de compra — Las Vegas Sex Shop · ${ddmm(hojeISO())}*`, '', ...Object.entries(porCat).flatMap(([c,xs])=>[`*${c}*`, ...xs.map(x=>`• ${x.sugerir}x ${x.p.nome}${x.p.codigo?' ('+x.p.codigo+')':''}`), '']), `_${L.length} produtos · ${L.reduce((s,x)=>s+x.sugerir,0)} peças_`].join('\n');
   opCopiar(t, 'Pedido copiado ✔');
 }
 function opComprasCsv(){
   const L = opComprasVis(), locais = estLocais();
-  const linhas = [['Produto','Código','Categoria',...locais.map(l=>l.nome),'Total','Mínimo','Vendeu 30d','Comprar'], ...L.map(x=>[x.p.nome, x.p.codigo||x.p.sku||'', x.p.categoria||'', ...locais.map(l=>x.locais[l.id]||0), x.qtd, x.min, x.vend, x.sugerir])];
+  const linhas = [['Produto','Código','Categoria',...locais.map(l=>l.nome),'Total','Mínimo','Vendeu 30d','Comprar'], ...L.map(x=>[x.p.nome, x.p.codigo||x.p.sku||'', catsTexto(x.p), ...locais.map(l=>x.locais[l.id]||0), x.qtd, x.min, x.vend, x.sugerir])];
   const csv = '﻿'+linhas.map(l=>l.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\n');
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download = 'lista-de-compra-'+hojeISO()+'.csv'; a.click();
 }

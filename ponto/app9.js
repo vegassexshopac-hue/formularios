@@ -77,13 +77,13 @@ itensBusca = function itensBusca(){
 
 /* v9: Estoque + entrada de mercadoria (Portal › Receber · Administração › Estoque) — carrega aqui, antes do app4 (que inicia o app) */
 /* v10: depósito + contagem + transferências + saída + reposição + PDV ligado ao estoque (app11.js) */
-document.write('<script src="app10.js?v=15"><\/script><script src="app11.js?v=15"><\/script>');
+document.write('<script src="app10.js?v=21"><\/script><script src="app11.js?v=15"><\/script>');
 /* v13: fotos dos produtos + tela Produtos (catálogo, tirar foto, produto novo, link #produtos) */
-document.write('<script src="app13.js?v=13"><\/script>');
+document.write('<script src="app13.js?v=21"><\/script>');
 /* v14: entrada nova (bater o ponto × entrar no portal) e portal no endereço principal, sem /ponto */
 document.write('<script src="app14.js?v=14"><\/script>');
 /* v15: link de fotos sem PIN (app15.js) — antes do app12, que fica por último */
-document.write('<script src="app15.js?v=15k"><\/script>');
+document.write('<script src="app15.js?v=21"><\/script>');
 /* v16: Nuvemshop — conectar o site (API), importar produtos, estoque e pedidos (Administração › Nuvemshop) */
 document.write('<script src="app16.js?v=16"><\/script>');
 /* v15d: catálogo do site — categorias, nomes, descrição e preços pelo CSV da Nuvemshop (app17.js) */
@@ -93,6 +93,6 @@ document.write('<script src="app18.js?v=18a"><\/script>');
 /* v19: link do mutirão mais intuitivo — boas-vindas, missões, anel de progresso, salvar e próximo, animações (app19.js) */
 document.write('<script src="app19.js?v=19c"><\/script>');
 /* v20: operação da loja — abertura/fechamento no ponto, fechamento de caixa, aviso de transferência, lista de compra (app20.js) */
-document.write('<script src="app20.js?v=20"><\/script>');
+document.write('<script src="app20.js?v=21"><\/script>');
 /* v12: layout novo — tema claro, menu lateral agrupado e movimento (app12.js carrega o tema.css) */
 document.write('<script src="app12.js?v=12"><\/script>');

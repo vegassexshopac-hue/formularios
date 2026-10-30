@@ -96,6 +96,15 @@
 .fl-falta button{position:relative;display:flex;justify-content:space-between;gap:8px;border:0;background:#faf5f3;border-radius:10px;padding:7px 10px;font:inherit;font-size:13px;color:#333;cursor:pointer;overflow:hidden;text-align:left}
 .fl-falta button span,.fl-falta button b{position:relative;z-index:1}
 .fl-falta button i{position:absolute;left:0;top:0;bottom:0;background:rgba(212,18,27,.12);border-radius:10px}
+.fl-fbts{display:flex;gap:8px;margin-top:8px}.fl-fbts .fl-bt{flex:1;padding:12px 8px;transition:transform .15s}.fl-fbts .fl-bt:active{transform:scale(.96)}
+.fl-bt.gal{background:#fff;color:#7c3aed;border:2px solid #7c3aed}
+.fl-cats{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;align-items:center}
+.fl-chipc{display:inline-flex;align-items:center;border-radius:99px;background:#f1eafe;color:#5b21b6;font-weight:800;font-size:13px;overflow:hidden;animation:flCatPop .25s ease-out}
+.fl-chipc.pri{background:#7c3aed;color:#fff}
+.fl-chipc button{border:0;background:none;color:inherit;font:inherit;cursor:pointer;padding:7px 4px 7px 12px}.fl-chipc .x{padding:7px 11px 7px 6px;opacity:.75}
+.fl-cvaz,.fl-cdica{font-size:12.5px;color:#999}.fl-cdica{width:100%}
+.fl-mcat{color:#7c3aed!important;font-weight:700}
+@keyframes flCatPop{from{transform:scale(.7)}to{transform:none}}
 .fl-pend{font-size:12.5px;font-weight:800;color:#8a5d00;background:rgba(245,181,36,.18);border-radius:10px;padding:6px 10px;margin-top:6px}
 `; document.head.appendChild(st); })();
 
@@ -207,7 +216,7 @@ function flFiltrada(){
   else if(FL.filtro==='prontos') l = l.filter(p=>!p._av.length);
   else if(FL.filtro==='naocontados') l = l.filter(p=>!flContado(p));
   else if(FL.filtro==='contados') l = l.filter(p=>flContado(p));
-  return l.sort((a,b)=>(a.categoria||'~').localeCompare(b.categoria||'~') || a.nome.localeCompare(b.nome));
+  return l.sort((a,b)=>(catsDe(a)[0]||'~').localeCompare(catsDe(b)[0]||'~') || a.nome.localeCompare(b.nome));
 }
 
 function flPintar(){
@@ -248,8 +257,8 @@ function flListaHtml(){
   const l = flFiltrada();
   if(!l.length) return `<div class="fl-card fl-vazio">${FL.filtro==='arrumar'&&!FL.q?'🎉 Nada para arrumar aqui!':'Nada encontrado.'}</div>`;
   const vis = l.slice(0, FL.lim), grupos = [];
-  vis.forEach(p=>{ const k = p.categoria || 'Sem categoria'; let g = grupos[grupos.length-1]; if(!g || g.k!==k){ g = {k, itens:[]}; grupos.push(g); } g.itens.push(p); });
-  const totCat = {}; l.forEach(p=>{ const k = p.categoria||'Sem categoria'; totCat[k]=(totCat[k]||0)+1; });
+  vis.forEach(p=>{ const k = catsDe(p)[0] || 'Sem categoria'; let g = grupos[grupos.length-1]; if(!g || g.k!==k){ g = {k, itens:[]}; grupos.push(g); } g.itens.push(p); });
+  const totCat = {}; l.forEach(p=>{ const k = catsDe(p)[0]||'Sem categoria'; totCat[k]=(totCat[k]||0)+1; });
   return grupos.map(g=>`<div class="fl-cat"><span>${esc(g.k)}</span><small>${totCat[g.k]} produto(s)</small></div><div class="fl-grade">${g.itens.map(flItemHtml).join('')}</div>`).join('')
     + (l.length>FL.lim?`<button class="fl-bt sec" style="width:100%;margin-top:14px" onclick="FL.lim+=150;flPintarLista()">Mostrar mais (${l.length-FL.lim})</button>`:'');
 }
@@ -259,7 +268,7 @@ function flItemHtml(p){
     ${!p._av.length?'<span class="ok">✓</span>':''}
     ${u?`<img class="ft" src="${esc(u)}" loading="lazy" alt="" onerror="this.outerHTML='<span class=&quot;semft&quot;><i class=&quot;ti ti-photo-off&quot;></i>foto não abriu</span>'">`:`<span class="semft"><i class="ti ${env?'ti-loader-2':'ti-camera-plus'}"></i>${env?'Enviando…':'Tirar foto'}</span>`}
     ${FL.ct?`<span class="fl-cnt ${flContado(p)?'ok':''}">📦 ${flContado(p)?FL.ct.totais[p.id]+' contado(s)':'não contado'}</span>`:''}
-    <b>${esc(p.nome)}</b><small>${esc(p.codigo||p.sku||'sem código')} · ${p.preco>0?brl2(p.preco):'sem preço'}</small>
+    <b>${esc(p.nome)}</b><small>${esc(p.codigo||p.sku||'sem código')} · ${p.preco>0?brl2(p.preco):'sem preço'}</small>${catsDe(p).length>1?`<small class="fl-mcat">🏷️ ${esc(catsDe(p).join(' · '))}</small>`:''}
     ${p._av.filter(k=>k!=='sem_foto').length||p.precoPendente?`<span class="fl-av">${p._av.filter(k=>k!=='sem_foto').map(k=>`<span class="${FL_AVISOS[k].am?'am':''}">${FL_AVISOS[k].c}</span>`).join('')}${p.precoPendente?`<span class="am">preço em aprovação</span>`:''}</span>`:''}
   </button>`;
 }
@@ -274,26 +283,27 @@ let FLP = null;
 function flAbrir(id){
   if(flPrecisaNome()) return;
   const p = FL.lista.find(x=>x.id===id); if(!p) return;
-  FLP = {id, nome: p.nome, codigo: p.codigo || '', categoria: p.categoria || '', preco: p.preco>0 ? Number(p.preco).toFixed(2).replace('.',',') : ''};
+  FLP = {id, nome: p.nome, codigo: p.codigo || '', categoria: p.categoria || '', cats: catsDe(p), preco: p.preco>0 ? Number(p.preco).toFixed(2).replace('.',',') : ''};
   flModal();
 }
 function flModal(){
   const p = FL.lista.find(x=>x.id===FLP.id); if(!p) return;
-  const cats = [...new Set(FL.lista.map(x=>x.categoria).filter(Boolean))].sort();
+  const cats = [...new Set(FL.lista.flatMap(catsDe))].sort((a,b)=>a.localeCompare(b));
   const u = p.foto ? fotoUrl(p, 640) : '', env = FL.enviando[p.id];
   let m = $('#fl-m'); if(!m){ m = document.createElement('div'); m.id = 'fl-m'; document.body.appendChild(m); }
   m.innerHTML = `<div class="fl-m" onclick="if(event.target===this)flFechar()"><div class="fl-mc" role="dialog" aria-modal="true">
     <div class="fl-mt"><h3>${esc(p.nome)}</h3><button class="fl-x" aria-label="Fechar" onclick="flFechar()">✕</button></div>
     ${u?`<img class="fl-fg" src="${esc(u)}" alt="">`:`<div class="fl-fv" onclick="flFoto()"><i class="ti ${env?'ti-loader-2':'ti-camera-plus'}"></i>${env?'Enviando a foto…':'Tirar foto'}</div>`}
-    <button class="fl-bt ouro" style="width:100%;margin-top:8px" onclick="flFoto()" ${env?'disabled':''}><i class="ti ti-camera"></i> ${p.foto?'Trocar a foto':'Tirar foto'}</button>
+    <div class="fl-fbts"><button class="fl-bt ouro" onclick="flFoto()" ${env?'disabled':''}><i class="ti ti-camera"></i> ${p.foto?'Trocar (câmera)':'Tirar foto'}</button><button class="fl-bt gal" onclick="flFoto('galeria')" ${env?'disabled':''}><i class="ti ti-photo"></i> Da galeria</button></div>
     ${p._av.length?`<div class="fl-avl">${p._av.map(k=>`<div><span>⚠️ ${FL_AVISOS[k].t}</span>${k!=='sem_foto'?`<button onclick="flOk('${k}')">está certo assim</button>`:''}</div>`).join('')}</div>`:`<div class="fl-avl"><div style="background:rgba(47,179,107,.1);color:#1f7a49"><span>✅ Tudo certo com este produto</span></div></div>`}
     ${flContagemModal(p)}
     <label class="fl-lb">Nome do produto</label>
     <div class="fl-lin"><input class="fl-inp" id="flp-nome" value="${esc(FLP.nome)}" oninput="FLP.nome=this.value"><button class="fl-bt sec" title="Arrumar maiúsculas" onclick="FLP.nome=flTitulo(FLP.nome);$('#flp-nome').value=FLP.nome">Aa</button></div>
     <label class="fl-lb">Código de barras / código</label>
     <div class="fl-lin"><input class="fl-inp" id="flp-cod" inputmode="numeric" value="${esc(FLP.codigo)}" oninput="FLP.codigo=this.value">${typeof estCamera==='function'?`<button class="fl-bt sec" title="Ler com a câmera" onclick="flBipar()"><i class="ti ti-barcode"></i></button>`:''}</div>
-    <label class="fl-lb">Categoria</label>
-    <input class="fl-inp" list="flp-cats" value="${esc(FLP.categoria)}" oninput="FLP.categoria=this.value" placeholder="Ex.: Lubrificantes"><datalist id="flp-cats">${cats.map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
+    <label class="fl-lb">Categorias <span style="font-weight:600;color:#999">· pode ter mais de uma</span></label>
+    <div class="fl-cats" id="flp-catsel">${flCatsChips()}</div>
+    <div class="fl-lin"><input class="fl-inp" id="flp-cat" list="flp-cats" placeholder="${FLP.cats.length?'Adicionar outra categoria':'Ex.: Lubrificantes'}" onkeydown="if(event.key==='Enter'){event.preventDefault();flCatAdd()}" onchange="flCatAdd()"><button class="fl-bt sec" title="Adicionar categoria" onclick="flCatAdd()"><i class="ti ti-plus"></i> Pôr</button></div><datalist id="flp-cats">${cats.map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
     <label class="fl-lb">Preço de venda (R$)</label>
     <input class="fl-inp" inputmode="decimal" value="${esc(FLP.preco)}" oninput="FLP.preco=this.value" placeholder="0,00">
     <p class="fl-dica">Mudança de preço vai para a administração aprovar antes de valer no PDV.</p>
@@ -301,12 +311,29 @@ function flModal(){
     <button class="fl-bt pri" id="flp-ok" onclick="flSalvar()"><i class="ti ti-check"></i> Salvar</button>
   </div></div>`;
 }
+/* ───────── várias categorias (v21): chips + adicionar; a 1ª é a principal ───────── */
+function flCatsChips(){
+  if(!FLP.cats.length) return `<span class="fl-cvaz">Nenhuma categoria ainda — escolha abaixo.</span>`;
+  return FLP.cats.map((c,i)=>`<span class="fl-chipc ${i?'':'pri'}"><button class="t" title="${i?'Tornar a principal':'Categoria principal'}" onclick="flCatPrincipal(${i})">${i?'':'⭐ '}${esc(c)}</button><button class="x" aria-label="Tirar ${esc(c)}" onclick="flCatTirar(${i})">✕</button></span>`).join('')
+    + (FLP.cats.length>1?`<small class="fl-cdica">⭐ = principal (onde aparece na lista). Toque em outra para trocar.</small>`:'');
+}
+function flCatSync(){ FLP.categoria = FLP.cats.join(CAT_SEP); const b = $('#flp-catsel'); if(b) b.innerHTML = flCatsChips(); const i = $('#flp-cat'); if(i) i.placeholder = FLP.cats.length ? 'Adicionar outra categoria' : 'Ex.: Lubrificantes'; }
+function flCatAdd(){
+  const i = $('#flp-cat'); if(!i || !FLP) return true;
+  let v = i.value.replace(/[|]/g,' ').replace(/\s+/g,' ').trim(); if(!v) return true;
+  const ex = [...new Set(FL.lista.flatMap(catsDe))].find(c=>semAcento(c)===semAcento(v)); if(ex) v = ex;   // usa a grafia que já existe
+  if(FLP.cats.some(c=>semAcento(c)===semAcento(v))){ i.value = ''; toast('Essa categoria já está no produto'); return true; }
+  if([...FLP.cats, v].join(CAT_SEP).length > 60){ toast('Muitas categorias — o limite é 60 letras no total. Tire uma ou use nomes mais curtos.', true); return false; }
+  FLP.cats.push(v); i.value = ''; flCatSync(); return true;
+}
+function flCatTirar(k){ FLP.cats.splice(k,1); flCatSync(); }
+function flCatPrincipal(k){ if(!k) return; const [c] = FLP.cats.splice(k,1); FLP.cats.unshift(c); flCatSync(); toast('⭐ '+c+' agora é a principal'); }
 function flFechar(){ const m = $('#fl-m'); if(m) m.innerHTML = ''; FLP = null; if(EDT && EDT.modo==='link' && document.getElementById('ed-tela')?.innerHTML) flEditados(); }
 function flBipar(){ try{ estCamera(cod=>{ try{ estCameraFechar(); }catch(e){} FLP.codigo = String(cod).trim(); const i = $('#flp-cod'); if(i) i.value = FLP.codigo; try{ estBip(true); }catch(e){} }, 'Ler o código do produto'); }catch(e){ toast('Câmera indisponível — digite o código', true); } }
-async function flFoto(){
+async function flFoto(origem){
   if(flPrecisaNome() || !FLP) return;
   const pid = FLP.id, p = FL.lista.find(x=>x.id===pid); if(!p || FL.enviando[pid]) return;
-  const img = await fotoEscolher(); if(!img) return;
+  const img = await fotoEscolher(origem==='galeria'); if(!img) return;
   FL.enviando[pid] = true; if(FLP) flModal(); flPintarLista();
   try{
     const r = await api('fotos', {chave: FL.chave, op: 'salvar', produto_id: pid, img, por: FL.por});
@@ -320,6 +347,7 @@ async function flFoto(){
 async function flSalvar(){
   if(flPrecisaNome() || !FLP) return;
   const p = FL.lista.find(x=>x.id===FLP.id); if(!p) return;
+  const pend = $('#flp-cat'); if(pend && pend.value.trim() && !flCatAdd()) return;   // categoria digitada e não adicionada
   const campos = {};
   if(FLP.nome.trim() !== p.nome) campos.nome = FLP.nome.trim();
   if(FLP.codigo.replace(/\s/g,'') !== (p.codigo||'')) campos.codigo = FLP.codigo.replace(/\s/g,'');

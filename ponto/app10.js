@@ -262,7 +262,7 @@ function estItem(x, k){
     ${x.produto_id ? `<button class="est-prod" onclick="estBuscarProduto(${k})"><span style="font-size:20px">${emojiDe(p||{})}</span><div class="cresce"><b>${esc(p?.nome||'Produto removido')}</b><small>${p?brl2(precoDe(p))+' · ':''}estoque ${esc(estLojaNome(EST.loja))}: ${estFmt(atual??0)} → <b class="est-depois">${estFmt((atual||0)+estN(x.qtd))}</b> ${selo}</small></div><i class="ti ti-switch-horizontal apagado"></i></button>`
       : x.criar ? `<div class="nota info" style="margin:0;padding:8px 10px"><i class="ti ti-sparkles"></i><div><b>Produto novo</b> — entra no catálogo do PDV. <button class="btn p fantasma" style="padding:0;height:auto" onclick="estBuscarProduto(${k})">ou ligar a um que já existe</button></div></div>
           <div class="est-novo"><input class="inp nome" value="${esc(x.criar.nome)}" placeholder="Nome no catálogo" oninput="EST.itens[${k}].criar.nome=this.value"><input class="inp num" inputmode="decimal" value="${esc(x.criar.preco)}" placeholder="Preço venda" oninput="EST.itens[${k}].criar.preco=this.value" title="Preço de venda (sugestão: custo × 2,2)"><input class="inp" list="est-cats" value="${esc(x.criar.categoria)}" placeholder="Categoria" oninput="EST.itens[${k}].criar.categoria=this.value"></div>
-          <datalist id="est-cats">${[...new Set(pdvD().produtos.map(y=>y.categoria).filter(Boolean))].sort().map(y=>`<option value="${esc(y)}">`).join('')}</datalist>`
+          <datalist id="est-cats">${[...new Set(pdvD().produtos.flatMap(catsDe))].sort().map(y=>`<option value="${esc(y)}">`).join('')}</datalist>`
       : `<button class="btn" onclick="estBuscarProduto(${k})"><i class="ti ti-link"></i> Ligar a um produto</button>`}
   </div>`;
 }

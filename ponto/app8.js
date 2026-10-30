@@ -19,6 +19,10 @@ function pdvD(){
 }
 const precoDe = p => (p.promo>0 && p.promo<p.preco) ? p.promo : p.preco;
 const PDV_ICONES = [[/lubri|gel |oleo|excita|sensibil|aromat|beijav|comest|esquent|esfria|retard/,'💧'],[/vibr|plug|dild|penis|masturb|bullet|capsul|anel|brinq|egg|sugador|estimul/,'💜'],[/lingerie|calcinha|sutia|body|corset|espartilho|camisola|baby ?doll|meia|cinta|tanga|fio/,'👙'],[/fantasia|cosplay|uniforme/,'🎭'],[/algema|chicote|bdsm|venda |mordaca|coleira|fetiche|palmat/,'⛓️'],[/jogo|dado|baralho|raspad|roleta/,'🎲'],[/higien|sabonete|limpa|cleaner|desodor|intimo/,'🫧'],[/perfum|cosmet|hidrat|massag|vela|pomada|creme/,'✨'],[/preserv|camisinha/,'🛡️'],[/presente|kit|cesta|caixa/,'🎁']];
+/* v21: um produto pode ter várias categorias, gravadas no mesmo campo separadas por " | " (a 1ª é a principal) */
+const CAT_SEP = ' | ';
+function catsDe(p){ return String((p && (p.categoria||p.cat)) || '').split('|').map(s=>s.replace(/\s+/g,' ').trim()).filter(Boolean); }
+function catsTexto(p){ return catsDe(p).join(', '); }
 function emojiDe(p){ const t = ' '+semAcento((p.categoria||p.cat||'')+' '+(p.nome||''))+' '; const m = PDV_ICONES.find(([r])=>r.test(t)); return m ? m[1] : '🔥'; }
 function lojaAtual(){
   const d = S.sess?.dados; if(!d) return Object.keys(S.boot.lojas)[0];
@@ -92,7 +96,7 @@ function pdvVoar(el, emo){
 function pdvFiltrar(){
   const prods = pdvD().produtos, q = semAcento(PDV.q.trim()), mv = maisVendidos();
   let r = prods;
-  if(PDV.cat) r = r.filter(p=>(p.categoria||'Sem categoria')===PDV.cat);
+  if(PDV.cat) r = r.filter(p=>{ const c = catsDe(p); return c.length ? c.includes(PDV.cat) : PDV.cat==='Sem categoria'; });
   if(q){ const ws = q.split(/\s+/); r = r.filter(p=>{ const t = semAcento(p.nome+' '+(p.codigo||'')+' '+(p.sku||'')+' '+(p.categoria||'')); return ws.every(w=>t.includes(w)); }); }
   r = r.slice().sort((a,b)=> q ? ((semAcento(a.nome).startsWith(q)?0:1)-(semAcento(b.nome).startsWith(q)?0:1) || (mv[b.id]||0)-(mv[a.id]||0) || a.nome.localeCompare(b.nome)) : ((mv[b.id]||0)-(mv[a.id]||0) || a.nome.localeCompare(b.nome)));
   return {lista:r.slice(0, 80), total:r.length, mv};
@@ -112,7 +116,7 @@ function pdvBusca(ev){
 function portalPDV(){
   pdvCarregarCarrinho();
   const P = pdvD(), d = S.sess.dados, c = d.colaboradora;
-  const cats = [...new Set(P.produtos.map(p=>p.categoria||'Sem categoria'))].sort((a,b)=>a.localeCompare(b));
+  const cats = [...new Set(P.produtos.flatMap(p=>{ const c = catsDe(p); return c.length ? c : ['Sem categoria']; }))].sort((a,b)=>a.localeCompare(b));
   const hoje = hojeISO(), minhas = P.vendas.filter(v=>v.data===hoje && v.colaboradora_id===c.id && v.status!=='cancelada');
   const somaHoje = minhas.reduce((s,v)=>s+v.total,0);
   return `<div id="pdv-raiz">
@@ -147,7 +151,7 @@ function pdvPintarGrade(reanima){
   const {lista, total, mv} = pdvFiltrar(), noCar = {}; PDV.car.forEach(i=>{ if(i.id) noCar[i.id]=(noCar[i.id]||0)+i.qtd; });
   const topIds = Object.entries(mv).sort((a,b)=>b[1]-a[1]).slice(0,5).map(x=>x[0]);
   g.innerHTML = lista.map((p,i)=>`<button class="pdv-prod ${topIds.includes(p.id)&&!noCar[p.id]?'top':''}" data-id="${p.id}" style="--i:${reanima||!g.dataset.ok?Math.min(i,24):0}" onclick="pdvAdd('${p.id}',this)">
-      <span class="emo">${emojiDe(p)}</span><b>${esc(p.nome)}</b><small>${esc(p.codigo||p.sku||p.categoria||'')}</small>
+      <span class="emo">${emojiDe(p)}</span><b>${esc(p.nome)}</b><small>${esc(p.codigo||p.sku||catsDe(p)[0]||'')}</small>
       <span class="preco">${brl2(precoDe(p))}${precoDe(p)<p.preco?`<s>${brl2(p.preco)}</s>`:''}</span>${noCar[p.id]?`<span class="qtd">${noCar[p.id]}</span>`:''}</button>`).join('')
     + `<button class="pdv-prod avulso" onclick="pdvAvulso()"><span class="emo">➕</span><b>Item avulso</b><small>fora do catálogo</small></button>`
     + (total>lista.length?`<div class="pdv-vazio" style="grid-column:1/-1;padding:14px">Mostrando ${lista.length} de ${total}. Digite mais letras para achar.</div>`:'')
