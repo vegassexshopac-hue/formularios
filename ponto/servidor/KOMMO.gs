@@ -74,3 +74,29 @@ ADMIN.admKommo = function (req) {
   }
   return { ok: false, erro: 'Operação desconhecida' };
 };
+
+/* ───────── v33: vendas da Kommo aparecem na Arena ("Acabou de vender", flash, nº de vendas e ticket) ─────────
+   Vão junto do pacote do PDV como "kommo" (sem produto nenhum — discrição). Não mexem na meta: ela já soma pela aba Vendas. */
+function kmLinhasPdv_(desde) {
+  return ler_('VendasKommo').filter(function (r) { return r.status === 'ok' && String(r.data) >= desde; }).map(function (r) {
+    return { lead: String(r.lead), data: String(r.data), loja: r.loja, colaboradora_id: r.colaboradora_id, colaboradora: r.colaboradora, valor: Number(r.valor) || 0, criado_em: String(r.criado_em || '') };
+  });
+}
+var _kmDadosColab = dadosColab_;
+dadosColab_ = function (c) {
+  var d = _kmDadosColab(c);
+  try { if (d.pdv && !d.pdv.erro) d.pdv.kommo = kmLinhasPdv_(mesDe_(hoje_()) + '-01'); } catch (e) {}
+  return d;
+};
+var _kmAdmDados = ADMIN.admDados;
+ADMIN.admDados = function (req) {
+  var d = _kmAdmDados(req);
+  try { if (d.pdv && !d.pdv.erro) d.pdv.kommo = kmLinhasPdv_(diaMais_(-62)); } catch (e) {}
+  return d;
+};
+var _kmAoVivo = ADMIN.admAoVivo;
+ADMIN.admAoVivo = function (req) {
+  var d = _kmAoVivo(req);
+  try { d.kommoMes = kmLinhasPdv_(mesDe_(hoje_()) + '-01'); } catch (e) {}
+  return d;
+};

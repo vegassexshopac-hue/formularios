@@ -117,4 +117,6 @@ document.write('<script src="app30.js?v=30"><\/script>');
 document.write('<script src="campanha.js?v=31"><\/script>');
 /* v32: portal mais rápido — abre na hora com os dados guardados no aparelho e atualiza sozinho; arquivos guardados (sw.js) (app32.js) */
 document.write('<script src="app32.js?v=32"><\/script>');
+/* v33: vendas da Kommo na Arena — "Acabou de vender", flash, nº de vendas e ticket (app33.js) */
+document.write('<script src="app33.js?v=33"><\/script>');
 document.write('<script src="app12.js?v=12"><\/script>');
