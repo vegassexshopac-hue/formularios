@@ -98,5 +98,7 @@ document.write('<script src="app20.js?v=21"><\/script>');
 document.write('<script src="app21.js?v=21b"><\/script>');
 /* v22: clientes e fidelidade — cartão de selos, presentes, cashback e indicação na comanda + Administração › Clientes (app22.js) */
 document.write('<script src="app22.js?v=22b"><\/script>');
+/* v23: cupom da roleta da loja na comanda (código LV…, baixa ligada à cliente) + Administração › Roletas (app23.js) */
+document.write('<script src="app23.js?v=23"><\/script>');
 /* v12: layout novo — tema claro, menu lateral agrupado e movimento (app12.js carrega o tema.css) */
 document.write('<script src="app12.js?v=12"><\/script>');
