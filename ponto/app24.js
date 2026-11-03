@@ -98,7 +98,13 @@ const KM = { url: LS.get('lv_kommo_teste','') || KOMMO_URL_FIXO, tk:null, quem:n
 .km-vistas{display:flex;background:#fff;border:1px solid var(--linha2);border-radius:12px;padding:3px}
 .km-vistas button{border:0;background:none;width:34px;height:30px;border-radius:9px;cursor:pointer;font-size:16px;color:var(--creme2);transition:background .15s}
 .km-vistas button.on{background:var(--vermelho);color:#fff}
-.km-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;align-items:start}
+.km-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px;align-items:start}
+.km-gcard,.km-row,.km-glist{min-width:0}.km-gcard{overflow:hidden}
+.km-et{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.km-vivo{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--creme2)}
+.km-vivo i.pt{width:8px;height:8px;border-radius:50%;background:#22b864;box-shadow:0 0 0 0 rgba(34,184,100,.6);animation:kmVivo 1.6s infinite}
+.km-vivo.carregando i.pt{background:#F5B524}
+@keyframes kmVivo{0%{box-shadow:0 0 0 0 rgba(34,184,100,.6)}70%{box-shadow:0 0 0 8px rgba(34,184,100,0)}100%{box-shadow:0 0 0 0 rgba(34,184,100,0)}}
 .km-gcard{background:#fff;border-radius:20px;box-shadow:var(--sh);padding:12px;animation:kmSobe .45s var(--mola) both;border:1px solid transparent}
 .km-gcard.sem{background:linear-gradient(180deg,#FFF7E0,#fff 70px);border-color:#F5D27A}
 .km-gcard.eu{border-color:var(--vermelho);box-shadow:0 8px 26px rgba(227,16,31,.14)}
@@ -175,6 +181,8 @@ async function kmCarregar(forcar){
 }
 function naTelaKm(){ return (S.tela==='portal' && S.portalTab==='whats') || (S.tela==='admin' && S.adm?.tab==='whats'); }
 function kmRepintar(){ if(typeof modalAberto==='function' && modalAberto()) return; const ae = document.activeElement; if(ae && /^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName)) return; if(naTelaKm() || (S.tela==='portal' && S.portalTab==='inicio')) render(); }
+function kmHaQuanto(){ if(!KM.t) return 'conectando…'; const s = Math.max(0, Math.round((Date.now()-KM.t)/1000)); return 'ao vivo · atualizado ' + (s<5?'agora':s<60?'há '+s+' s':'há '+Math.round(s/60)+' min'); }
+setInterval(()=>{ const el = document.querySelector('#km-vivo span'); if(el && !KM.carregando) el.textContent = kmHaQuanto(); }, 1000);
 function kmRelogio(){
   clearInterval(KM.timer);
   KM.timer = setInterval(()=>{ if(document.hidden || (KM.sub==='config' && naTelaKm())) return; if(naTelaKm() || (S.tela==='portal' && S.portalTab==='inicio')) kmCarregar(true); }, 15e3);
@@ -492,7 +500,7 @@ function kmTela(adm){
   const sub = subs.some(s=>s[0]===KM.sub) ? KM.sub : 'esperando';
   const corpo = !r && !KM.erro ? `<p class="suave"><i class="ti ti-loader-2"></i> Conectando na Kommo…</p>` :
     ({esperando:()=>kmEsperando(adm), tarefas:()=>kmTarefas(adm), funil:kmFunil, numeros:kmMeusNumeros, vendas:kmVendas, tempo:kmTempo, config:kmConfig})[sub]();
-  return `<div class="linha entre quebra" style="gap:8px;margin-bottom:10px"><h2 class="secao" style="margin:0">💬 Atendimento · Kommo</h2><span class="apagado" style="font-size:12.5px">${KM.carregando?'<i class="ti ti-loader-2"></i> atualizando…':KM.t?'atualizado '+new Date(KM.t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):''} <button class="icone" title="Atualizar" onclick="KM.funil=null;KM.vend=null;kmCarregar(true);if(KM.sub==='tarefas')kmTarCarregar()"><i class="ti ti-refresh"></i></button></span></div>
+  return `<div class="linha entre quebra" style="gap:8px;margin-bottom:10px"><h2 class="secao" style="margin:0">💬 Atendimento · Kommo</h2><span class="linha" style="gap:6px;align-items:center"><span class="km-vivo ${KM.carregando?'carregando':''}" id="km-vivo"><i class="pt"></i><span>${KM.carregando?'atualizando…':kmHaQuanto()}</span></span> <button class="icone" title="Atualizar" onclick="KM.funil=null;KM.vend=null;kmCarregar(true);if(KM.sub==='tarefas')kmTarCarregar()"><i class="ti ti-refresh"></i></button></span></div>
     ${KM.erro?kmErroHtml():''}
     <div class="km-hub">${subs.map(([k,i,n,b])=>`<button class="${sub===k?'on':''}" onclick="KM.sub='${k}';${k==='tarefas'?'kmTarCarregar();':''}render()"><i class="ti ${i}"></i>${n}${b?`<span class="contador">${b}</span>`:''}</button>`).join('')}</div>
     ${corpo}`;
