@@ -32,6 +32,12 @@ function fidCfg_() {
   o.ciclo = Math.max(2, Math.round(o.ciclo)); o.presente_em = Math.max(1, Math.min(o.ciclo - 1, Math.round(o.presente_em)));
   return o;
 }
+/* trava: usa a do PDV.gs novo; se o PDV for antigo, usa a própria */
+function fidTrava_(fn) {
+  if (typeof comTrava_ === 'function') return comTrava_(fn);
+  var lock = LockService.getScriptLock(); lock.waitLock(25000);
+  try { return fn(); } finally { lock.releaseLock(); }
+}
 function fidR2_(n) { return Math.round((Number(n) || 0) * 100) / 100; }
 function fidTel_(t) {
   t = String(t || '').replace(/\D/g, '');
@@ -144,7 +150,7 @@ function fidPresentes_(admin) {
 
 /* ───────── cadastro ───────── */
 function fidCadastrar_(dados, por, admin) {
-  return comTrava_(function () {
+  return fidTrava_(function () {
     var nome = String(dados.nome || '').trim().replace(/\s+/g, ' ').slice(0, 80);
     if (nome.length < 2) throw new Error('Escreva o nome da cliente');
     var tel = fidTel_(dados.tel);
@@ -294,7 +300,7 @@ ADMIN.admFidelidade = function (req) {
   }
   if (op === 'cartao') return { ok: true, cartao: fidCartaoPorId_(req.id, true) };
   if (op === 'cadastrar') { var n = fidCadastrar_(req.cliente || {}, 'Administração', true); return { ok: true, cartao: fidCartaoPorId_(n.id, true) }; }
-  if (op === 'salvar') return comTrava_(function () {
+  if (op === 'salvar') return fidTrava_(function () {
     var x = req.cliente || {}, todas = ler_('Clientes'), c = todas.filter(function (y) { return y.id === x.id; })[0];
     if (!c) throw new Error('Cliente não encontrada');
     if (x.nome != null) { var nm = String(x.nome).trim().replace(/\s+/g, ' ').slice(0, 80); if (nm.length < 2) throw new Error('Nome muito curto'); c.nome = nm; }
@@ -333,7 +339,7 @@ ADMIN.admFidelidade = function (req) {
     log_('Administração', 'config fidelidade', JSON.stringify(atual));
     return { ok: true, cfg: fidCfg_() };
   }
-  if (op === 'importar') return comTrava_(function () { return fidImportar_(req.lista); });
+  if (op === 'importar') return fidTrava_(function () { return fidImportar_(req.lista); });
   throw new Error('Operação desconhecida');
 };
 
