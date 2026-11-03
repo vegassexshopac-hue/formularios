@@ -100,5 +100,7 @@ document.write('<script src="app21.js?v=21b"><\/script>');
 document.write('<script src="app22.js?v=22b"><\/script>');
 /* v23: cupom da roleta da loja na comanda (código LV…, baixa ligada à cliente) + Administração › Roletas (app23.js) */
 document.write('<script src="app23.js?v=23"><\/script>');
+/* v24: WhatsApp · Kommo — esperando resposta, tarefas, funil/ficha e vendas pelo motor no Railway (app24.js) */
+document.write('<script src="app24.js?v=24"><\/script>');
 /* v12: layout novo — tema claro, menu lateral agrupado e movimento (app12.js carrega o tema.css) */
 document.write('<script src="app12.js?v=12"><\/script>');
