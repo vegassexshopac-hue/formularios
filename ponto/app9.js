@@ -108,5 +108,7 @@ document.write('<script src="app26.js?v=26"><\/script>');
 document.write('<script src="app27.js?v=27"><\/script>');
 /* v28: caixa — imprimir comprovante e relatório do mês, histórico de fechamentos refeitos, foto obrigatória do envelope na sangria (app28.js) */
 document.write('<script src="app28.js?v=28"><\/script>');
+/* v29: perfis da administração — Madu (gestão da loja) × Matheus (técnico) (app29.js) */
+document.write('<script src="app29.js?v=29"><\/script>');
 /* v12: layout novo — tema claro, menu lateral agrupado e movimento (app12.js carrega o tema.css) */
 document.write('<script src="app12.js?v=12"><\/script>');
