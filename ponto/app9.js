@@ -96,5 +96,7 @@ document.write('<script src="app19.js?v=19c"><\/script>');
 document.write('<script src="app20.js?v=21"><\/script>');
 /* v21b: placar do mutirão + tirar produto do catálogo (app21.js) — antes do app12 */
 document.write('<script src="app21.js?v=21b"><\/script>');
+/* v22: clientes e fidelidade — cartão de selos, presentes, cashback e indicação na comanda + Administração › Clientes (app22.js) */
+document.write('<script src="app22.js?v=22"><\/script>');
 /* v12: layout novo — tema claro, menu lateral agrupado e movimento (app12.js carrega o tema.css) */
 document.write('<script src="app12.js?v=12"><\/script>');
