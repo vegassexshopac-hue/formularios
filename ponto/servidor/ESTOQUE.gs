@@ -463,6 +463,16 @@ function estFotosPublico_(req) {
   if (op === 'editados') {   // o que já foi mexido no mutirão (para conferir e corrigir) — sem contagem por pessoa
     return { ok: true, historico: ler_('Arrumacao').map(function (a) { return { id: a.id, quando: a.quando, por: a.por, produto_id: a.produto_id, produto: a.produto, tipo: a.tipo, campo: a.campo, antes: a.antes, depois: a.depois, status: a.status }; }).reverse().slice(0, 2000) };
   }
+  if (op === 'tirar') {     // v21b: a loja não trabalha mais com o produto → sai do catálogo/PDV (fica desativado; a administração pode desfazer)
+    return comTrava_(function () {
+      var p = achar(), mot = String(req.motivo || '').replace(/\s+/g, ' ').trim().slice(0, 120);
+      if (p.ativo === 'NÃO') return { ok: true, ja: true };
+      estArrRegistrar_({ por: por, produto_id: p.id, produto: p.nome, tipo: 'correcao', campo: 'ativo', antes: 'SIM', depois: 'NÃO' + (mot ? ' · ' + mot : '') });
+      p.ativo = 'NÃO'; p.atualizado_em = agora_(); gravar_('Produtos', p);
+      log_(por + ' (link)', 'tirou produto do catálogo', p.nome + (mot ? ' · ' + mot : ''));
+      return { ok: true };
+    });
+  }
   if (op === 'ok') {
     return comTrava_(function () {
       var p = achar(), av = String(req.aviso || '').replace(/[^\w-]/g, '').slice(0, 30);
@@ -544,6 +554,7 @@ function estArrDesfazer_(req) {
       var p = ler_('Produtos').filter(function (x) { return x.id === a.produto_id; })[0];
       if (!p) throw new Error('Produto não encontrado');
       var campo = a.campo === 'preco' ? 'preco' : a.campo;
+      if (campo === 'ativo') { p.ativo = 'SIM'; p.atualizado_em = agora_(); gravar_('Produtos', p); a.status = 'desfeito'; a.revisado_por = 'Administração'; a.revisado_em = agora_(); gravar_('Arrumacao', a); log_('Administração', 'voltou produto ao catálogo', a.produto + ' (' + a.por + ')'); return estArrHistorico_(); }
       if (['nome', 'codigo', 'categoria', 'preco'].indexOf(campo) < 0) throw new Error('Campo não pode ser desfeito');
       if (String(p[campo] || '') !== String(a.depois || '') && !req.forcar) throw new Error('Esse campo já foi mudado de novo depois (agora: "' + p[campo] + '"). Confira antes de desfazer.');
       p[campo] = a.antes || ''; p.atualizado_em = agora_(); gravar_('Produtos', p);

@@ -94,5 +94,7 @@ document.write('<script src="app18.js?v=18a"><\/script>');
 document.write('<script src="app19.js?v=19c"><\/script>');
 /* v20: operação da loja — abertura/fechamento no ponto, fechamento de caixa, aviso de transferência, lista de compra (app20.js) */
 document.write('<script src="app20.js?v=21"><\/script>');
+/* v21b: placar do mutirão + tirar produto do catálogo (app21.js) — antes do app12 */
+document.write('<script src="app21.js?v=21b"><\/script>');
 /* v12: layout novo — tema claro, menu lateral agrupado e movimento (app12.js carrega o tema.css) */
 document.write('<script src="app12.js?v=12"><\/script>');
