@@ -112,11 +112,13 @@ document.write('<script src="app28.js?v=28c"><\/script>');
 document.write('<script src="app29.js?v=29"><\/script>');
 /* v30: ponto pelo celular — QR Code no computador da loja + selfie no celular (app30.js) */
 document.write('<script src="app30.js?v=30"><\/script>');
-/* v12: layout novo — tema claro, menu lateral agrupado e movimento (app12.js carrega o tema.css) */
 /* v31: campanha do mês — raspadinha do dia, bingo de vendas, hora de ouro, ranking da semana e mural dos sonhos (campanha.js) */
 document.write('<script src="campanha.js?v=31"><\/script>');
 /* v32: portal mais rápido — abre na hora com os dados guardados no aparelho e atualiza sozinho; arquivos guardados (sw.js) (app32.js) */
 document.write('<script src="app32.js?v=32"><\/script>');
 /* v33: vendas da Kommo na Arena — "Acabou de vender", flash, nº de vendas e ticket (app33.js) */
 document.write('<script src="app33.js?v=33b"><\/script>');
+/* v34: Administração organizada — 6 áreas no menu + abas por dentro + "O que precisa de mim hoje" (app34.js) */
+document.write('<script src="app34.js?v=34"><\/script>');
+/* v12: layout novo — tema claro, menu lateral agrupado e movimento (app12.js carrega o tema.css) */
 document.write('<script src="app12.js?v=12"><\/script>');
