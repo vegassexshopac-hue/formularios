@@ -122,5 +122,7 @@ document.write('<script src="app33.js?v=33b"><\/script>');
 document.write('<script src="app34.js?v=35"><\/script>');
 /* v36: entrar mais rápido — aquece o servidor durante o PIN, tela "Entrando…", Administração lembrada no aparelho pessoal (app36.js) */
 document.write('<script src="app36.js?v=36"><\/script>');
+/* v38: compras do sistema antigo na ficha da cliente (Administração › Clientes) — servidor HISTORICO.gs (app38.js) */
+document.write('<script src="app38.js?v=38"><\/script>');
 /* v12: layout novo — tema claro, menu lateral agrupado e movimento (app12.js carrega o tema.css) */
 document.write('<script src="app12.js?v=35"><\/script>');
