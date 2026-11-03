@@ -1,6 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════
-   LAS VEGAS SEX SHOP · OPERAÇÃO DA LOJA (Portal Equipe) — v19
+   LAS VEGAS SEX SHOP · OPERAÇÃO DA LOJA (Portal Equipe) — v28
    Fechamento de caixa (esperado × contado) + mínimo de estoque em lote.
+   v28: histórico de fechamentos refeitos (aba CaixaHistorico) + foto obrigatória do envelope na sangria (vai para o Drive).
    Arquivo SEPARADO — fica DEPOIS do Código.gs, PDV.gs, ROLETA.gs, ESTOQUE.gs e NUVEMSHOP.gs.
    ───────────────────────────────────────────────────────────────
    COMO INSTALAR:
@@ -12,6 +13,10 @@
 
 ABAS.Caixa = ['id', 'data', 'loja', 'criado_em', 'por', 'colaboradora_id', 'fundo', 'esperado', 'contado', 'diferenca',
               'sangrias', 'vendas', 'qtd_vendas', 'status', 'obs', 'conferido_por', 'conferido_em', 'obs_adm'];
+
+/* v28: cada vez que um caixa é refeito, a versão anterior vai para CaixaHistorico (nunca é apagada). */
+ABAS.CaixaHistorico = ['id', 'orig_id', 'data', 'loja', 'criado_em', 'por', 'colaboradora_id', 'fundo', 'esperado', 'contado', 'diferenca',
+                       'sangrias', 'qtd_vendas', 'status', 'obs', 'substituido_em', 'substituido_por'];
 
 var OPX_PADRAO = { tolerancia: 5, fundo: {} };          // fundo: { bosque: 100, centro: 100 }
 var OPX_FORMAS = ['pix', 'dinheiro', 'debito', 'credito'];
@@ -82,6 +87,9 @@ function opxFechar_(req, por, eid, admin) {
     OPX_FORMAS.forEach(function (f) { dif[f] = opxR2_(cont[f] - e.esperado[f]); maior = Math.max(maior, Math.abs(dif[f])); });
     var ja = ler_('Caixa').filter(function (r) { return r.data === data && r.loja === loja; })[0];
     if (ja && ja.status === 'conferido' && !admin) throw new Error('Este caixa já foi conferido pela administração. Fale com ela para reabrir.');
+    if (ja) gravar_('CaixaHistorico', { id: 'H' + new Date().getTime() + Math.floor(Math.random() * 1e3), orig_id: ja.id, data: ja.data, loja: ja.loja,
+      criado_em: ja.criado_em, por: ja.por, colaboradora_id: ja.colaboradora_id, fundo: ja.fundo, esperado: ja.esperado, contado: ja.contado,
+      diferenca: ja.diferenca, sangrias: ja.sangrias, qtd_vendas: ja.qtd_vendas, status: ja.status, obs: ja.obs, substituido_em: agora_(), substituido_por: por });
     var r = ja || { id: 'CX' + new Date().getTime() + Math.floor(Math.random() * 1e3), data: data, loja: loja, conferido_por: '', conferido_em: '', obs_adm: '' };
     r.criado_em = agora_(); r.por = por; r.colaboradora_id = eid || ''; r.fundo = String(e.fundo);
     r.esperado = JSON.stringify(e.esperado); r.contado = JSON.stringify(cont); r.diferenca = JSON.stringify(dif);
@@ -144,7 +152,12 @@ function opxPacote_(admin, eid) {
   var cfg = opxCfg_();
   var lista = opxLista_(diaMais_(admin ? -62 : -14));
   if (!admin) lista = lista.map(function (f) { return { id: f.id, data: f.data, loja: f.loja, criado_em: f.criado_em, por: f.por, colaboradora_id: f.colaboradora_id, status: f.status, diferenca: f.colaboradora_id === eid ? f.diferenca : undefined, contado: f.colaboradora_id === eid ? f.contado : undefined, obs: f.obs }; });
-  return { cfg: cfg, formas: OPX_FORMAS, fechamentos: lista };
+  var pac = { cfg: cfg, formas: OPX_FORMAS, fechamentos: lista };
+  if (admin) {
+    var desde = diaMais_(-62);
+    try { pac.historico = ler_('CaixaHistorico').filter(function (h) { return h.data >= desde; }).map(opxFech_); } catch (e) { pac.historico = []; }
+  }
+  return pac;
 }
 var _opxDadosColab = dadosColab_;
 dadosColab_ = function (c) {
@@ -161,6 +174,24 @@ ADMIN.admDados = function (req) {
 
 var _opxRodar = rodar_;
 rodar_ = function (req) {
+  if (req && req.a === 'sangria') {               // v28: foto do envelope obrigatória
+    try {
+      var cs = checarColab_(req);
+      var bytes = Utilities.base64Decode(String(req.foto || '').replace(/^data:image\/\w+;base64,/, ''));
+      if (bytes.length < 1500) throw new Error('Tire a foto do envelope antes de registrar a sangria');
+      if (bytes.length > 900 * 1024) throw new Error('Foto grande demais — tire de novo');
+      var raiz = pastaAnexos_(), it = raiz.getFoldersByName('Sangrias - fotos dos envelopes');
+      var pasta = it.hasNext() ? it.next() : raiz.createFolder('Sangrias - fotos dos envelopes');
+      var nome = hoje_() + ' ' + String(req.loja || '') + ' R$ ' + String(req.valor || '') + ' - ' + String(cs.nome || '').slice(0, 40) + '.jpg';
+      var arq = pasta.createFile(Utilities.newBlob(bytes, 'image/jpeg', nome));
+      arq.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      var video = String(req.video_url || '').trim();
+      req.video_url = 'https://drive.google.com/file/d/' + arq.getId() + '/view';
+      if (video) req.obs = (String(req.obs || '') + ' · vídeo: ' + video).replace(/^ · /, '').slice(0, 300);
+      delete req.foto;
+    } catch (e3) { return { ok: false, erro: String(e3 && e3.message || e3) }; }
+    return _opxRodar(req);
+  }
   if (req && req.a === 'caixa') {
     try {
       var c = checarColab_(req);

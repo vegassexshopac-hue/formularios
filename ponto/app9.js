@@ -106,5 +106,7 @@ document.write('<script src="app24.js?v=24"><\/script>');
 document.write('<script src="app26.js?v=26"><\/script>');
 /* v27: login fixo no aparelho pessoal (não no computador da loja) — só sai pelo "Sair do portal" (app27.js) */
 document.write('<script src="app27.js?v=27"><\/script>');
+/* v28: caixa — imprimir comprovante e relatório do mês, histórico de fechamentos refeitos, foto obrigatória do envelope na sangria (app28.js) */
+document.write('<script src="app28.js?v=28"><\/script>');
 /* v12: layout novo — tema claro, menu lateral agrupado e movimento (app12.js carrega o tema.css) */
 document.write('<script src="app12.js?v=12"><\/script>');
