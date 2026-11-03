@@ -102,7 +102,7 @@ document.write('<script src="app22.js?v=22b"><\/script>');
 document.write('<script src="app23.js?v=23"><\/script>');
 /* v24: WhatsApp · Kommo — esperando resposta, tarefas, funil/ficha e vendas pelo motor no Railway (app24.js) */
 document.write('<script src="app24.js?v=24"><\/script>');
-/* v25: miniatura do produto em cada item da comanda (app25.js) */
-document.write('<script src="app25.js?v=25"><\/script>');
+/* v26: miniaturas — comanda do PDV + "Acabou de vender" da Arena com detalhes da venda (app26.js) */
+document.write('<script src="app26.js?v=26"><\/script>');
 /* v12: layout novo — tema claro, menu lateral agrupado e movimento (app12.js carrega o tema.css) */
 document.write('<script src="app12.js?v=12"><\/script>');
