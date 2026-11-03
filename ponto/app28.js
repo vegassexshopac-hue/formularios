@@ -102,7 +102,7 @@ const _admCaixaV28 = admCaixa;
 admCaixa = function admCaixa(){
   return _admCaixaV28.apply(this, arguments)
     .replace('<button class="btn" onclick="opCaixaCfgModal()">', '<button class="btn" onclick="opRelatorioMes()"><i class="ti ti-printer"></i> Imprimir relatório do mês</button><button class="btn" onclick="opCaixaCfgModal()">')
-    .replace(/🎥 ver/g, '📷 ver');
+    .replace(/🎥 ver/g, '📷 ver').replace('<th>Vídeo</th>', '<th>Foto</th>');
 };
 
 /* ───────── sangria com foto obrigatória do envelope ───────── */
