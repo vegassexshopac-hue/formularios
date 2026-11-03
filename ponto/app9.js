@@ -107,7 +107,7 @@ document.write('<script src="app26.js?v=26"><\/script>');
 /* v27: login fixo no aparelho pessoal (não no computador da loja) — só sai pelo "Sair do portal" (app27.js) */
 document.write('<script src="app27.js?v=27"><\/script>');
 /* v28: caixa — imprimir comprovante e relatório do mês, histórico de fechamentos refeitos, foto obrigatória do envelope na sangria (app28.js) */
-document.write('<script src="app28.js?v=28b"><\/script>');
+document.write('<script src="app28.js?v=28c"><\/script>');
 /* v29: perfis da administração — Madu (gestão da loja) × Matheus (técnico) (app29.js) */
 document.write('<script src="app29.js?v=29"><\/script>');
 /* v30: ponto pelo celular — QR Code no computador da loja + selfie no celular (app30.js) */

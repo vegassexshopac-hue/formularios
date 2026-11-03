@@ -6,14 +6,19 @@
    Servidor: OPERACAO.gs v28. */
 
 /* ───────── utilidades de impressão ───────── */
-function opImprimirHtml(html){
+function opImprimirHtml(html, titulo){
+  const antes = document.title;
+  if(titulo) document.title = titulo;          // o Chrome usa o título da página como nome do PDF
+  const volta = ()=>{ document.title = antes; };
   const fr = document.createElement('iframe');
   fr.setAttribute('aria-hidden','true');
   fr.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
   document.body.appendChild(fr);
   const d = fr.contentDocument; d.open(); d.write(html); d.close();
-  setTimeout(()=>{ try{ fr.contentWindow.focus(); fr.contentWindow.print(); }catch(e){ toast('Não consegui abrir a impressão neste aparelho', true); } setTimeout(()=>fr.remove(), 4000); }, 350);
+  setTimeout(()=>{ try{ fr.contentWindow.focus(); fr.contentWindow.print(); }catch(e){ toast('Não consegui abrir a impressão neste aparelho', true); } setTimeout(()=>{ fr.remove(); volta(); }, 4000); }, 350);
 }
+function opBrl(v){ const n = Number(v)||0; return n < -0.004 ? '-'+brl2(-n) : brl2(n); }
+function opArq(t){ return String(t).replace(/[\\/:*?"<>|]+/g,'-').replace(/\s+/g,' ').trim(); }
 function opSoma(o){ return Object.keys(opFormas).reduce((s,k)=>s+(Number(o?.[k])||0), 0); }
 function opMaiorDif(f){ return Math.max(0, ...Object.values(f.diferenca||{}).map(v=>Math.abs(Number(v)||0))); }
 function opStatusTxt(s){ return {ok:'BATEU', diferenca:'COM DIFERENÇA', conferido:'CONFERIDO'}[s] || String(s||'').toUpperCase(); }
@@ -29,8 +34,8 @@ td.n,th.n{text-align:right;white-space:nowrap}.c{text-align:center}.sub{font-siz
 /* ───────── comprovante de um fechamento ───────── */
 function opReciboHtml(f){
   const temEsp = f.esperado && Object.keys(f.esperado).length, v = f.vendas||{}, vers = opAdmin() ? opVersoes(f.id) : [];
-  const lin = k => `<tr><td>${opFormas[k][0]}</td><td class="n">${brl2(f.contado?.[k])}</td>${temEsp?`<td class="n">${brl2(f.esperado?.[k])}</td>`:''}<td class="n">${Math.abs(Number(f.diferenca?.[k])||0)<0.005?'ok':opDifTxt(f.diferenca?.[k])}</td></tr>`;
-  return `<!doctype html><html><head><meta charset="utf-8"><title>Fechamento ${esc(opLojaNome(f.loja))} ${ddmm(f.data)}</title><style>${OP_CSS_PRINT}body{max-width:76mm;margin:0 auto}</style></head><body>
+  const lin = k => `<tr><td>${opFormas[k][0]}</td><td class="n">${brl2(f.contado?.[k])}</td>${temEsp?`<td class="n">${opBrl(f.esperado?.[k])}</td>`:''}<td class="n">${Math.abs(Number(f.diferenca?.[k])||0)<0.005?'ok':opDifTxt(f.diferenca?.[k])}</td></tr>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><title>Fechamento de Caixa - ${esc(opLojaNome(f.loja))} - ${esc(String(f.data).split('-').reverse().join('-'))}</title><style>${OP_CSS_PRINT}body{max-width:76mm;margin:0 auto}</style></head><body>
   <div class="c"><h1>LAS VEGAS SEX SHOP</h1><div class="sub">Fechamento de caixa</div></div>
   <div class="linha"></div>
   <table><tr><td>Loja</td><td class="n forte">${esc(opLojaNome(f.loja))}</td></tr><tr><td>Data</td><td class="n forte">${esc(String(f.data).split('-').reverse().join('/'))}</td></tr>
@@ -38,7 +43,7 @@ function opReciboHtml(f){
   <div class="c"><span class="st">${opStatusTxt(f.status)}</span></div>
   <table><thead><tr><th>Forma</th><th class="n">Contado</th>${temEsp?'<th class="n">Esperado</th>':''}<th class="n">Dif.</th></tr></thead><tbody>
   ${Object.keys(opFormas).map(lin).join('')}
-  <tr class="forte"><td>TOTAL</td><td class="n">${brl2(opSoma(f.contado))}</td>${temEsp?`<td class="n">${brl2(opSoma(f.esperado))}</td>`:''}<td class="n">${opDifTxt(opSoma(f.diferenca))}</td></tr></tbody></table>
+  <tr class="forte"><td>TOTAL</td><td class="n">${brl2(opSoma(f.contado))}</td>${temEsp?`<td class="n">${opBrl(opSoma(f.esperado))}</td>`:''}<td class="n">${opDifTxt(opSoma(f.diferenca))}</td></tr></tbody></table>
   <div class="linha"></div>
   <table><tr><td>Fundo de troco</td><td class="n">${brl2(f.fundo)}</td></tr>${f.sangrias!=null?`<tr><td>Sangrias do dia</td><td class="n">${brl2(f.sangrias)}</td></tr>`:''}
   ${f.qtd_vendas!=null?`<tr><td>Vendas no PDV</td><td class="n">${esc(String(f.qtd_vendas))}${v.total!=null?' · '+brl2(v.total):''}</td></tr>`:''}
@@ -49,7 +54,8 @@ function opReciboHtml(f){
   <div class="ass">Assinatura de quem fechou</div><div class="ass">Assinatura de quem conferiu</div>
   <p class="sub c" style="margin-top:10px">Impresso em ${opAgoraTxt()}</p></body></html>`;
 }
-function opImprimirAtual(){ if(window._opCxF) opImprimirHtml(opReciboHtml(window._opCxF)); }
+function opImprimirAtual(){ const f = window._opCxF; if(!f) return;
+  opImprimirHtml(opReciboHtml(f), opArq(`Fechamento de Caixa - ${opLojaNome(f.loja)} - ${String(f.data).split('-').reverse().join('-')} - ${primeiroNome(f.por||'')}`)); }
 
 /* resultado do fechamento: botão Imprimir + versões anteriores (administração) */
 const _opCaixaResultadoV28 = opCaixaResultado;
@@ -92,11 +98,11 @@ function opRelatorioMes(){
   <h1>LAS VEGAS SEX SHOP — Relatório de caixa ${mes}/${ano}</h1><p class="sub">Impresso em ${opAgoraTxt()}</p>
   <h2>Resumo por loja</h2><table><thead><tr><th>Loja</th><th class="n">Fechamentos</th><th class="n">Bateram/conferidos</th><th class="n">Com diferença</th><th class="n">Soma das diferenças</th><th class="n">Sangrias</th></tr></thead><tbody>${resumo}</tbody></table>
   <h2>Fechamentos</h2><table><thead><tr><th>Data</th><th>Loja</th><th>Fechou</th><th class="n">Contado</th><th class="n">Esperado</th><th class="n">Diferença</th><th>Status</th><th>Refeito</th></tr></thead><tbody>
-  ${F.map(f=>`<tr><td>${ddmm(f.data)}</td><td>${esc(opLojaNome(f.loja))}</td><td>${esc(primeiroNome(f.por||''))} ${esc(String(f.criado_em).slice(11,16))}</td><td class="n">${brl2(opSoma(f.contado))}</td><td class="n">${brl2(opSoma(f.esperado))}</td><td class="n">${opDifTxt(opSoma(f.diferenca))}</td><td>${opStatusTxt(f.status)}</td><td class="c">${opVersoes(f.id).length||''}</td></tr>`).join('')||'<tr><td colspan="8">Nenhum fechamento.</td></tr>'}</tbody></table>
+  ${F.map(f=>`<tr><td>${ddmm(f.data)}</td><td>${esc(opLojaNome(f.loja))}</td><td>${esc(primeiroNome(f.por||''))} ${esc(String(f.criado_em).slice(11,16))}</td><td class="n">${brl2(opSoma(f.contado))}</td><td class="n">${opBrl(opSoma(f.esperado))}</td><td class="n">${opDifTxt(opSoma(f.diferenca))}</td><td>${opStatusTxt(f.status)}</td><td class="c">${opVersoes(f.id).length||''}</td></tr>`).join('')||'<tr><td colspan="8">Nenhum fechamento.</td></tr>'}</tbody></table>
   <h2>Sangrias</h2><table><thead><tr><th>Data</th><th>Hora</th><th>Loja</th><th class="n">Valor</th><th>Tirou</th><th>Conferiu</th><th>Foto</th></tr></thead><tbody>
   ${SG.map(s=>`<tr><td>${ddmm(s.data)}</td><td>${esc(s.hora)}</td><td>${esc(opLojaNome(s.loja))}</td><td class="n">${brl2(s.valor)}</td><td>${esc(primeiroNome(s.tirou||''))}</td><td>${esc(s.conferiu||'—')}</td><td>${s.video_url?'sim':'NÃO'}</td></tr>`).join('')||'<tr><td colspan="7">Nenhuma sangria.</td></tr>'}</tbody></table>
   <div style="display:flex;gap:30px"><div class="ass" style="flex:1">Conferido por</div><div class="ass" style="flex:1">Data</div></div></body></html>`;
-  opImprimirHtml(html);
+  opImprimirHtml(html, `Relatorio de Caixa - ${mes}-${ano}`);
 }
 const _admCaixaV28 = admCaixa;
 admCaixa = function admCaixa(){
