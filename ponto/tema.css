@@ -289,3 +289,10 @@ tr.clica:hover td{background:var(--vermelho-claro)}
 @media (max-width:420px){.letreiro .sub{display:none}.letreiro h1{font-size:15px}}
 @media (max-width:640px){.numeros>:last-child:nth-child(odd){grid-column:1/-1}}
 .anel .cheio.zero{opacity:0}
+
+/* ═════ v35: conteúdo centralizado e aproveitando a largura (telas grandes / zoom reduzido) ═════ */
+@media (min-width:901px){
+  #app.com-menu>.menu{grid-column:1;grid-row:1}
+  #app.com-menu>.wrap{grid-column:2;grid-row:1;justify-self:center;margin-left:auto;margin-right:auto;width:100%;max-width:min(1280px,100%);padding-left:28px;padding-right:28px}
+}
+@media (min-width:1700px){ #app.com-menu>.wrap{max-width:1480px;padding-left:36px;padding-right:36px} }

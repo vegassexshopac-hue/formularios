@@ -160,7 +160,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .sub34-abas button.on{background:var(--cor);color:#fff;box-shadow:0 8px 18px -10px var(--cor)}
 .sub34-abas button .contador{margin-left:2px}
 .bar34{display:none}
-@media (max-width:860px){
+@media (max-width:900px){
   .bar34{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:40;background:#fff;border-top:1px solid var(--linha);box-shadow:0 -8px 24px -14px rgba(0,0,0,.25);padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
   .bar34 button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:12px;font-size:11.5px;font-weight:700;color:var(--creme3);position:relative;transition:color .2s,transform .2s var(--mola,ease)}
   .bar34 button i.ti{font-size:23px}

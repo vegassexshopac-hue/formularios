@@ -2,7 +2,7 @@
    Tema claro (tema.css), menu lateral agrupado no lugar da faixa de abas, "Mais" em blocos
    no celular e movimento: troca de tela deslizando, números contando, barras e anéis enchendo,
    indicador do menu deslizando e toque com onda. Não mexe nas telas: monta a casca em volta. */
-document.write('<link rel="stylesheet" href="tema.css?v=12">');
+document.write('<link rel="stylesheet" href="tema.css?v=35">');
 (function(){ const m = document.querySelector('meta[name="theme-color"]'); if(m) m.content = '#E3101F'; })();
 
 const GRUPOS_PORTAL = [
