@@ -101,7 +101,7 @@ document.write('<script src="app22.js?v=22b"><\/script>');
 /* v23: cupom da roleta da loja na comanda (código LV…, baixa ligada à cliente) + Administração › Roletas (app23.js) */
 document.write('<script src="app23.js?v=23"><\/script>');
 /* v24: WhatsApp · Kommo — esperando resposta, tarefas, funil/ficha e vendas pelo motor no Railway (app24.js) */
-document.write('<script src="app24.js?v=24"><\/script>');
+document.write('<script src="app24.js?v=24c"><\/script>');
 /* v26: miniaturas — comanda do PDV + "Acabou de vender" da Arena com detalhes da venda (app26.js) */
 document.write('<script src="app26.js?v=26"><\/script>');
 /* v27: login fixo no aparelho pessoal (não no computador da loja) — só sai pelo "Sair do portal" (app27.js) */

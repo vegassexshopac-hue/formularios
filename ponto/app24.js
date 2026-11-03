@@ -1,4 +1,4 @@
-/* ═══════════ Portal Equipe Las Vegas · v24 — WHATSAPP · KOMMO ═══════════
+/* ═══════════ Portal Equipe Las Vegas · v24b — ATENDIMENTO · KOMMO (WhatsApp, Instagram…) ═══════════
    Equipe (Portal › Vendas › WhatsApp) e Administração (Visão geral › WhatsApp · Kommo):
    clientes esperando resposta, tempo de resposta, tarefas da Kommo em balões
    (Concluir / Remarcar / Repassar), funil e ficha da cliente, vendas ganhas por vendedora.
@@ -25,6 +25,7 @@ const KM = { url: LS.get('lv_kommo_teste','') || KOMMO_URL_FIXO, tk:null, quem:n
 .km-cli.minha{border-left:4px solid var(--vermelho)}
 .km-cli .av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:800;flex:none;background:#E7F8EE;color:#127a43}
 .km-cli.atrasada .av{background:var(--vermelho-claro);color:var(--vermelho2);animation:kmPulsa 1.4s infinite}
+.km-cli .av{position:relative}.km-selo{position:absolute;right:-4px;bottom:-4px;width:19px;height:19px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:11px;font-style:normal;border:2px solid #fff}
 .km-cli .t{flex:1;min-width:0}.km-cli .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.km-cli .t small{color:var(--creme2);font-size:12.5px}
 .km-tempo{font-weight:800;font-size:13px;border-radius:99px;padding:4px 10px;background:#E7F8EE;color:#127a43;white-space:nowrap}
 .km-tempo.warn{background:var(--ouro-claro);color:#8a5a00}.km-tempo.bad{background:var(--vermelho-claro);color:var(--vermelho2)}
@@ -121,6 +122,19 @@ function kmRelogio(){
 }
 kmRelogio();
 
+/* ───────── canal da conversa (vem da origem da mensagem na Kommo) ───────── */
+const KM_CANAIS = {
+  whatsapp:{n:'WhatsApp', i:'ti-brand-whatsapp', bg:'#25D366'},
+  instagram:{n:'Instagram', i:'ti-brand-instagram', bg:'linear-gradient(45deg,#F58529,#DD2A7B 55%,#8134AF)'},
+  instagram_comentario:{n:'Comentário no Instagram', i:'ti-brand-instagram', bg:'linear-gradient(45deg,#F58529,#DD2A7B 55%,#8134AF)'},
+  facebook:{n:'Messenger', i:'ti-brand-messenger', bg:'#0084FF'},
+  telegram:{n:'Telegram', i:'ti-brand-telegram', bg:'#229ED9'},
+  tiktok:{n:'TikTok', i:'ti-brand-tiktok', bg:'#111'},
+  email:{n:'E-mail', i:'ti-mail', bg:'#6b6b6b'},
+  chat:{n:'Chat', i:'ti-message-circle', bg:'#8a8a8a'}
+};
+const kmCanal = k => KM_CANAIS[k] || KM_CANAIS.chat;
+
 /* ───────── pedacinhos ───────── */
 function kmMin(m){ if(m < 1) return 'agora'; if(m < 60) return m+' min'; const h = Math.floor(m/60); return h < 24 ? h+'h'+(m%60?String(m%60).padStart(2,'0'):'') : Math.floor(h/24)+'d'; }
 function kmClasseTempo(min, prazo){ return min >= prazo ? 'bad' : min >= prazo*.6 ? 'warn' : ''; }
@@ -129,7 +143,7 @@ function kmQuando(ts){ const d = new Date(ts), h = new Date(), am = new Date(); 
   const hr = d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   if(d.toDateString()===h.toDateString()) return 'hoje '+hr; if(d.toDateString()===am.toDateString()) return 'amanhã '+hr; return kmHora(ts); }
 function kmVazio(em, t, s){ return `<div class="km-vazio"><span class="em">${em}</span><b>${t}</b>${s?`<p style="margin:4px 0 0;font-size:13.5px">${s}</p>`:''}</div>`; }
-function kmSemUsuario(){ return `<div class="nota info" style="margin-bottom:12px"><i class="ti ti-link"></i><div><b>Seu usuário da Kommo ainda não está ligado ao seu nome.</b> Avise a administração (Administração › WhatsApp · Kommo › Configurar). Enquanto isso você vê a fila da loja, mas não as suas tarefas e vendas.</div></div>`; }
+function kmSemUsuario(){ return `<div class="nota info" style="margin-bottom:12px"><i class="ti ti-link"></i><div><b>Seu nome ainda não está ligado ao campo “Atendente Responsável” da Kommo.</b> Avise a administração (Administração › Atendimento · Kommo › Configurar). Enquanto isso você vê a fila da loja, mas não as suas tarefas e vendas.</div></div>`; }
 function kmErroHtml(){
   return `<div class="nota" style="border-color:var(--vermelho);margin-bottom:12px"><i class="ti ti-plug-x"></i><div><b>Não consegui falar com a Kommo.</b> ${esc(KM.erro)}<br><button class="btn p" style="margin-top:8px" onclick="kmCarregar(true)"><i class="ti ti-refresh"></i> Tentar de novo</button></div></div>`;
 }
@@ -143,11 +157,11 @@ function kmEsperando(adm){
   if(!it.length) return topo + kmVazio('💚','Todas as clientes foram respondidas.','A lista atualiza sozinha a cada 30 segundos.');
   const ordem = adm ? it : [...it].sort((a,b)=>(b.minha-a.minha) || (a.desde-b.desde));
   return topo + `<div class="km-lista">${ordem.map((i,n)=>`<div class="km-cli ${i.atrasada?'atrasada':''} ${i.minha?'minha':''}" style="animation-delay:${Math.min(n,12)*35}ms" onclick="${i.lead?`kmFicha(${i.lead})`:''}">
-    <span class="av">${esc(iniciais(i.nome))}</span>
-    <div class="t"><b>${esc(i.nome)}</b><small>${i.respNome?esc(primeiroNome(i.respNome)):'sem responsável'}${i.tel?' · '+esc(i.tel):''}</small></div>
+    <span class="av">${esc(iniciais(i.nome))}<em class="km-selo" style="background:${kmCanal(i.canal).bg}"><i class="ti ${kmCanal(i.canal).i}"></i></em></span>
+    <div class="t"><b>${esc(i.nome)}</b><small>${kmCanal(i.canal).n} · ${i.atNome?esc(i.atNome):'sem atendente'}${i.tel?' · '+esc(i.tel):''}</small></div>
     <span class="km-tempo ${kmClasseTempo(i.minUteis, e.prazoMin)}">${kmMin(i.minUteis)}</span>
-    ${i.link?`<a class="km-ir" href="${esc(i.link)}" target="_blank" rel="noopener" title="Responder na Kommo" onclick="event.stopPropagation()"><i class="ti ti-brand-whatsapp"></i></a>`:''}</div>`).join('')}</div>
-    <p class="apagado" style="font-size:12.5px;margin-top:8px">O tempo conta só no horário da loja. Toque no nome para ver a ficha; no botão verde para responder na Kommo.</p>`;
+    ${i.link?`<a class="km-ir" style="background:${kmCanal(i.canal).bg}" href="${esc(i.link)}" target="_blank" rel="noopener" title="Responder na Kommo (${kmCanal(i.canal).n})" onclick="event.stopPropagation()"><i class="ti ${kmCanal(i.canal).i}"></i></a>`:''}</div>`).join('')}</div>
+    <p class="apagado" style="font-size:12.5px;margin-top:8px">O tempo conta só no horário da loja. Toque no nome para ver a ficha; no botão colorido (o canal da cliente) para responder na Kommo.</p>`;
 }
 
 /* ───────── tarefas ───────── */
@@ -156,8 +170,8 @@ function kmTarefas(adm){
   if(!t) return `<p class="suave"><i class="ti ti-loader-2"></i> Carregando tarefas…</p>`;
   if(t.erro) return `<p class="suave">${esc(t.erro)}</p>`;
   if(t.semUsuario) return kmSemUsuario();
-  const us = t.usuarios||[];
-  const filtro = adm ? `<div class="linha quebra" style="gap:8px;margin-bottom:10px"><select class="inp" style="max-width:240px" onchange="KM.tarQuem=this.value;kmTarCarregar()"><option value="">Todas as pessoas</option>${us.map(u=>`<option value="${u.id}" ${String(KM.tarQuem)===String(u.id)?'selected':''}>${esc(u.nome)}</option>`).join('')}</select></div>` : '';
+  const us = t.atendentes||[];
+  const filtro = adm ? `<div class="linha quebra" style="gap:8px;margin-bottom:10px"><select class="inp" style="max-width:240px" onchange="KM.tarQuem=this.value;kmTarCarregar()"><option value="">Todas as atendentes</option>${us.map(u=>`<option value="${u.id}" ${String(KM.tarQuem)===String(u.id)?'selected':''}>${esc(u.nome)}</option>`).join('')}</select></div>` : '';
   const it = t.itens||[];
   if(!it.length) return filtro + kmVazio('✅','Nenhuma tarefa aberta.', adm?'':'Quando alguém criar uma tarefa para você na Kommo, ela aparece aqui.');
   const grupos = [['Atrasadas','ti-alarm',it.filter(x=>x.atrasada)],['Hoje','ti-sun',it.filter(x=>!x.atrasada&&x.hoje)],['Próximas','ti-calendar',it.filter(x=>!x.atrasada&&!x.hoje)]];
@@ -165,12 +179,12 @@ function kmTarefas(adm){
   return filtro + grupos.filter(g=>g[2].length).map(([nome,ic,ls])=>`<div class="km-grupo"><i class="ti ${ic}"></i>${nome} · ${ls.length}</div><div class="km-lista">${ls.map(x=>`
     <div class="km-tar ${x.atrasada?'atrasada':''}" id="kmt-${x.id}" style="animation-delay:${Math.min(n++,12)*35}ms">
       <div class="tx">${esc(x.texto||'Tarefa')}</div>
-      <div class="meta"><span class="km-tempo ${x.atrasada?'bad':x.hoje?'warn':''}"><i class="ti ti-clock"></i> ${kmQuando(x.prazo)}</span>${x.cliente?`<span>👤 ${x.lead?`<a href="#" onclick="event.preventDefault();kmFicha(${x.lead})">${esc(x.cliente)}</a>`:esc(x.cliente)}</span>`:''}${adm&&x.respNome?`<span>· ${esc(primeiroNome(x.respNome))}</span>`:''}</div>
+      <div class="meta"><span class="km-tempo ${x.atrasada?'bad':x.hoje?'warn':''}"><i class="ti ti-clock"></i> ${kmQuando(x.prazo)}</span>${x.cliente?`<span>👤 ${x.lead?`<a href="#" onclick="event.preventDefault();kmFicha(${x.lead})">${esc(x.cliente)}</a>`:esc(x.cliente)}</span>`:''}${adm&&x.atNome?`<span>· ${esc(x.atNome)}</span>`:''}</div>
       <div class="acoes"><button class="km-b-ok" onclick="kmTarConcluir(${x.id})"><i class="ti ti-check"></i>Concluir</button><button class="km-b-2" onclick="kmTarRemarcar(${x.id})"><i class="ti ti-clock-edit"></i>Remarcar</button><button class="km-b-2" onclick="kmTarRepassar(${x.id})"><i class="ti ti-arrow-forward-up"></i>Repassar</button>${x.link?`<a class="km-ir" style="margin-left:auto" href="${esc(x.link)}" target="_blank" rel="noopener" title="Abrir na Kommo"><i class="ti ti-external-link"></i></a>`:''}</div>
     </div>`).join('')}</div>`).join('');
 }
 async function kmTarCarregar(){
-  try{ KM.tar = await kmApi('/api/tarefas'+(S.tela==='admin'&&KM.tarQuem?'?todas='+KM.tarQuem:'')); }catch(e){ toast(e.message, true); }
+  try{ KM.tar = await kmApi('/api/tarefas'+(S.tela==='admin'&&KM.tarQuem?'?at='+KM.tarQuem:'')); }catch(e){ toast(e.message, true); }
   render();
 }
 async function kmTarAgir(id, corpo, ok){
@@ -200,8 +214,8 @@ function kmTarRemarcar(id){
     <button class="btn pri" onclick="const v=new Date($('#km-qd').value).getTime();if(!v)return toast('Escolha a data',true);fecharModal();kmTarAgir(${id},{acao:'remarcar',quando:v},'Tarefa remarcada ✔')"><i class="ti ti-calendar-check"></i> Remarcar</button></div>`);
 }
 function kmTarRepassar(id){
-  const us = (KM.tar||KM.res?.tarefas)?.usuarios||[];
-  kmModal('↪️ Repassar para', `<div class="km-lista">${us.map(u=>`<button class="btn" style="justify-content:flex-start" onclick="fecharModal();kmTarAgir(${id},{acao:'repassar',para:${u.id}},'Repassada para ${esc(primeiroNome(u.nome)).replace(/'/g,'')} ✔')"><span class="av" style="width:28px;height:28px;border-radius:50%;display:inline-grid;place-items:center;background:var(--veludo2);font-size:12px;font-weight:800;margin-right:8px">${esc(iniciais(u.nome))}</span>${esc(u.nome)}</button>`).join('') || '<p class="suave">Nenhuma pessoa encontrada na Kommo.</p>'}</div>`);
+  const us = (KM.tar||KM.res?.tarefas)?.atendentes||[];
+  kmModal('↪️ Passar a cliente para', `<div class="km-lista">${us.map(u=>`<button class="btn" style="justify-content:flex-start" onclick="fecharModal();kmTarAgir(${id},{acao:'repassar',para:${u.id}},'Repassada para ${esc(primeiroNome(u.nome)).replace(/'/g,'')} ✔')"><span class="av" style="width:28px;height:28px;border-radius:50%;display:inline-grid;place-items:center;background:var(--veludo2);font-size:12px;font-weight:800;margin-right:8px">${esc(iniciais(u.nome))}</span>${esc(u.nome)}</button>`).join('') || '<p class="suave">Nenhuma atendente no campo da Kommo.</p>'}<p class="apagado" style="font-size:12.5px;margin:6px 0 0">Muda o campo “Atendente Responsável” da cliente na Kommo — a tarefa vai junto.</p></div>`);
 }
 
 /* ───────── funil e ficha ───────── */
@@ -214,7 +228,7 @@ function kmFunil(){
   return `<div class="km-hub" style="margin-bottom:8px">${f.funis.map(x=>`<button class="${x.id===f.funil.id?'on':''}" onclick="KM.funilId=${x.id};KM.funil=null;render()">${esc(x.nome)}</button>`).join('')}</div>
     <p class="apagado" style="font-size:12.5px;margin:0 0 8px">${tot} ${tot===1?'cliente aberta':'clientes abertas'} · arraste para o lado para ver todas as etapas · 💬 = esperando resposta</p>
     <div class="km-kanban">${f.etapas.map((e,i)=>`<div class="km-col" style="animation-delay:${i*50}ms;border-top:4px solid ${esc(e.cor||'#ddd')}"><h4>${esc(e.nome)}<span>${e.total}</span></h4><div class="v">${e.valor?brl(e.valor):'&nbsp;'}</div>
-      ${e.leads.map((l,j)=>`<button class="km-card ${l.minha?'minha':''}" style="animation-delay:${Math.min(j,10)*30}ms" onclick="kmFicha(${l.id})"><b>${l.esperando?'<span class="zap">💬</span> ':''}${esc(l.nome)}</b><small>${l.respNome?esc(primeiroNome(l.respNome)):'—'}${l.valor?' · '+brl(l.valor):''}${l.parado>=3?` · <span style="color:var(--vermelho2)">${l.parado}d parada</span>`:''}</small></button>`).join('')}
+      ${e.leads.map((l,j)=>`<button class="km-card ${l.minha?'minha':''}" style="animation-delay:${Math.min(j,10)*30}ms" onclick="kmFicha(${l.id})"><b>${l.canal?`<i class="ti ${kmCanal(l.canal).i}" title="${kmCanal(l.canal).n}" style="color:${/gradient/.test(kmCanal(l.canal).bg)?'#DD2A7B':kmCanal(l.canal).bg}"></i> `:''}${l.esperando?'<span class="zap">💬</span> ':''}${esc(l.nome)}</b><small>${l.atNome?esc(l.atNome):'—'}${l.valor?' · '+brl(l.valor):''}${l.parado>=3?` · <span style="color:var(--vermelho2)">${l.parado}d parada</span>`:''}</small></button>`).join('')}
       ${e.total>e.leads.length?`<small class="apagado">+${e.total-e.leads.length} na Kommo</small>`:''}</div>`).join('')}</div>`;
 }
 async function kmFunilCarregar(){
@@ -234,20 +248,26 @@ async function kmFicha(id){
       ${espera!=null?`<div class="km-topo alerta" style="margin-bottom:10px"><span class="ic">⏰</span><div class="cresce"><b>Esperando resposta há ${kmMin(espera)}</b><small>desde ${kmHora(f.esperandoDesde)}</small></div></div>`:''}
       <div class="km-kpis">
         <div class="km-kpi"><small>Funil</small><b style="font-size:16px">${esc(f.funil||'—')}</b></div>
-        <div class="km-kpi"><small>Atende</small><b style="font-size:16px">${esc(f.respNome||'—')}</b></div>
+        <div class="km-kpi"><small>Atendente</small><b style="font-size:16px">${esc(f.atNome||'—')}</b></div>
         <div class="km-kpi"><small>Valor</small><b style="font-size:16px">${f.valor?brl2(f.valor):'—'}</b></div>
-        <div class="km-kpi"><small>WhatsApp</small><b style="font-size:16px">${f.tel?esc(adm?fmtTel(f.tel):f.tel):'—'}</b></div>
+        <div class="km-kpi"><small>Canal</small><b style="font-size:16px;display:flex;align-items:center;gap:6px">${f.canal?`<span class="km-ir" style="width:26px;height:26px;font-size:14px;border-radius:8px;background:${kmCanal(f.canal).bg}"><i class="ti ${kmCanal(f.canal).i}"></i></span>${kmCanal(f.canal).n}`:'—'}</b>${f.tel?`<small>${esc(adm?fmtTel(f.tel):f.tel)}</small>`:''}</div>
       </div>
       <div class="campo"><label>Etapa</label><select class="inp" id="km-etapa" onchange="kmMoverEtapa(${f.id}, this.value)">${f.etapas.map(e=>`<option value="${e.id}" ${e.id===f.etapaId?'selected':''}>${esc(e.nome)}</option>`).join('')}${f.etapas.some(e=>e.id===f.etapaId)?'':`<option selected>${esc(f.etapa)}</option>`}</select></div>
+      ${(adm||f.minha)&&f.atendentes?.length?`<div class="campo"><label>Atendente responsável</label><select class="inp" onchange="kmTrocarAt(${f.id}, this.value)">${f.at?'':'<option value="">— sem atendente —</option>'}${f.atendentes.map(a=>`<option value="${a.id}" ${a.id===f.at?'selected':''}>${esc(a.nome)}</option>`).join('')}</select></div>`:''}
       <p class="apagado" style="font-size:12.5px;margin:-4px 0 10px">Na Kommo desde ${kmHora(f.criado)} · mexida em ${kmHora(f.atualizado)}${f.ultEntrada?` · última mensagem dela ${kmHora(f.ultEntrada)}`:''}${f.ultSaida?` · última resposta ${kmHora(f.ultSaida)}`:''}</p>
       <b style="font-size:14px">📌 Tarefas abertas</b>
       <div class="km-lista" style="margin:6px 0 12px">${f.tarefas.length?f.tarefas.map(t=>`<div class="km-cli" style="cursor:default"><div class="t"><b style="white-space:normal">${esc(t.texto||'Tarefa')}</b><small>${kmQuando(t.prazo)}</small></div><button class="km-ir" style="background:#1a7f4b" title="Concluir" onclick="fecharModal();kmTarConcluir(${t.id})"><i class="ti ti-check"></i></button></div>`).join(''):'<p class="suave" style="font-size:13.5px;margin:0">Nenhuma.</p>'}</div>
       <div id="km-fid"></div>
       <div class="linha quebra" style="gap:8px">
-        <a class="btn pri" href="${esc(f.link)}" target="_blank" rel="noopener"><i class="ti ti-brand-whatsapp"></i> Abrir na Kommo</a>
+        <a class="btn pri" href="${esc(f.link)}" target="_blank" rel="noopener"><i class="ti ${f.canal?kmCanal(f.canal).i:'ti-external-link'}"></i> Abrir na Kommo</a>
         ${typeof fidApi==='function'||typeof fidAdm==='function'?`<button class="btn" onclick="kmFidelidade('${esc(f.nome).replace(/'/g,'')}','${esc(adm?f.tel:f.telFinal)}')"><i class="ti ti-heart-handshake"></i> Cartão fidelidade</button>`:''}
       </div>
     </div></div></div>`;
+}
+async function kmTrocarAt(id, at){
+  if(!at) return;
+  try{ await kmApi('/api/lead/'+id+'/atendente', {at:Number(at)}); toast('Atendente trocada na Kommo ✔'); KM.funil = null; KM.vend = null; kmCarregar(true); }
+  catch(e){ toast(e.message, true); }
 }
 async function kmMoverEtapa(id, etapa){
   try{ await kmApi('/api/lead/'+id+'/etapa', {etapa:Number(etapa)}); toast('Etapa atualizada na Kommo ✔'); KM.funil = null; kmCarregar(true); }
@@ -269,7 +289,7 @@ async function kmFidelidade(nome, tel){
     }
     box.innerHTML = achou ? `<div class="fid-card" style="margin-bottom:12px"><div class="top"><span style="font-size:20px">💳</span><b>${esc(achou.nome)}</b><small>${achou.selos??achou.no_cartao??0} selos</small></div>
       <div class="fid-msg">${achou.cashback?.saldo?`💸 Cashback <b>${brl2(achou.cashback.saldo)}</b>`:'Sem cashback no momento'}${achou.pendentes?.length?` · 🎁 ${achou.pendentes.length} prêmio(s) a entregar`:''}</div></div>`
-      : `<div class="nota info" style="margin-bottom:12px"><i class="ti ti-heart-handshake"></i><div>Ainda não tem cartão fidelidade com esse WhatsApp. Cadastre na próxima compra pelo PDV.</div></div>`;
+      : `<div class="nota info" style="margin-bottom:12px"><i class="ti ti-heart-handshake"></i><div>Não achei cartão fidelidade para essa cliente (pelo telefone ou nome). Cadastre na próxima compra pelo PDV.</div></div>`;
   }catch(e){ box.innerHTML = `<p class="apagado" style="font-size:13px">Cartão fidelidade indisponível: ${esc(e.message)}</p>`; }
 }
 
@@ -279,11 +299,11 @@ function kmMeusNumeros(){
   if(!KM.res?.temUsuario) return kmSemUsuario();
   const med = s => s==null ? '—' : s < 60 ? s+' s' : Math.round(s/60)+' min';
   return `<div class="km-kpis">
-    <div class="km-kpi"><small>Vendas no WhatsApp (mês)</small><b class="num">${v?brl(v.total):'—'}</b><small>${v?v.n+(v.n===1?' venda ganha':' vendas ganhas'):''}</small></div>
-    <div class="km-kpi" style="animation-delay:60ms"><small>Hoje no WhatsApp</small><b class="num">${v?brl(v.hoje):'—'}</b></div>
+    <div class="km-kpi"><small>Vendas pela Kommo (mês)</small><b class="num">${v?brl(v.total):'—'}</b><small>${v?v.n+(v.n===1?' venda ganha':' vendas ganhas'):''}</small></div>
+    <div class="km-kpi" style="animation-delay:60ms"><small>Hoje pela Kommo</small><b class="num">${v?brl(v.hoje):'—'}</b></div>
     <div class="km-kpi" style="animation-delay:120ms"><small>Seu tempo de resposta (hoje)</small><b>${med(t?.hoje?.mediana)}</b><small>${t?.hoje?.n?t.hoje.n+' respostas':'sem respostas hoje'}</small></div>
     <div class="km-kpi" style="animation-delay:180ms"><small>Dentro de ${pz} min (7 dias)</small><b>${t?.semana?.dentro!=null?t.semana.dentro+'%':'—'}</b><div class="km-barra"><i style="width:${t?.semana?.dentro||0}%"></i></div></div>
-  </div><p class="apagado" style="font-size:12.5px">Só você contra você: compare com a semana passada. As vendas contam quando a cliente vai para “venda ganha” na Kommo com você como responsável.</p>`;
+  </div><p class="apagado" style="font-size:12.5px">Só você contra você: compare com a semana passada. As vendas contam quando a cliente vai para “venda ganha” na Kommo com você no campo Atendente Responsável${KM.res?.vendas?.pdv?.ligado?' — e já somam na sua meta do PDV.':'.'}</p>`;
 }
 
 /* ───────── administração: vendas, tempo, configurar ───────── */
@@ -295,7 +315,7 @@ function kmVendas(){
   return `<div class="linha quebra" style="gap:8px;margin-bottom:10px"><input class="inp" type="month" style="max-width:180px" value="${v.mes}" onchange="KM.vendMes=this.value;KM.vend=null;render()"></div>
     <div class="km-kpis"><div class="km-kpi"><small>Ganhas no mês</small><b>${v.total.n}</b></div><div class="km-kpi" style="animation-delay:60ms"><small>Valor no mês</small><b>${brl(v.total.total)}</b></div><div class="km-kpi" style="animation-delay:120ms"><small>Hoje</small><b>${brl(v.total.hoje)}</b></div><div class="km-kpi" style="animation-delay:180ms"><small>Ticket médio</small><b>${brl(v.total.n?v.total.total/v.total.n:0)}</b></div></div>
     <div class="cartao pad">${v.pessoas.length?v.pessoas.map((p,i)=>`<div style="margin-bottom:12px"><div class="linha entre"><b>${esc(p.eid&&nomes[p.eid]?primeiroNome(nomes[p.eid]):p.nome)}${p.eid?'':' <small class="apagado">(não ligada ao portal)</small>'}</b><span><b>${brl(p.total)}</b> <small class="apagado">· ${p.n} ${p.n===1?'venda':'vendas'}${p.hoje?' · hoje '+brl(p.hoje):''}</small></span></div><div class="km-barra"><i style="width:${p.total/mx*100}%;animation-delay:${i*80}ms"></i></div></div>`).join(''):kmVazio('📭','Nenhuma venda ganha na Kommo neste mês.')}</div>
-    <p class="apagado" style="font-size:12.5px">Conta cada cliente que foi para “venda ganha” na Kommo, pelo valor do lead e pela responsável. Ainda não soma na meta do PDV, para não contar duas vezes a venda que também passou no caixa.</p>`;
+    <p class="apagado" style="font-size:12.5px">Conta cada cliente que foi para “venda ganha” na Kommo, pelo valor do lead e pelo campo Atendente Responsável. ${v.pdv?.ligado?'<b>Somando na meta do PDV</b> (atualiza a cada 5 min).':'Ainda não está somando na meta do PDV — ligue em Configurar.'}</p>`;
 }
 async function kmVendCarregar(){ if(KM._vc) return; KM._vc = true; try{ KM.vend = await kmApi('/api/vendas'+(KM.vendMes?'?mes='+KM.vendMes:'')); }catch(e){ KM.vend = {erro:e.message}; } finally{ KM._vc = false; } kmRepintar(); }
 function kmTempo(){
@@ -313,8 +333,13 @@ function kmConfig(){
   const k = c.kommo||{}, dias = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   return `<div class="nota ${k.ok?'info':''}" style="margin-bottom:12px;${k.ok?'':'border-color:var(--vermelho)'}"><i class="ti ti-${k.ok?'plug-connected':'plug-x'}"></i><div><b>${k.ok?'Kommo conectada':'Kommo com problema'}</b>${k.conta?' · conta '+esc(k.conta):''}${k.subdominio?' · '+esc(k.subdominio)+'.kommo.com':''}${k.ultimaLeitura?`<br><small>Última leitura das conversas: ${kmHora(k.ultimaLeitura)}</small>`:''}${k.erro?`<br><small>${esc(k.erro)}</small>`:''}
       <br><button class="btn p" style="margin-top:6px" onclick="kmAtualizarJa()"><i class="ti ti-refresh"></i> Atualizar agora</button></div></div>
-    <div class="cartao pad" style="margin-bottom:12px"><h3 style="margin:0 0 4px;font-size:16px">🔗 Quem é quem</h3><p class="apagado" style="font-size:13px;margin:0 0 10px">Ligue cada usuário da Kommo à colaboradora do portal. É isso que faz as tarefas, as vendas e o tempo de resposta aparecerem para cada uma.</p>
-      ${c.usuarios.filter(u=>u.ativo).map(u=>`<div class="linha entre" style="gap:10px;padding:6px 0;border-bottom:1px solid var(--linha2)"><span><b>${esc(u.nome)}</b><br><small class="apagado">Kommo #${u.id}</small></span><select class="inp km-map" data-uid="${u.id}" style="max-width:220px"><option value="">— ninguém —</option>${colabs.map(x=>`<option value="${x.id}" ${c.mapa[u.id]===x.id?'selected':''}>${esc(x.nome)}</option>`).join('')}</select></div>`).join('')}</div>
+    <div class="cartao pad" style="margin-bottom:12px"><h3 style="margin:0 0 4px;font-size:16px">🔗 Quem é quem</h3><p class="apagado" style="font-size:13px;margin:0 0 10px">${c.campo?`Pelo campo <b>${esc(c.campo.nome)}</b> do lead (as etapas de cada atendente no funil preenchem esse campo).`:'<b>Não achei o campo de atendente na Kommo.</b>'} Ligue cada opção à colaboradora do portal: é isso que faz as tarefas, as vendas e o tempo de resposta aparecerem para cada uma.</p>
+      ${(c.atendentes||[]).map(u=>{ const sug = c.mapaAt[u.id] || (colabs.find(x=>semAcento(primeiroNome(x.nome)).slice(0,3)===semAcento(u.nome).slice(0,3))||{}).id || ''; return `<div class="linha entre" style="gap:10px;padding:6px 0;border-bottom:1px solid var(--linha2)"><span><b>${esc(u.nome)}</b><br><small class="apagado">${c.mapaAt[u.id]?'ligada':(sug?'sugestão — confira e salve':'opção da Kommo')}</small></span><select class="inp km-map" data-at="${u.id}" style="max-width:220px"><option value="">— ninguém —</option>${colabs.map(x=>`<option value="${x.id}" ${sug===x.id?'selected':''}>${esc(x.nome)}</option>`).join('')}</select></div>`; }).join('')}</div>
+    <div class="cartao pad" style="margin-bottom:12px"><h3 style="margin:0 0 4px;font-size:16px">🧾 Vendas da Kommo no PDV</h3>
+      <p class="apagado" style="font-size:13px;margin:0 0 10px">Quando a cliente vai para “venda ganha” na Kommo, o valor entra na meta da atendente no PDV (Arena, ranking e metas), uma vez só. Se o valor ou a atendente mudar, corrige; se sair de “venda ganha”, tira. <b>Por isso, a venda do WhatsApp/Instagram não deve ser passada de novo no caixa do PDV.</b></p>
+      ${c.pdv?.segredo?`<label class="linha" style="gap:8px;margin-bottom:8px;cursor:pointer"><input type="checkbox" id="km-somar" ${c.cfg.somarMeta?'checked':''}> Somar as vendas da Kommo na meta do PDV</label>
+        ${c.pdv.ultimo?`<p class="apagado" style="font-size:12.5px;margin:0 0 8px">${c.pdv.ultimo.ok?'✅':'⚠️'} Última sincronização ${kmHora(c.pdv.ultimo.em)}${c.pdv.ultimo.ok?(c.pdv.ultimo.res||[]).map(r=>` · ${r.mes}: ${r.novas||0} novas, ${r.corrigidas||0} corrigidas, ${r.tiradas||0} tiradas`).join(''):' · '+esc(c.pdv.ultimo.erro||'')}</p>`:''}`
+      :`<button class="btn pri" onclick="kmLigarPdv()"><i class="ti ti-plug-connected"></i> Ligar vendas da Kommo ao PDV</button><p class="apagado" style="font-size:12.5px;margin:6px 0 0">Precisa do arquivo KOMMO.gs no Apps Script (publicado como nova versão).</p>`}</div>
     <div class="cartao pad"><h3 style="margin:0 0 10px;font-size:16px">⏰ Prazo e horário</h3>
       <div class="fid-g2"><div class="campo"><label>Prazo para responder (min)</label><input class="inp" type="number" id="km-prazo" min="1" max="240" value="${c.cfg.prazoMin}"></div>
       <div class="campo"><label>Horário da loja</label><div class="linha" style="gap:6px"><input class="inp" type="time" id="km-ini" value="${c.cfg.ini}"><span>às</span><input class="inp" type="time" id="km-fim" value="${c.cfg.fim}"></div></div></div>
@@ -322,12 +347,20 @@ function kmConfig(){
       <label class="linha" style="gap:8px;margin-bottom:12px;cursor:pointer"><input type="checkbox" id="km-masc" ${c.cfg.mascararTel?'checked':''}> Esconder o WhatsApp da cliente da equipe (mostra só o final)</label>
       <button class="btn pri" onclick="kmCfgSalvar()"><i class="ti ti-device-floppy"></i> Salvar</button></div>`;
 }
-async function kmCfgCarregar(){ if(KM._cc) return; KM._cc = true; try{ KM.cfg = await kmApi('/api/admin/usuarios'); }catch(e){ KM.cfg = {erro:e.message}; } finally{ KM._cc = false; } kmRepintar(); }
+async function kmLigarPdv(){
+  try{
+    const g = await api('admKommo', {...S.adm.cred, op:'segredo'});
+    const r = await kmApi('/api/admin/salvar', {pdvSegredo:g.segredo, cfg:{somarMeta:true}});
+    KM.cfg = {...KM.cfg, cfg:r.cfg, pdv:r.pdv}; KM.vend = null; render();
+    toast(r.pdv?.ultimo?.ok ? 'Vendas da Kommo ligadas ao PDV ✔' : 'Ligado, mas a primeira sincronização falhou: '+(r.pdv?.ultimo?.erro||''), !r.pdv?.ultimo?.ok);
+  }catch(e){ toast(/desconhecida/i.test(e.message) ? 'Falta colar o KOMMO.gs no Apps Script e publicar nova versão.' : e.message, true); }
+}
+async function kmCfgCarregar(){ if(KM._cc) return; KM._cc = true; try{ KM.cfg = await kmApi('/api/admin/config'); }catch(e){ KM.cfg = {erro:e.message}; } finally{ KM._cc = false; } kmRepintar(); }
 async function kmCfgSalvar(){
-  const mapa = {}; document.querySelectorAll('.km-map').forEach(s=>{ if(s.value) mapa[s.dataset.uid] = s.value; });
+  const mapaAt = {}; document.querySelectorAll('.km-map').forEach(s=>{ if(s.value) mapaAt[s.dataset.at] = s.value; });
   const dias = [...document.querySelectorAll('.km-dia:checked')].map(x=>+x.value);
-  try{ const r = await kmApi('/api/admin/salvar', {mapa, cfg:{prazoMin:+$('#km-prazo').value, ini:$('#km-ini').value, fim:$('#km-fim').value, dias, mascararTel:$('#km-masc').checked}});
-    KM.cfg = {...KM.cfg, mapa:r.mapa, cfg:r.cfg}; KM.vend = null; toast('Configuração salva ✔'); kmCarregar(true); render(); }
+  try{ const r = await kmApi('/api/admin/salvar', {mapaAt, cfg:{prazoMin:+$('#km-prazo').value, ini:$('#km-ini').value, fim:$('#km-fim').value, dias, mascararTel:$('#km-masc').checked, ...($('#km-somar')?{somarMeta:$('#km-somar').checked}:{})}});
+    KM.cfg = {...KM.cfg, mapaAt:r.mapaAt, cfg:r.cfg, pdv:r.pdv}; KM.vend = null; toast('Configuração salva ✔'); kmCarregar(true); render(); }
   catch(e){ toast(e.message, true); }
 }
 async function kmAtualizarJa(){ try{ await kmApi('/api/admin/atualizar', {}); KM.cfg = null; KM.funil = null; KM.vend = null; toast('Atualizado ✔'); kmCarregar(true); render(); }catch(e){ toast(e.message, true); } }
@@ -341,7 +374,7 @@ function kmTela(adm){
   const sub = subs.some(s=>s[0]===KM.sub) ? KM.sub : 'esperando';
   const corpo = !r && !KM.erro ? `<p class="suave"><i class="ti ti-loader-2"></i> Conectando na Kommo…</p>` :
     ({esperando:()=>kmEsperando(adm), tarefas:()=>kmTarefas(adm), funil:kmFunil, numeros:kmMeusNumeros, vendas:kmVendas, tempo:kmTempo, config:kmConfig})[sub]();
-  return `<div class="linha entre quebra" style="gap:8px;margin-bottom:10px"><h2 class="secao" style="margin:0">💬 WhatsApp · Kommo</h2><span class="apagado" style="font-size:12.5px">${KM.carregando?'<i class="ti ti-loader-2"></i> atualizando…':KM.t?'atualizado '+new Date(KM.t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):''} <button class="icone" title="Atualizar" onclick="KM.funil=null;KM.vend=null;kmCarregar(true);if(KM.sub==='tarefas')kmTarCarregar()"><i class="ti ti-refresh"></i></button></span></div>
+  return `<div class="linha entre quebra" style="gap:8px;margin-bottom:10px"><h2 class="secao" style="margin:0">💬 Atendimento · Kommo</h2><span class="apagado" style="font-size:12.5px">${KM.carregando?'<i class="ti ti-loader-2"></i> atualizando…':KM.t?'atualizado '+new Date(KM.t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):''} <button class="icone" title="Atualizar" onclick="KM.funil=null;KM.vend=null;kmCarregar(true);if(KM.sub==='tarefas')kmTarCarregar()"><i class="ti ti-refresh"></i></button></span></div>
     ${KM.erro?kmErroHtml():''}
     <div class="km-hub">${subs.map(([k,i,n,b])=>`<button class="${sub===k?'on':''}" onclick="KM.sub='${k}';${k==='tarefas'?'kmTarCarregar();':''}render()"><i class="ti ${i}"></i>${n}${b?`<span class="contador">${b}</span>`:''}</button>`).join('')}</div>
     ${corpo}`;
@@ -353,9 +386,9 @@ function kmCartaoInicio(){
   const e = KM.res.esperando?.itens||[], minhas = e.filter(i=>i.minha), atras = e.filter(i=>i.atrasada).length;
   const t = KM.res.tarefas?.itens||[], ta = t.filter(x=>x.atrasada||x.hoje).length, v = KM.res.vendas?.eu;
   return `<div class="km-ini">
-    <button class="${atras?'alerta':''}" onclick="S.portalTab='whats';KM.sub='esperando';render()"><span class="ic">💬</span><span><b>${e.length}</b><small>${minhas.length?minhas.length+' sua(s) · ':''}esperando no WhatsApp</small></span></button>
+    <button class="${atras?'alerta':''}" onclick="S.portalTab='whats';KM.sub='esperando';render()"><span class="ic">💬</span><span><b>${e.length}</b><small>${minhas.length?minhas.length+' sua(s) · ':''}esperando resposta</small></span></button>
     <button style="animation-delay:60ms" onclick="S.portalTab='whats';KM.sub='tarefas';kmTarCarregar();render()"><span class="ic">📌</span><span><b>${ta}</b><small>tarefas para hoje</small></span></button>
-    ${v?`<button style="animation-delay:120ms" onclick="S.portalTab='whats';KM.sub='numeros';render()"><span class="ic">🏆</span><span><b>${brl(v.total)}</b><small>vendido no WhatsApp no mês</small></span></button>`:''}
+    ${v?`<button style="animation-delay:120ms" onclick="S.portalTab='whats';KM.sub='numeros';render()"><span class="ic">🏆</span><span><b>${brl(v.total)}</b><small>vendido pela Kommo no mês</small></span></button>`:''}
   </div>`;
 }
 
@@ -363,8 +396,8 @@ function kmCartaoInicio(){
 /* os grupos do menu (app12) só existem depois deste arquivo: encaixa na hora de desenhar */
 function kmGrupos(){
   try{
-    if(typeof GRUPOS_PORTAL !== 'undefined'){ const g = GRUPOS_PORTAL.find(x=>x.k.includes('pdv')); if(g && !g.k.includes('whats')) g.k.splice(g.k.indexOf('pdv')+1, 0, 'whats'); NOMES12.portal.whats = 'WhatsApp · Kommo'; }
-    if(typeof GRUPOS_ADM !== 'undefined'){ const g = GRUPOS_ADM.find(x=>x.k.includes('aovivo')); if(g && !g.k.includes('whats')) g.k.splice(g.k.indexOf('aovivo')+1, 0, 'whats'); NOMES12.admin.whats = 'WhatsApp · Kommo'; }
+    if(typeof GRUPOS_PORTAL !== 'undefined'){ const g = GRUPOS_PORTAL.find(x=>x.k.includes('pdv')); if(g && !g.k.includes('whats')) g.k.splice(g.k.indexOf('pdv')+1, 0, 'whats'); NOMES12.portal.whats = 'Atendimento · Kommo'; }
+    if(typeof GRUPOS_ADM !== 'undefined'){ const g = GRUPOS_ADM.find(x=>x.k.includes('aovivo')); if(g && !g.k.includes('whats')) g.k.splice(g.k.indexOf('aovivo')+1, 0, 'whats'); NOMES12.admin.whats = 'Atendimento · Kommo'; }
   }catch(e){}
 }
 const _telaPortalV24 = telaPortal;
@@ -378,7 +411,7 @@ telaPortal = function telaPortal(){
     h = h.replace(`class="aba on" style="flex:0 0 auto" onclick="S.portalTab='atalhos'`, `class="aba " style="flex:0 0 auto" onclick="S.portalTab='atalhos'`);
   } else h = _telaPortalV24();
   const n = KM.res?.esperando?.itens?.length || 0;
-  const btn = `<button class="aba ${aqui?'on':''}" style="flex:0 0 auto" onclick="S.portalTab='whats';S.protoAberto=null;render()"><i class="ti ti-brand-whatsapp"></i> WhatsApp ${n?`<span class="contador">${n}</span>`:''}</button>`;
+  const btn = `<button class="aba ${aqui?'on':''}" style="flex:0 0 auto" onclick="S.portalTab='whats';S.protoAberto=null;render()"><i class="ti ti-messages"></i> Atendimento ${n?`<span class="contador">${n}</span>`:''}</button>`;
   const a = h.indexOf(`onclick="S.portalTab='arena'`);
   if(a > 0){ const ini = h.lastIndexOf('<button', a); h = h.slice(0, ini) + btn + h.slice(ini); }
   return h;
@@ -399,7 +432,7 @@ function kmPatchMais(){
     if(i >= 0) g.k.splice(i, 1);
     let h; try{ h = base(); } finally { if(i >= 0) g.k.splice(i, 0, 'whats'); }
     const n = KM.res?.esperando?.itens?.length || 0;
-    const tile = `<button class="tile" style="--cor:var(--g-vendas)" onclick="S.portalTab='whats';render()"><i class="ti ti-brand-whatsapp"></i><b>WhatsApp · Kommo</b><small>${n?n+' esperando resposta':'Fila, tarefas e funil'}</small>${n?`<span class="contador">${n}</span>`:''}</button>`;
+    const tile = `<button class="tile" style="--cor:var(--g-vendas)" onclick="S.portalTab='whats';render()"><i class="ti ti-messages"></i><b>Atendimento · Kommo</b><small>${n?n+' esperando resposta':'Fila, tarefas e funil'}</small>${n?`<span class="contador">${n}</span>`:''}</button>`;
     const a = h.indexOf('<div class="tiles">');
     return a >= 0 ? h.slice(0, a+19) + tile + h.slice(a+19) : tile + h;
   };
@@ -419,7 +452,7 @@ telaAdmin = function telaAdmin(){
     h = h.replace(`class="aba on" onclick="S.adm.tab='regras'`, `class="aba " onclick="S.adm.tab='regras'`);
   }
   const n = KM.quem==='admin' ? (KM.res?.esperando?.itens?.length || 0) : 0;
-  const btn = `<button class="aba ${aqui?'on':''}" onclick="S.adm.tab='whats';TR=null;render()"><i class="ti ti-brand-whatsapp"></i> WhatsApp ${n?`<span class="contador">${n}</span>`:''}</button>`;
+  const btn = `<button class="aba ${aqui?'on':''}" onclick="S.adm.tab='whats';TR=null;render()"><i class="ti ti-messages"></i> Atendimento ${n?`<span class="contador">${n}</span>`:''}</button>`;
   const ancora = h.indexOf(`onclick="S.adm.tab='pedidos'`);
   if(ancora > 0){ const ini = h.lastIndexOf('<button', ancora); h = h.slice(0, ini) + btn + h.slice(ini); }
   return h;
@@ -427,6 +460,6 @@ telaAdmin = function telaAdmin(){
 const _itensBuscaV24 = itensBusca;
 itensBusca = function itensBusca(){
   const r = _itensBuscaV24(), adm = !!(S.adm && S.tela==='admin');
-  if(adm || S.sess) r.unshift({t:'WhatsApp · Kommo', s:'Clientes esperando resposta, tarefas, funil e vendas', i:'ti-brand-whatsapp', go:()=>{ if(adm) S.adm.tab='whats'; else { S.tela='portal'; S.portalTab='whats'; } render(); }});
+  if(adm || S.sess) r.unshift({t:'Atendimento · Kommo', s:'WhatsApp e Instagram: clientes esperando resposta, tarefas, funil e vendas', i:'ti-messages', go:()=>{ if(adm) S.adm.tab='whats'; else { S.tela='portal'; S.portalTab='whats'; } render(); }});
   return r;
 };
