@@ -266,11 +266,11 @@ async function kmFicha(id){
 }
 async function kmTrocarAt(id, at){
   if(!at) return;
-  try{ await kmApi('/api/lead/'+id+'/atendente', {at:Number(at)}); toast('Atendente trocada na Kommo ✔'); KM.funil = null; KM.vend = null; kmCarregar(true); }
+  try{ const r = await kmApi('/api/lead/'+id+'/atendente', {at:Number(at)}); toast(r?.movida?.etapa ? 'Atendente trocada e cliente movida para '+r.movida.etapa+' na Kommo ✔' : 'Atendente trocada na Kommo ✔'); KM.funil = null; KM.vend = null; kmCarregar(true); kmFicha(id); }
   catch(e){ toast(e.message, true); }
 }
 async function kmMoverEtapa(id, etapa){
-  try{ await kmApi('/api/lead/'+id+'/etapa', {etapa:Number(etapa)}); toast('Etapa atualizada na Kommo ✔'); KM.funil = null; kmCarregar(true); }
+  try{ await kmApi('/api/lead/'+id+'/etapa', {etapa:Number(etapa)}); toast('Etapa atualizada na Kommo ✔'); KM.funil = null; kmCarregar(true); kmFicha(id); }
   catch(e){ toast(e.message, true); }
 }
 /* liga a cliente da Kommo ao cartão fidelidade do PDV (pelo WhatsApp) */
