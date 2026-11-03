@@ -92,7 +92,7 @@ function estMovimentar_(lista, tipo, ref, por, obs, uid) {
   return comTrava_(function () {
     var sh = aba_('Estoque'), cab = cabecalho_('Estoque', sh), atuais = ler_('Estoque'), porChave = {};
     atuais.forEach(function (r) { porChave[r.chave] = r; });
-    var agora = agora_(), hoje = hoje_(), base = uid || (new Date().getTime() + '' + Math.floor(Math.random() * 1e4)), movs = [];
+    var agora = agora_(), hoje = hoje_(), base = uid || (new Date().getTime() + '' + Math.floor(Math.random() * 1e4)), movs = [], mudou = {};
     lista.forEach(function (m, n) {
       var chave = m.produto_id + '|' + m.loja;
       var r = porChave[chave];
@@ -100,17 +100,36 @@ function estMovimentar_(lista, tipo, ref, por, obs, uid) {
       var antes = estNum_(r.qtd);
       var depois = m.definir != null ? estNum_(m.definir) : Math.round((antes + estNum_(m.delta)) * 1000) / 1000;
       if (m.minimo != null && m.minimo !== '') r.minimo = String(estNum_(m.minimo));
-      r.qtd = String(depois); r.atualizado_em = agora; r.por = por;
+      r.qtd = String(depois); r.atualizado_em = agora; r.por = por; mudou[chave] = r;
       movs.push({ id: 'M' + base + '-' + n, quando: agora, data: hoje, loja: m.loja, produto_id: m.produto_id, produto: String(m.produto || '').slice(0, 120),
                   tipo: tipo, qtd: String(Math.round((depois - antes) * 1000) / 1000), saldo: String(depois), ref: ref || '', por: por, obs: String(m.obs || obs || '').slice(0, 200) });
     });
-    var linhas = atuais.map(function (r) { return linha_('Estoque', r, cab); });
-    if (sh.getLastRow() > 1) sh.getRange(2, 1, sh.getLastRow() - 1, cab.length).clearContent();
-    if (linhas.length) sh.getRange(2, 1, linhas.length, cab.length).setNumberFormat('@').setValues(linhas);
+    estGravarSaldos_(sh, cab, atuais, mudou);
     var shM = aba_('MovEstoque'), cabM = cabecalho_('MovEstoque', shM);
     shM.getRange(shM.getLastRow() + 1, 1, movs.length, cabM.length).setNumberFormat('@').setValues(movs.map(function (m) { return linha_('MovEstoque', m, cabM); }));
     return movs;
   });
+}
+
+/* v32 (desempenho): grava só as linhas do estoque que mudaram (antes regravava a aba inteira — ~3 mil linhas — a cada venda).
+   Acha a linha pela coluna "chave" lida da própria planilha; produto/local novo vai para o fim.
+   Muitas mudanças de uma vez (contagem fechada, saldo inicial) continuam regravando tudo de uma vez, que é mais rápido nesse caso. */
+function estGravarSaldos_(sh, cab, atuais, mudou) {
+  var chaves = Object.keys(mudou), ultima = sh.getLastRow(), col = cab.indexOf('chave') + 1;
+  if (chaves.length > 40 || col < 1) {
+    var linhas = atuais.map(function (r) { return linha_('Estoque', r, cab); });
+    if (ultima > 1) sh.getRange(2, 1, ultima - 1, cab.length).clearContent();
+    if (linhas.length) sh.getRange(2, 1, linhas.length, cab.length).setNumberFormat('@').setValues(linhas);
+    return;
+  }
+  var pos = {};
+  if (ultima > 1) sh.getRange(2, col, ultima - 1, 1).getDisplayValues().forEach(function (l, i) { if (l[0]) pos[l[0]] = i + 2; });
+  var novas = [];
+  chaves.forEach(function (k) {
+    if (pos[k]) sh.getRange(pos[k], 1, 1, cab.length).setNumberFormat('@').setValues([linha_('Estoque', mudou[k], cab)]);
+    else novas.push(linha_('Estoque', mudou[k], cab));
+  });
+  if (novas.length) sh.getRange(ultima + 1, 1, novas.length, cab.length).setNumberFormat('@').setValues(novas);
 }
 
 /* ───────── IA: lê a nota (foto ou PDF) e confere a foto dos produtos ───────── */
