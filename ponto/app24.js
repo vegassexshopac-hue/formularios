@@ -74,6 +74,65 @@ const KM = { url: LS.get('lv_kommo_teste','') || KOMMO_URL_FIXO, tk:null, quem:n
 @keyframes kmSai{to{transform:translateX(40px) scale(.95);opacity:0;height:0;padding:0;margin:0}}
 @keyframes kmCresce{from{transform:scaleX(0)}}
 @keyframes kmFlutua{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.km-hero{background:linear-gradient(125deg,#0f5132,#17804a 55%,#22b864);color:#fff;border-radius:22px;padding:16px 18px;margin-bottom:12px;position:relative;overflow:hidden;animation:kmSobe .4s var(--mola)}
+.km-hero.alerta{background:linear-gradient(125deg,#5e0a12,#b10f1c 55%,#ff4d5a)}
+.km-hero::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.13) 48%,transparent 60%);background-size:260% 100%;animation:kmBrilho 6s ease-in-out infinite;pointer-events:none}
+.km-hero-l{display:flex;align-items:center;gap:14px}.km-hero-l b{display:block;font-size:17px}.km-hero-l small{opacity:.9;font-size:12.5px}
+.km-big{font-size:54px;font-weight:900;line-height:1;letter-spacing:-.04em;min-width:70px}
+.km-hero-k{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px;position:relative;z-index:1}
+.km-hero-k div{background:rgba(255,255,255,.13);border-radius:14px;padding:9px 10px;backdrop-filter:blur(4px);animation:kmPop .5s var(--mola)}
+@keyframes kmPop{from{transform:scale(.9)}to{transform:none}}
+.km-hero-k div.quente{background:rgba(255,215,0,.22);box-shadow:inset 0 0 0 1.5px rgba(255,215,0,.6)}
+.km-hero-k span{font-size:16px}.km-hero-k b{display:block;font-size:22px;line-height:1.1}.km-hero-k small{font-size:11.5px;opacity:.9}
+.km-urg{display:flex;height:9px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.2);margin-top:14px;position:relative;z-index:1}
+.km-urg i{display:block;height:100%;transform-origin:left;animation:kmCresce 1s var(--mola) both}
+.km-urg i.ok,.km-urg-leg i.ok{background:#7CF0B5}.km-urg i.quase,.km-urg-leg i.quase{background:#FFD54A}.km-urg i.atr,.km-urg-leg i.atr{background:#fff}
+.km-urg i.quase{animation-delay:.15s}.km-urg i.atr{animation-delay:.3s}
+.km-urg-leg{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;font-size:12px;opacity:.95;position:relative;z-index:1}.km-urg-leg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.km-barra2{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.km-chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.km-chips button{flex:none;border:1px solid var(--linha2);background:#fff;border-radius:99px;padding:7px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;display:flex;gap:6px;align-items:center;transition:transform .15s var(--mola),background .15s}
+.km-chips button span{background:var(--veludo2);border-radius:99px;padding:0 7px;font-size:12px}
+.km-chips button.on{background:var(--creme);color:#fff;border-color:var(--creme)}.km-chips button.on span{background:rgba(255,255,255,.2)}
+.km-chips button:hover{transform:translateY(-1px)}.km-chips button:active{transform:scale(.94)}
+.km-vistas{display:flex;background:#fff;border:1px solid var(--linha2);border-radius:12px;padding:3px}
+.km-vistas button{border:0;background:none;width:34px;height:30px;border-radius:9px;cursor:pointer;font-size:16px;color:var(--creme2);transition:background .15s}
+.km-vistas button.on{background:var(--vermelho);color:#fff}
+.km-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;align-items:start}
+.km-gcard{background:#fff;border-radius:20px;box-shadow:var(--sh);padding:12px;animation:kmSobe .45s var(--mola) both;border:1px solid transparent}
+.km-gcard.sem{background:linear-gradient(180deg,#FFF7E0,#fff 70px);border-color:#F5D27A}
+.km-gcard.eu{border-color:var(--vermelho);box-shadow:0 8px 26px rgba(227,16,31,.14)}
+.km-gcard header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.km-gcard header b{display:block;font-size:15px}.km-gcard header b em{font-style:normal;font-size:11px;background:var(--vermelho);color:#fff;border-radius:99px;padding:1px 7px;margin-left:4px;vertical-align:2px}
+.km-gcard header small{color:var(--creme2);font-size:12.5px}.km-gcard .neg{color:var(--vermelho2);font-weight:700}
+.km-gav{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:14px;background:conic-gradient(var(--vermelho) calc(var(--p)*1%),#E7F8EE 0);position:relative;flex:none}
+.km-gav::before{content:'';position:absolute;inset:4px;border-radius:50%;background:#fff;z-index:0}.km-gav{isolation:isolate}.km-gav{color:var(--creme)}
+.km-gav{z-index:0}.km-gcard header .km-gav{font-size:14px}
+.km-gav > *{position:relative}
+.km-gn{font-size:24px;font-weight:900;color:var(--creme);min-width:30px;text-align:right}
+.km-glist,.km-lista2{display:grid;gap:6px}
+.km-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:14px;background:var(--veludo2);cursor:pointer;animation:kmEntra .35s var(--mola) both;transition:transform .15s var(--mola),background .15s,box-shadow .15s;position:relative}
+.km-lista2 .km-row{background:#fff;border:1px solid var(--linha2)}
+.km-row:hover{transform:translateX(3px);background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.07)}.km-row:active{transform:scale(.98)}
+.km-row.minha{box-shadow:inset 3px 0 0 var(--vermelho)}
+.km-row.nova{animation:kmEntra .35s var(--mola) both,kmFlash 1.6s .2s 2}
+.km-cn{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;color:#fff;font-size:18px;flex:none}
+.km-row.atrasada .km-cn{animation:kmPulsa 1.4s infinite}
+.km-rt{flex:1;min-width:0}.km-rt b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.km-rt small{display:flex;flex-wrap:wrap;gap:4px 8px;font-size:11.5px;color:var(--creme2);margin-top:1px}
+.km-et{background:#fff;border:1px solid var(--linha2);border-radius:99px;padding:0 7px;color:var(--creme)}
+.km-tag{background:#E8F0FF;color:#2453b5;border-radius:99px;padding:0 7px;font-weight:700}
+.km-prog{height:4px;border-radius:99px;background:rgba(0,0,0,.07);margin-top:6px;overflow:hidden}
+.km-prog i{display:block;height:100%;border-radius:99px;background:#22b864;transform-origin:left;animation:kmCresce .9s var(--mola) both}
+.km-prog.warn i{background:#F5B524}.km-prog.bad i{background:var(--vermelho)}
+.km-rr{display:flex;flex-direction:column;align-items:flex-end;gap:2px}.km-rr small{font-size:10.5px;color:var(--creme3);text-transform:uppercase;letter-spacing:.04em}
+.km-mais{width:100%;margin-top:6px;border:1px dashed var(--linha2);background:none;border-radius:12px;padding:7px;font:inherit;font-weight:700;font-size:13px;cursor:pointer;color:var(--creme2)}
+.km-mais:hover{background:var(--veludo2)}
+.km-hq,.km-hq .km-hero-k div,.km-hq .km-urg i,.km-quieto .km-row:not(.nova),.km-quieto .km-gcard,.km-quieto .km-prog i{animation:none}
+@keyframes kmEntra{from{transform:translateY(8px) scale(.98);opacity:0}to{transform:none;opacity:1}}
+@keyframes kmFlash{0%,100%{box-shadow:0 0 0 0 rgba(37,211,102,0)}50%{box-shadow:0 0 0 4px rgba(37,211,102,.45)}}
+@media(max-width:700px){.km-hero-k{grid-template-columns:repeat(3,1fr)}.km-hero-k div:nth-child(n+4){display:none}.km-big{font-size:44px;min-width:56px}.km-grade{grid-template-columns:1fr}.km-rt small span:nth-child(n+4){display:none}}
+@media(prefers-reduced-motion:reduce){.km-hero::after,.km-row,.km-row.nova,.km-row.atrasada .km-cn,.km-urg i,.km-prog i{animation:none}}
 @media(prefers-reduced-motion:reduce){.km-topo::after,.km-topo .ic,.km-cli.atrasada .av,.km-vazio .em{animation:none}}`;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 })();
@@ -107,7 +166,7 @@ if(_sairV24) sair = function sair(){ kmSair(); return _sairV24.apply(this, argum
 async function kmCarregar(forcar){
   const q = kmQuem(); if(!q) return;
   if(KM.quem && KM.quem!==q){ KM.res=null; KM.funil=null; KM.tar=null; KM.vend=null; KM.tempo=null; KM.cfg=null; }
-  if(KM.carregando || (!forcar && KM.res && Date.now()-KM.t < 25e3)) return;
+  if(KM.carregando || (!forcar && KM.res && Date.now()-KM.t < 12e3)) return;
   KM.carregando = true;
   try{ KM.res = await kmApi('/api/resumo'); KM.erro=''; KM.t = Date.now(); KM.tar = KM.res.tarefas?.itens ? KM.res.tarefas : KM.tar; }
   catch(e){ KM.erro = e.message; }
@@ -118,7 +177,7 @@ function naTelaKm(){ return (S.tela==='portal' && S.portalTab==='whats') || (S.t
 function kmRepintar(){ if(typeof modalAberto==='function' && modalAberto()) return; const ae = document.activeElement; if(ae && /^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName)) return; if(naTelaKm() || (S.tela==='portal' && S.portalTab==='inicio')) render(); }
 function kmRelogio(){
   clearInterval(KM.timer);
-  KM.timer = setInterval(()=>{ if(document.hidden || (KM.sub==='config' && naTelaKm())) return; if(naTelaKm() || (S.tela==='portal' && S.portalTab==='inicio')) kmCarregar(true); }, 30e3);
+  KM.timer = setInterval(()=>{ if(document.hidden || (KM.sub==='config' && naTelaKm())) return; if(naTelaKm() || (S.tela==='portal' && S.portalTab==='inicio')) kmCarregar(true); }, 15e3);
 }
 kmRelogio();
 
@@ -151,17 +210,76 @@ function kmErroHtml(){
 /* ───────── esperando resposta ───────── */
 function kmEsperando(adm){
   const e = KM.res?.esperando; if(!e || e.erro) return e?.erro ? `<p class="suave">${esc(e.erro)}</p>` : '';
-  const it = e.itens||[], atras = it.filter(i=>i.atrasada).length, minhas = it.filter(i=>i.minha).length;
-  const topo = `<div class="km-topo ${atras?'alerta':''}"><span class="big">${it.length}</span><div class="cresce"><b>${it.length?(it.length===1?'cliente esperando resposta':'clientes esperando resposta'):'Ninguém esperando 🎉'}</b>
-    <small>${atras?`${atras} passou de ${e.prazoMin} min · `:''}${!adm&&minhas?`${minhas} ${minhas===1?'é sua':'são suas'} · `:''}${e.lojaAberta?'loja aberta':'fora do horário — o relógio do prazo está parado'}</small></div><span class="ic">${atras?'⏰':'💬'}</span></div>`;
-  if(!it.length) return topo + kmVazio('💚','Todas as clientes foram respondidas.','A lista atualiza sozinha a cada 30 segundos.');
-  const ordem = adm ? it : [...it].sort((a,b)=>(b.minha-a.minha) || (a.desde-b.desde));
-  return topo + `<div class="km-lista">${ordem.map((i,n)=>`<div class="km-cli ${i.atrasada?'atrasada':''} ${i.minha?'minha':''}" style="animation-delay:${Math.min(n,12)*35}ms" onclick="${i.lead?`kmFicha(${i.lead})`:''}">
-    <span class="av">${esc(iniciais(i.nome))}<em class="km-selo" style="background:${kmCanal(i.canal).bg}"><i class="ti ${kmCanal(i.canal).i}"></i></em></span>
-    <div class="t"><b>${esc(i.nome)}</b><small>${kmCanal(i.canal).n} · ${i.atNome?esc(i.atNome):'sem atendente'}${i.tel?' · '+esc(i.tel):''}</small></div>
-    <span class="km-tempo ${kmClasseTempo(i.minUteis, e.prazoMin)}">${kmMin(i.minUteis)}</span>
-    ${i.link?`<a class="km-ir" style="background:${kmCanal(i.canal).bg}" href="${esc(i.link)}" target="_blank" rel="noopener" title="Responder na Kommo (${kmCanal(i.canal).n})" onclick="event.stopPropagation()"><i class="ti ${kmCanal(i.canal).i}"></i></a>`:''}</div>`).join('')}</div>
-    <p class="apagado" style="font-size:12.5px;margin-top:8px">O tempo conta só no horário da loja. Toque no nome para ver a ficha; no botão colorido (o canal da cliente) para responder na Kommo.</p>`;
+  const todas = e.itens||[], pz = e.prazoMin||10;
+  // quem chegou desde a última atualização pisca
+  const antes = KM._vistos || null; KM._vistos = new Set(todas.map(i=>i.k));
+  const novas = new Set(antes ? todas.filter(i=>!antes.has(i.k)).map(i=>i.k) : []);
+  const atras = todas.filter(i=>i.atrasada).length, quase = todas.filter(i=>!i.atrasada && i.minUteis >= pz*.6).length, emDia = todas.length - atras - quase;
+  const porCanal = c => todas.filter(i=>i.canal===c || (c==='instagram' && i.canal==='instagram_comentario')).length;
+  const semAt = todas.filter(i=>!i.at).length, maior = todas.reduce((m,i)=>Math.max(m,i.minUteis),0), minhas = todas.filter(i=>i.minha).length;
+  const F = KM.filtro || 'todas';
+  const filtros = [['todas','Todas',todas.length],...(adm?[]:[['minhas','Minhas',minhas]]),['atrasadas','Atrasadas',atras],['instagram','Instagram',porCanal('instagram')],['whatsapp','WhatsApp',porCanal('whatsapp')],['sem','Sem atendente',semAt]];
+  const passa = i => F==='todas' || (F==='minhas'&&i.minha) || (F==='atrasadas'&&i.atrasada) || (F==='sem'&&!i.at) || (F==='instagram'&&/instagram/.test(i.canal)) || (F==='whatsapp'&&i.canal==='whatsapp');
+  const it = todas.filter(passa);
+  const vista = KM.vista || 'atendente';
+  const sig = F+'|'+vista, quieto = KM._sigEsp === sig; KM._sigEsp = sig;
+  const pct = (n)=> todas.length ? Math.round(n/todas.length*100) : 0;
+
+  const topo = `<div class="km-hero ${atras?'alerta':''}">
+    <div class="km-hero-l"><span class="km-big" data-km-n="${todas.length}">0</span><div><b>${todas.length===1?'cliente esperando':'clientes esperando'}</b><small>${e.lojaAberta?'🟢 loja aberta · o relógio está correndo':'🌙 fora do horário · o relógio está parado'}</small></div></div>
+    <div class="km-hero-k">
+      <div class="${atras?'quente':''}"><span>⏰</span><b data-km-n="${atras}">0</b><small>passaram de ${pz} min</small></div>
+      <div><span>⚡</span><b>${kmMin(maior)}</b><small>espera mais longa</small></div>
+      <div><span>📸</span><b data-km-n="${porCanal('instagram')}">0</b><small>Instagram</small></div>
+      <div><span>💬</span><b data-km-n="${porCanal('whatsapp')}">0</b><small>WhatsApp</small></div>
+      <div class="${semAt?'quente':''}"><span>🙋</span><b data-km-n="${semAt}">0</b><small>sem atendente</small></div>
+    </div>
+    ${todas.length?`<div class="km-urg" title="Em dia · quase no prazo · atrasadas"><i class="ok" style="width:${pct(emDia)}%"></i><i class="quase" style="width:${pct(quase)}%"></i><i class="atr" style="width:${pct(atras)}%"></i></div>
+    <div class="km-urg-leg"><span><i class="ok"></i>${emDia} em dia</span><span><i class="quase"></i>${quase} quase no prazo</span><span><i class="atr"></i>${atras} atrasadas</span></div>`:''}
+  </div>`;
+  if(!todas.length){ setTimeout(kmAnimar, 30); KM._sigEsp = null; return topo + kmVazio('💚','Todas as clientes foram respondidas.','A lista atualiza sozinha a cada 15 segundos.'); }
+
+  const barra = `<div class="km-barra2"><div class="km-chips">${filtros.map(([k,n,c])=>`<button class="${F===k?'on':''}" onclick="KM.filtro='${k}';render()">${n}<span>${c}</span></button>`).join('')}</div>
+    <div class="km-vistas"><button class="${vista==='atendente'?'on':''}" title="Por atendente" onclick="KM.vista='atendente';render()"><i class="ti ti-layout-grid"></i></button><button class="${vista==='lista'?'on':''}" title="Lista" onclick="KM.vista='lista';render()"><i class="ti ti-list"></i></button></div></div>`;
+
+  const linha = (i,n) => { const cn = kmCanal(i.canal), p = Math.min(100, Math.round(i.minUteis/pz*100)), cls = kmClasseTempo(i.minUteis, pz);
+    return `<div class="km-row ${i.atrasada?'atrasada':''} ${i.minha?'minha':''} ${novas.has(i.k)?'nova':''}" style="animation-delay:${Math.min(n,14)*30}ms" onclick="${i.lead?`kmFicha(${i.lead})`:''}">
+      <span class="km-cn" style="background:${cn.bg}" title="${cn.n}"><i class="ti ${cn.i}"></i></span>
+      <div class="km-rt"><b>${esc(i.nome)}</b>
+        <small>${i.etapaNome?`<span class="km-et">${esc(bonitoEt(i.etapaNome))}</span>`:''}${i.primeira?'<span class="km-tag">1º contato</span>':''}${vista==='lista'?`<span>${i.atNome?esc(i.atNome):'sem atendente'}</span>`:''}${i.valor?`<span>${brl(i.valor)}</span>`:''}${i.tel?`<span>${esc(i.tel)}</span>`:''}</small>
+        <div class="km-prog ${cls}"><i style="width:${p}%"></i></div></div>
+      <div class="km-rr"><span class="km-tempo ${cls}">${kmMin(i.minUteis)}</span><small>${i.atrasada?'atrasada':i.minUteis>=pz*.6?'quase':'no prazo'}</small></div>
+      ${i.link?`<a class="km-ir" style="background:${cn.bg}" href="${esc(i.link)}" target="_blank" rel="noopener" title="Responder na Kommo (${cn.n})" onclick="event.stopPropagation()"><i class="ti ti-send"></i></a>`:''}
+    </div>`; };
+
+  let corpo;
+  if(!it.length) corpo = kmVazio('🔎','Nada nesse filtro.','Toque em “Todas” para ver a fila inteira.');
+  else if(vista==='lista') corpo = `<div class="km-lista2">${it.map(linha).join('')}</div>`;
+  else {
+    const grupos = {}; it.forEach(i=>{ const k = i.at ? String(i.at) : 'sem'; (grupos[k] ||= []).push(i); });
+    const ord = Object.keys(grupos).sort((a,b)=> (a==='sem'?-1:b==='sem'?1:0) || (grupos[b].filter(x=>x.atrasada).length - grupos[a].filter(x=>x.atrasada).length) || (grupos[b].length-grupos[a].length));
+    corpo = `<div class="km-grade">${ord.map((k,gi)=>{ const ls = grupos[k], nome = k==='sem' ? 'Sem atendente' : (ls[0].atNome||'Atendente'), at = ls.filter(x=>x.atrasada).length, aberto = KM.abertos?.[k], mostra = aberto ? ls : ls.slice(0,4);
+      const p = Math.round(at/ls.length*100), eu = ls.some(x=>x.minha);
+      return `<section class="km-gcard ${k==='sem'?'sem':''} ${eu?'eu':''}" style="animation-delay:${gi*70}ms">
+        <header><span class="km-gav" style="--p:${p}">${k==='sem'?'🙋':esc(iniciais(nome))}</span><div class="cresce"><b>${esc(nome)}${eu?' <em>você</em>':''}</b><small>${ls.length} ${ls.length===1?'esperando':'esperando'}${at?` · <span class="neg">${at} atrasada${at>1?'s':''}</span>`:' · tudo no prazo'}</small></div><span class="km-gn">${ls.length}</span></header>
+        <div class="km-glist">${mostra.map(linha).join('')}</div>
+        ${ls.length>4?`<button class="km-mais" onclick="KM.abertos={...(KM.abertos||{}),'${k}':${!aberto}};render()">${aberto?'Mostrar menos':`Ver mais ${ls.length-4}`} <i class="ti ti-chevron-${aberto?'up':'down'}"></i></button>`:''}
+      </section>`; }).join('')}</div>`;
+  }
+  setTimeout(kmAnimar, 30);
+  return (quieto ? topo.replace('class="km-hero','class="km-hq km-hero') : topo) + barra + `<div class="${quieto?'km-quieto':''}">` + corpo + `</div><p class="apagado" style="font-size:12.5px;margin-top:10px">⏱️ O tempo conta só no horário da loja e a barrinha mostra quanto do prazo de ${pz} min já passou. Toque na cliente para ver a ficha; no botão colorido para responder na Kommo. Atualiza sozinho a cada 15 s.</p>`;
+}
+const bonitoEt = t => String(t||'').toLowerCase().replace(/(^|\s|\/)\S/g, x=>x.toUpperCase());
+/* números contando (só quando o valor muda) */
+function kmAnimar(){
+  KM._numAnt ||= {};
+  document.querySelectorAll('[data-km-n]').forEach((el,n)=>{
+    const alvo = +el.dataset.kmN, de = KM._numAnt[n] ?? 0; KM._numAnt[n] = alvo;
+    if(de === alvo || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches){ el.textContent = alvo; return; }
+    const t0 = performance.now(), d = 700;
+    const passo = t=>{ const k = Math.min(1,(t-t0)/d), v = Math.round(de + (alvo-de)*(1-Math.pow(1-k,3))); el.textContent = v; if(k<1) requestAnimationFrame(passo); };
+    requestAnimationFrame(passo);
+  });
 }
 
 /* ───────── tarefas ───────── */
