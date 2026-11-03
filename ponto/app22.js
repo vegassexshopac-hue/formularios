@@ -158,6 +158,7 @@ pdvPintarComanda = function pdvPintarComanda(bater){
 };
 function fidBloco(k){
   const c = FID.cli, cfg = fidCfg();
+  if(!c && !fidD()) return `<div class="fid-btn" style="cursor:default;border-color:var(--bad)"><span class="ic">⚠️</span><span><b>Fidelidade ainda desligada</b><small>A administração precisa atualizar o servidor (FIDELIDADE.gs)</small></span></div>`;
   if(!c) return `<button class="fid-btn" onclick="fidAbrirBusca()"><span class="ic">💳</span><span><b>Cliente fidelidade</b><small>Buscar ou cadastrar · selo, presente e cashback</small></span><i class="ti ti-chevron-right" style="margin-left:auto"></i></button>`;
   const p = k.fid || fidPrevia(k), no = c.no_cartao, cheio = no===0 && c.selos>0 && (c.pendentes||[]).some(x=>x.tipo===10);
   const mostrar = cheio ? cfg.ciclo : no, agora = p && p.selo ? ((p.selo-1) % cfg.ciclo) + 1 : 0;

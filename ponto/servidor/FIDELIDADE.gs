@@ -42,6 +42,7 @@ function fidTel_(t) {
 function fidMascara_(t) { t = String(t || ''); return t.length >= 4 ? '•••• ' + t.slice(-4) : ''; }
 function fidNasc_(s) {
   s = String(s || '').trim(); var m;
+  if (/^\d{8}$/.test(s)) s = s.slice(0, 2) + '/' + s.slice(2, 4) + '/' + s.slice(4);
   if ((m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/))) { var a = m[3].length === 2 ? (Number(m[3]) > 30 ? '19' : '20') + m[3] : m[3]; return a + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2); }
   if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
   return '';
