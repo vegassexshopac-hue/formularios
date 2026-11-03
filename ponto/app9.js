@@ -115,4 +115,6 @@ document.write('<script src="app30.js?v=30"><\/script>');
 /* v12: layout novo — tema claro, menu lateral agrupado e movimento (app12.js carrega o tema.css) */
 /* v31: campanha do mês — raspadinha do dia, bingo de vendas, hora de ouro, ranking da semana e mural dos sonhos (campanha.js) */
 document.write('<script src="campanha.js?v=31"><\/script>');
+/* v32: portal mais rápido — abre na hora com os dados guardados no aparelho e atualiza sozinho; arquivos guardados (sw.js) (app32.js) */
+document.write('<script src="app32.js?v=32"><\/script>');
 document.write('<script src="app12.js?v=12"><\/script>');
