@@ -75,6 +75,40 @@ const CP = { sub:'raspadinha', ouro:null, rank:null, sonhos:null, adm:null, admS
 .cp-print{display:grid;grid-template-columns:96px 1fr;gap:12px;background:#fff;border:1px solid var(--linha2);border-radius:16px;padding:10px;animation:cpSobe .3s both}
 .cp-print img{width:96px;height:96px;object-fit:cover;border-radius:12px;background:var(--veludo2);cursor:zoom-in}
 .cp-confete{position:fixed;width:9px;height:14px;border-radius:2px;z-index:9999;pointer-events:none;animation:cpCai 1.6s cubic-bezier(.2,.6,.4,1) forwards}
+
+.cpa-topo{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin:2px 2px 14px}
+.cpa-topo h2{font-size:clamp(22px,3vw,30px);font-weight:800;letter-spacing:-.025em;line-height:1.1;margin:0}
+.cpa-topo p{color:var(--creme2);font-weight:600;margin:4px 0 0}
+.cpa-eq{background:linear-gradient(125deg,#1C1416,#3a0c12 60%,#E3101F);color:#fff;border-radius:22px;padding:16px 18px;box-shadow:var(--sh2);animation:cpSobe .35s var(--mola) both}
+.cpa-eq small{display:block;opacity:.8;font-size:12.5px}.cpa-eq b{display:block;font-size:30px;font-weight:900;letter-spacing:-.03em;line-height:1.1}
+.cpa-sit{font-weight:800;font-size:16px;text-align:right}.cpa-sit small{font-weight:600}
+.cpa-eq.atras .cpa-sit{color:#FFD98A}
+.cpa-b{position:relative;height:9px;border-radius:99px;background:var(--veludo2);margin-top:6px;overflow:visible}
+.cpa-b i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--vermelho),#F5B524);transform-origin:left;animation:cpCresce 1s var(--mola) both}
+.cpa-b.grande{height:14px;background:rgba(255,255,255,.18);margin-top:12px}.cpa-b.grande i{background:linear-gradient(90deg,#F5B524,#FFE08A)}
+.cpa-b s{position:absolute;top:-4px;bottom:-4px;width:3px;border-radius:2px;background:#fff;text-decoration:none}
+.cpa-it{align-items:center;flex-wrap:wrap;cursor:default}.cpa-it:hover{transform:none}
+.cpa-mini{width:48px;height:48px;border-radius:12px;object-fit:cover;cursor:zoom-in;flex-shrink:0;background:var(--veludo2)}
+.cpa-bts{display:flex;gap:6px;flex-wrap:wrap}.cpa-bts .btn{padding:8px 12px}
+.cpa-ps{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.cpa-p{background:#fff;border-radius:20px;padding:14px;box-shadow:var(--sh);display:grid;gap:12px;animation:entraCard .45s var(--mola) both;animation-delay:calc(var(--k,0) * 70ms)}
+.cpa-p-top{display:flex;align-items:center;gap:10px}.cpa-p-top b{font-size:17px;flex:1}
+.cpa-av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:var(--vermelho-claro);color:var(--vermelho2)}
+.cpa-l span{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--creme3)}.cpa-l b{display:block;font-size:20px;font-weight:900;letter-spacing:-.02em}.cpa-l small{display:block;font-size:12.5px;color:var(--creme2)}
+.cpa-rod{display:flex;justify-content:space-between;gap:6px;font-size:13px;font-weight:700;border-top:1px solid var(--linha);padding-top:10px}
+.cpa-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.cpa-tile{position:relative;text-align:left;background:#fff;border:1px solid var(--linha);border-radius:18px;padding:14px;font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:3px;box-shadow:var(--sh);transition:transform .2s var(--mola),box-shadow .2s;animation:entraCard .45s var(--mola) both}
+.cpa-tile:hover{transform:translateY(-3px);box-shadow:var(--sh2)}.cpa-tile:active{transform:scale(.97)}
+.cpa-tile .em{font-size:28px}.cpa-tile b{font-size:15px}.cpa-tile small{color:var(--creme2);font-size:12.5px}
+.cpa-tile .contador{position:absolute;top:10px;right:10px}
+.cpa-como{margin-top:16px;background:#fff;border-radius:16px;padding:12px 16px;border:1px solid var(--linha)}
+.cpa-como summary{cursor:pointer;font-weight:800}.cpa-como ul{margin:10px 0 2px;padding-left:4px;list-style:none;display:grid;gap:8px;font-size:14px;line-height:1.45}
+.cpa-it .cresce{flex:1 1 200px;min-width:0}
+@media(max-width:620px){.cpa-bts{flex:1 1 100%;justify-content:flex-end}.cpa-tiles{grid-template-columns:1fr 1fr}.cpa-sit{text-align:left}}
+.cpa-teste{display:flex;align-items:center;gap:12px;width:100%;text-align:left;margin-top:14px;padding:14px 16px;border-radius:20px;border:2px dashed #F5B524;background:linear-gradient(120deg,#FFF3D6,#fff);font:inherit;cursor:pointer;transition:transform .2s var(--mola)}
+.cpa-teste:hover{transform:translateY(-2px)}.cpa-teste:active{transform:scale(.98)}.cpa-teste .em{font-size:32px}.cpa-teste b{display:block;font-size:16px}.cpa-teste small{color:var(--creme2)}
+.cpa-volta{border:0;background:none;font:inherit;font-weight:800;color:var(--vermelho2);cursor:pointer;padding:4px 0;margin-bottom:6px;display:inline-flex;gap:6px;align-items:center}
+.cpa-tit{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:0 0 12px}
 @keyframes cpSobe{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
 @keyframes cpPula{0%{transform:scale(.6);opacity:0}100%{transform:none;opacity:1}}
 @keyframes cpBrilho{0%,60%{background-position:120% 0}100%{background-position:-60% 0}}
@@ -288,7 +322,7 @@ async function cpSonhoSalvar(){
 
 /* ───────── tela da equipe ───────── */
 function cpRepintar(){ if(typeof modalAberto==='function' && modalAberto()) return; const ae = document.activeElement; if(ae && /^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName)) return;
-  if((S.tela==='portal' && (S.portalTab==='campanha' || S.portalTab==='inicio')) || (S.tela==='admin' && S.adm?.tab==='campanha')) render(); }
+  if((S.tela==='portal' && (S.portalTab==='campanha' || S.portalTab==='inicio')) || (S.tela==='admin' && (S.adm?.tab==='campanha' || S.adm?.tab==='central'))) render(); }
 function cpTela(){
   const c = cpD();
   if(!c) return `<h2 class="secao">🎯 Campanha do mês</h2>`+cpVazio('🛠️','A campanha ainda não foi ligada no servidor','Avise a administração.');
@@ -394,14 +428,64 @@ portalInicio = function portalInicio(){
 /* ───────── administração ───────── */
 function cpAdmTela(){
   const A = CP.adm;
-  if(!A){ cpAdmCarregar(); return `<h2 class="secao">🎯 Campanha do mês</h2><p class="suave"><i class="ti ti-loader-2"></i> Carregando…</p>`; }
-  if(A.erro) return `<h2 class="secao">🎯 Campanha do mês</h2><div class="nota" style="border-color:var(--vermelho)"><i class="ti ti-plug-x"></i><div>${/desconhecida/i.test(A.erro)?'<b>Falta instalar o servidor da campanha.</b> Cole o arquivo CAMPANHA.gs no Apps Script (o último da lista) e publique uma Nova versão.':esc(A.erro)}<br><button class="btn p" style="margin-top:8px" onclick="CP.adm=null;render()">Tentar de novo</button></div></div>`;
-  const pend = A.premios.filter(p=>p.status==='entregar').length, prn = A.prints.filter(p=>p.status==='pendente').length;
-  const subs = [['premios','ti-gift','Prêmios a entregar',pend],['prints','ti-photo-check','Prints',prn],['ranking','ti-trophy','Ranking'],['cartelas','ti-grid-dots','Cartelas'],['sonhos','ti-sparkles','Sonhos'],['config','ti-settings','Configurar']];
-  const sub = subs.some(s=>s[0]===CP.admSub) ? CP.admSub : 'premios';
+  if(!A){ cpAdmCarregar(); return `<div class="cpa-topo"><h2>🎯 Campanha do mês</h2><p><i class="ti ti-loader-2"></i> Carregando…</p></div>`; }
+  if(A.erro) return `<div class="cpa-topo"><h2>🎯 Campanha do mês</h2></div><div class="nota" style="border-color:var(--vermelho)"><i class="ti ti-plug-x"></i><div>${/desconhecida/i.test(A.erro)?'<b>Falta instalar o servidor da campanha.</b> Cole o arquivo CAMPANHA.gs no Apps Script e publique uma Nova versão.':esc(A.erro)}<br><button class="btn p" style="margin-top:8px" onclick="CP.adm=null;render()">Tentar de novo</button></div></div>`;
+  const sub = ['resumo','premios','prints','ranking','cartelas','sonhos','config'].includes(CP.admSub) ? CP.admSub : 'resumo';
+  if(sub==='resumo') return cpAdmResumo();
+  const nomes = {premios:'🎁 Prêmios', prints:'📸 Prints', ranking:'🏆 Ranking e mensagem do grupo', cartelas:'🎱 Cartelas do bingo', sonhos:'💭 Mural dos sonhos', config:'⚙️ Configurar a campanha'};
   const corpo = ({premios:cpAdmPremios, prints:cpAdmPrints, ranking:cpAdmRanking, cartelas:cpAdmCartelas, sonhos:cpAdmSonhos, config:cpAdmConfig})[sub]();
-  return `<div class="linha entre quebra" style="gap:8px;margin-bottom:10px"><h2 class="secao" style="margin:0">🎯 Campanha do mês ${A.cfg.ativa?'':'<span class="cp-pend">pausada</span>'}</h2><button class="icone" title="Atualizar" onclick="CP.adm=null;render()"><i class="ti ti-refresh"></i></button></div>
-    <div class="cp-hub">${subs.map(([k,i,n,b])=>`<button class="${sub===k?'on':''}" onclick="CP.admSub='${k}';render()"><i class="ti ${i}"></i>${n}${b?`<span class="contador">${b}</span>`:''}</button>`).join('')}</div>${corpo}`;
+  return `<button class="cpa-volta" onclick="CP.admSub='resumo';render()"><i class="ti ti-arrow-left"></i> Voltar para a campanha</button>
+    <h2 class="cpa-tit">${nomes[sub]}</h2>${corpo}`;
+}
+/* tela principal: o que precisa de você + como está cada uma hoje + atalhos grandes */
+function cpAdmResumo(){
+  const A = CP.adm, R = A.ranking, cfg = A.cfg, mt = R.meta;
+  const pend = A.premios.filter(p=>p.status==='entregar'), prn = A.prints.filter(p=>p.status==='pendente');
+  const metaEq = mt.meta * Math.max(1, R.pessoas.length), pctEq = Math.min(100, R.equipe.mes / metaEq * 100), ritmo = R.dias_passados / R.dias_uteis * 100;
+  const noRitmo = pctEq >= ritmo - 2;
+  const tipo = t => t==='raspadinha'?'Raspadinha':t==='bingo_linha'?'Linha do bingo':'Cartela cheia';
+  const precisa = [];
+  prn.forEach(p=>precisa.push(`<div class="c34-it warn cpa-it"><img class="cpa-mini" src="${esc(p.url)}" alt="" onclick="window.open('${esc(p.url)}','_blank')">
+      <span class="cresce"><b>${esc(p.colaboradora)} mandou um print</b><small>${esc(p.texto)} · confira se está certo</small></span>
+      <span class="cpa-bts"><button class="btn pri" onclick="cpAdmPrint('${p.id}',true)"><i class="ti ti-check"></i> Aprovar</button><button class="btn" onclick="cpAdmPrint('${p.id}',false)">Recusar</button></span></div>`));
+  pend.forEach(p=>precisa.push(`<div class="c34-it info cpa-it"><span class="c34-ic" style="background:var(--ouro-claro);color:#A86F00">🎁</span>
+      <span class="cresce"><b>Entregar para ${esc(p.colaboradora)}: ${esc(p.premio)}</b><small>${tipo(p.tipo)} · ${p.tipo==='raspadinha'?'dia '+cpDia(p.ref):'semana de '+cpDia(p.ref)}</small></span>
+      <span class="cpa-bts"><button class="btn pri" onclick="cpAdmEntregar('${esc(p.id)}')"><i class="ti ti-check"></i> Já entreguei</button></span></div>`));
+  const cont = {}; (A.contatos.porPessoa||[]).forEach(p=>cont[p.id]=p);
+  const pessoa = (p,i) => {
+    const pctD = Math.min(100, p.hoje / R.valor_dia * 100), bateu = p.hoje >= R.valor_dia - .009, k = A.cartelas[p.id];
+    const pctM = Math.min(100, p.mes / mt.meta * 100), falta = Math.max(0, mt.meta - p.mes);
+    return `<div class="cpa-p" style="--k:${i}">
+      <div class="cpa-p-top"><span class="cpa-av">${esc(iniciais(p.nome))}</span><b>${esc(p.nome)}</b>${p.nivel?`<span class="cp-ok">${p.nivel==='hiper'?'🚀 hiper':p.nivel==='super'?'🔥 super':'🎯 meta'}</span>`:''}</div>
+      <div class="cpa-l"><span>Hoje</span><b>${brl(p.hoje)}</b><small>${bateu?'🎟️ liberou a raspadinha':'faltam '+brl(R.valor_dia-p.hoje)+' para a raspadinha'}</small><div class="cpa-b"><i style="width:${pctD}%;${bateu?'background:var(--ok)':''}"></i></div></div>
+      <div class="cpa-l"><span>No mês</span><b>${brl(p.mes)}</b><small>${falta?'faltam '+brl(falta)+' para a meta':'meta batida!'}</small><div class="cpa-b"><i style="width:${pctM}%"></i></div></div>
+      <div class="cpa-rod"><span title="Bingo da semana">🎱 ${p.bingo}/9${p.linhas?' ✅':''}</span><span title="Raspadinhas no mês">🎟️ ${p.raspadinhas}</span><span title="Clientes chamadas hoje na Hora de Ouro">⏰ ${(cont[p.id]||{}).hoje||0} hoje</span></div>
+    </div>`; };
+  const tile = (em, t, s, sub, n) => `<button class="cpa-tile" onclick="CP.admSub='${sub}';render()"><span class="em">${em}</span><b>${t}</b><small>${s}</small>${n?`<span class="contador">${n}</span>`:''}</button>`;
+  return `<div class="cpa-topo"><div><h2>🎯 Campanha de ${nomeMes(R.mes).split(' ')[0].toLowerCase()} ${cfg.ativa?'':'<span class="cp-pend">pausada</span>'}</h2>
+      <p>Dia ${R.dias_passados} de ${R.dias_uteis} · meta de cada uma ${brl(mt.meta)} · valor do dia ${brl(R.valor_dia)}</p></div>
+      <button class="icone" title="Atualizar" onclick="CP.adm=null;render()"><i class="ti ti-refresh"></i></button></div>
+    <button class="cpa-teste" onclick="cpDemo()"><span class="em">🎮</span><span class="cresce"><b>Testar os jogos como a equipe vê</b><small>Raspadinha e bingo de mentirinha — não grava nada e não conta prêmio</small></span><i class="ti ti-chevron-right"></i></button>
+    <section class="cpa-eq ${noRitmo?'':'atras'}" style="margin-top:14px"><div class="linha entre quebra" style="gap:8px"><span><small>Equipe no mês</small><b class="num">${brl(R.equipe.mes)}</b><small>de ${brl(metaEq)} (a meta das ${R.pessoas.length} somada)</small></span>
+      <span class="cpa-sit">${noRitmo?'✅ No ritmo':'⚠️ Abaixo do ritmo'}<small>${Math.round(pctEq)}% feito · o mês está em ${Math.round(ritmo)}%</small></span></div>
+      <div class="cpa-b grande"><i style="width:${pctEq}%"></i><s style="left:${ritmo}%" title="onde deveria estar hoje"></s></div></section>
+    <section class="c34-caixa ${precisa.length?'':'ok'}" style="margin-top:14px"><div class="c34-cab"><h3>${precisa.length?'O que precisa de você':'Tudo em dia ✨'}</h3>${precisa.length?`<span class="c34-n">${precisa.length}</span>`:''}</div>
+      ${precisa.length?`<div class="c34-lista">${precisa.join('')}</div>`:`<p class="c34-vazio">Nenhum print para aprovar e nenhum prêmio para entregar. Quando alguém ganhar ou mandar print, aparece aqui.</p>`}</section>
+    <h2 class="secao" style="margin-top:18px">Como está cada uma</h2>
+    <div class="cpa-ps">${R.pessoas.map(pessoa).join('') || '<p class="suave">Ninguém participando — veja em Configurar.</p>'}</div>
+    <h2 class="secao" style="margin-top:18px">Mais</h2>
+    <div class="cpa-tiles">
+      ${tile('🏆','Ranking da semana','e a mensagem pronta para o grupo','ranking')}
+      ${tile('🎱','Cartelas do bingo','o que cada uma já marcou','cartelas')}
+      ${tile('💭','Mural dos sonhos','pelo que cada uma está correndo','sonhos')}
+      ${tile('🎁','Histórico de prêmios','tudo o que já foi ganho e entregue','premios')}
+      ${tile('⚙️','Configurar','prêmios, horários e quem participa','config')}
+    </div>
+    <details class="cpa-como"><summary>❓ Como funciona a campanha</summary><ul>
+      <li>🎟️ <b>Raspadinha:</b> vendeu ${brl(R.valor_dia)} no dia, ganha uma raspadinha no portal. O prêmio é sorteado pelo sistema e aparece aqui para você entregar.</li>
+      <li>🎱 <b>Bingo:</b> cartela da semana que marca sozinha pelas vendas do PDV. Avaliação no Google e story precisam de print — você aprova aqui em cima. Fechou linha ou cartela, ganha prêmio.</li>
+      <li>⏰ <b>Hora de Ouro:</b> no horário parado (Bosque ${esc(cfg.hora_ouro.bosque)}, Centro ${esc(cfg.hora_ouro.centro)}) cada uma chama clientes sumidas no WhatsApp.</li>
+      <li>🏆 <b>Ranking</b> toda segunda no grupo e 💭 <b>mural dos sonhos</b> para lembrar o motivo.</li></ul></details>`;
 }
 async function cpAdmCarregar(){
   if(CP._c.adm) return; CP._c.adm = true;
@@ -503,7 +587,7 @@ async function cpAdmSalvar(){
 
 const _telaAdminCamp = telaAdmin;
 telaAdmin = function telaAdmin(){
-  cpGrupos();
+  cpGrupos(); try{ cpGancho34(); }catch(e){}
   const A = S.adm, aqui = A.tab === 'campanha';
   let h;
   if(aqui){
@@ -530,3 +614,44 @@ itensBusca = function itensBusca(){
 /* sai da sessão: esquece o que era da vendedora */
 const _sairCamp = typeof sair==='function' ? sair : null;
 if(_sairCamp) sair = function sair(){ Object.assign(CP, {ouro:null, rank:null, sonhos:null, snap:null}); return _sairCamp.apply(this, arguments); };
+
+/* "O que precisa de mim hoje" (Início da Administração, v34): prints para aprovar e prêmios para entregar */
+function cpGancho34(){
+  if(window._cp34 || typeof itens34 !== 'function') return; window._cp34 = true;
+  const _itens34Camp = itens34;
+  itens34 = function itens34(){
+    const I = _itens34Camp.apply(this, arguments);
+    try{
+      if(!CP.adm){ cpAdmCarregar(); return I; }
+      if(CP.adm.erro) return I;
+      const prn = CP.adm.prints.filter(p=>p.status==='pendente'), pend = CP.adm.premios.filter(p=>p.status==='entregar');
+      const ir = () => { S.adm.tab = 'campanha'; CP.admSub = 'resumo'; };
+      if(prn.length) I.push({c:'warn', i:'ti-photo-check', t:`${prn.length===1?'1 print':prn.length+' prints'} do bingo para aprovar`, s:prn.slice(0,3).map(p=>p.colaboradora).join(' · '), b:'Aprovar', go:ir});
+      if(pend.length) I.push({c:'info', i:'ti-gift', t:`${pend.length===1?'1 prêmio':pend.length+' prêmios'} da campanha para entregar`, s:pend.slice(0,3).map(p=>p.colaboradora+': '+p.premio).join(' · '), b:'Ver', go:ir});
+    }catch(e){}
+    return I;
+  };
+}
+
+/* modo teste da administração: raspadinha e bingo de mentirinha (nada vai para o servidor) */
+function cpDemo(aba){
+  aba = aba || 'raspa';
+  const tabs = `<div class="cp-hub" style="justify-content:center"><button class="${aba==='raspa'?'on':''}" onclick="cpDemo('raspa')">🎟️ Raspadinha</button><button class="${aba==='bingo'?'on':''}" onclick="cpDemo('bingo')">🎱 Bingo</button></div>`;
+  if(aba==='raspa'){
+    const ps = (CP.adm?.cfg?.raspadinha?.premios||[]).filter(p=>p.ativo!==false && Number(p.peso)>0);
+    const tot = ps.reduce((s,p)=>s+Number(p.peso),0); let r = Math.random()*tot, e = ps[ps.length-1] || {nome:'Chocolate', emoji:'🍫'};
+    for(const p of ps){ r -= Number(p.peso); if(r < 0){ e = p; break; } }
+    const pr = {premio:(e.emoji?e.emoji+' ':'')+e.nome, nada:!!e.nada};
+    cpModal('🎮 Teste · Raspadinha', `${tabs}<p style="text-align:center;margin:0 0 8px" class="suave">Raspe com o dedo (ou com o mouse) 👇 — é só teste, sorteio de verdade com os seus prêmios</p>
+      <div class="cp-raspa"><div class="premio"><span class="em">${esc(e.emoji||'🎁')}</span><b>${esc(e.nome)}</b><small class="suave">${e.nada?'Amanhã tem mais!':'A administração entrega para você 💋'}</small></div><canvas id="cp-canvas"></canvas></div>
+      <p id="cp-raspa-fim" style="text-align:center;min-height:22px;font-weight:800;margin:0"></p>
+      <div class="linha" style="gap:8px;margin-top:8px"><button class="btn" style="flex:1" onclick="cpDemo('raspa')"><i class="ti ti-refresh"></i> Outra raspadinha</button><button class="btn pri" style="flex:1" onclick="fecharModal()">Fechar</button></div>`);
+    setTimeout(()=>cpPrepararRaspa(pr), 30);
+  } else {
+    const feitos = new Set(['r300','pecas3','meta_dia','casada']);
+    const q = (CP.adm?.bingo||[]).map((b,i)=>({...b, i, feito:feitos.has(b.id), como:'auto', quando:'', pendente:b.id==='avaliacao', recusado:''}));
+    const fake = {participa:true, bingo_premios:CP.adm?.cfg?.bingo||{}, bingo:{semana:'', ate:'', quadrados:q, linhas:[[0,1,2].every(i=>q[i]?.feito)?[0,1,2]:null,[3,4,5].every(i=>q[i]?.feito)?[3,4,5]:null].filter(Boolean), feitos:q.filter(x=>x.feito).length, cheia:false}};
+    let h = cpBingo(fake).replace(/onclick="cpPrint\('[^']+'\)"/g, `onclick="toast('No teste o print não é enviado 😉')"`).replace('Cartela da semana · a ', 'Cartela de exemplo ');
+    cpModal('🎮 Teste · Bingo', `${tabs}<p class="suave" style="text-align:center;margin:0 0 10px">Assim fica a cartela da vendedora: os quadrados vermelhos marcam sozinhos pelas vendas do PDV.</p>${h}`, true);
+  }
+}
