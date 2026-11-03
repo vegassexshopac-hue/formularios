@@ -113,4 +113,6 @@ document.write('<script src="app29.js?v=29"><\/script>');
 /* v30: ponto pelo celular — QR Code no computador da loja + selfie no celular (app30.js) */
 document.write('<script src="app30.js?v=30"><\/script>');
 /* v12: layout novo — tema claro, menu lateral agrupado e movimento (app12.js carrega o tema.css) */
+/* v31: campanha do mês — raspadinha do dia, bingo de vendas, hora de ouro, ranking da semana e mural dos sonhos (campanha.js) */
+document.write('<script src="campanha.js?v=31"><\/script>');
 document.write('<script src="app12.js?v=12"><\/script>');
