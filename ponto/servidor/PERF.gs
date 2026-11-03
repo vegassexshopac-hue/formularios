@@ -109,6 +109,24 @@ ler_ = function (nome) {
   return _perfLerMemo.apply(this, arguments);
 };
 
+/* Se alguém apagar uma coluna da planilha na mão, o conserto automático do cabeçalho continua valendo:
+   na hora de GRAVAR, se faltar coluna, esquece o "já conferido" e deixa o Código.gs recriar as colunas. */
+if (typeof cabecalho_ === 'function') {
+  var _perfCab = cabecalho_;
+  cabecalho_ = function (nome, sh) {
+    var c = _perfCab.apply(this, arguments);
+    try {
+      if (typeof _abaOk === 'object' && _abaOk && ABAS[nome] && Array.isArray(c) && ABAS[nome].some(function (k) { return c.indexOf(k) < 0; })) {
+        delete _abaOk[nome]; delete _perfAlca[nome];
+        if (typeof _cabs === 'object' && _cabs) delete _cabs[nome];
+        try { CacheService.getScriptCache().remove(perfAbaOkChave_()); } catch (e) {}
+        c = _perfCab(nome, aba_(nome));
+      }
+    } catch (e) {}
+    return c;
+  };
+}
+
 /* Montar o pacote de dados que vai para o app (dadosColab_, admDados, boot_) só LÊ a planilha.
    Enquanto monta, cada aba é lida uma vez só (inclusive as que acabaram de ser gravadas pela venda);
    ao terminar, essa cópia é jogada fora. Se algo dentro do pacote pedir a aba para gravar, ela sai da cópia. */
