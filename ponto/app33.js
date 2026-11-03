@@ -22,13 +22,14 @@ arenaCalc = function arenaCalc(){
   let A; try{ A = _arenaCalcV33(); } finally { P.vendas = orig; }
   // peças por venda continua só do PDV (venda da Kommo não tem produtos)
   const ym = A.ym;
-  (A.pessoas||[]).forEach(p=>{ const m = orig.filter(v=>v.status!=='cancelada' && v.data.startsWith(ym) && v.colaboradora_id===p.c.id); p.pa = m.length ? m.reduce((s,v)=>s+v.qtd_itens,0)/m.length : 0; });
+  (A.pessoas||[]).forEach(p=>{ const m = orig.filter(v=>v.status!=='cancelada' && v.data.startsWith(ym) && v.colaboradora_id===p.c.id); p.pa = m.length ? m.reduce((s,v)=>s+v.qtd_itens,0)/m.length : 0; p.semPdv = !m.length; });
+  if(A.pags) delete A.pags['Kommo'];   // formas de pagamento: só PDV
   if(!KMA.vistos) KMA.vistos = new Set(km.map(v=>v.id));
   return A;
 };
 const _arenaHTMLV33 = arenaHTML;
 arenaHTML = function arenaHTML(tv){
-  const h = kmArenaVendas().length ? _arenaHTMLV33(tv).replace(/venda\(s\) no PDV/g, 'venda(s) · PDV + Kommo') : _arenaHTMLV33(tv);
+  const h = kmArenaVendas().length ? _arenaHTMLV33(tv).replace(/venda\(s\) no PDV/g, 'venda(s) · PDV + Kommo').replace(/(Peças\/venda<\/small><b>)0,0(<\/b>)/g, '$1—$2') : _arenaHTMLV33(tv);
   return h.replace(/(<div style="--i:\d+" class="[^"]*)("[^>]*>(?:(?!<div style="--i:)[\s\S])*?)0 itens · Kommo/g, (m, a, b)=> a + ' ar-km' + b + '<span class="ar-kmtag"><i class="ti ti-brand-whatsapp"></i> Kommo</span> WhatsApp/Instagram');
 };
 if(typeof arVendaVer === 'function'){
