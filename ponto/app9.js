@@ -120,5 +120,7 @@ document.write('<script src="app32.js?v=32"><\/script>');
 document.write('<script src="app33.js?v=33b"><\/script>');
 /* v34: Administração organizada — 6 áreas no menu + abas por dentro + "O que precisa de mim hoje" (app34.js) */
 document.write('<script src="app34.js?v=35"><\/script>');
+/* v36: entrar mais rápido — aquece o servidor durante o PIN, tela "Entrando…", Administração lembrada no aparelho pessoal (app36.js) */
+document.write('<script src="app36.js?v=36"><\/script>');
 /* v12: layout novo — tema claro, menu lateral agrupado e movimento (app12.js carrega o tema.css) */
 document.write('<script src="app12.js?v=35"><\/script>');
