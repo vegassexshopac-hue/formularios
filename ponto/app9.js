@@ -132,5 +132,5 @@ document.write('<script src="evolucao.js?v=40"><\/script>');
 document.write('<script src="app42.js?v=42"><\/script>');
 /* v12: layout novo — tema claro, menu lateral agrupado e movimento (app12.js carrega o tema.css) */
 /* v41: relacionamento — venda da Kommo no PDV (estoque + fidelidade), clientes para chamar (aniversário, cashback vencendo, sumidas), backup automático (app41.js) */
-document.write('<script src="app41.js?v=41c"><\/script>');
+document.write('<script src="app41.js?v=41d"><\/script>');
 document.write('<script src="app12.js?v=35"><\/script>');

@@ -218,11 +218,19 @@ function relCupomAniv_(cliId, criar) {
   var hoje = hoje_(), ano = hoje.slice(0, 4), mes = c.nascimento.slice(5, 7);
   var cp = relCupomDe_(c.id, ano);
   if (cp || !criar) return { cliente: c, cupom: cp, mes: mes, noMes: hoje.slice(5, 7) === mes };
-  cp = { codigo: 'NIVER' + nsAleatorioRel_(5), cliente_id: c.id, cliente: c.nome, ano: ano, valido_de: ano + '-' + mes + '-01', valido_ate: relFimMes_(ano, mes), status: 'aberto', criado_em: agora_(), usado_em: '', canal: '', venda: '', ns_id: '', ns_status: '' };
+  cp = { codigo: relCodigoAmigavel_(c.nome), cliente_id: c.id, cliente: c.nome, ano: ano, valido_de: ano + '-' + mes + '-01', valido_ate: relFimMes_(ano, mes), status: 'aberto', criado_em: agora_(), usado_em: '', canal: '', venda: '', ns_id: '', ns_status: '' };
   relCupomNs_(cp);
   gravar_('CuponsAniv', cp);
   log_('Sistema', 'cupom aniversário', cp.cliente + ' · ' + cp.codigo + ' · site: ' + cp.ns_status);
   return { cliente: c, cupom: cp, mes: mes, noMes: hoje.slice(5, 7) === mes };
+}
+/** Código fácil de ler e digitar: NIVER + primeiro nome (sem acento, até 8 letras) + 2 números. Ex.: NIVERMARIANA47 */
+function relCodigoAmigavel_(nome) {
+  var p = String(nome || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z ]/g, '').trim().split(/\s+/)[0] || 'CLIENTE';
+  p = p.slice(0, 8);
+  var usados = {}; ler_('CuponsAniv').forEach(function (x) { usados[x.codigo] = 1; });
+  for (var i = 0; i < 60; i++) { var c = 'NIVER' + p + String(10 + Math.floor(Math.random() * 90)); if (!usados[c]) return c; }
+  return 'NIVER' + p + nsAleatorioRel_(4);
 }
 function nsAleatorioRel_(n) { var s = '', a = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; for (var i = 0; i < n; i++) s += a.charAt(Math.floor(Math.random() * a.length)); return s; }
 function relCupomPublico_(r) {

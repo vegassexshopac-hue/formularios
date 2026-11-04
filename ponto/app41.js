@@ -23,7 +23,11 @@
 .rel-it .av{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:19px;flex:none;background:#fff}
 .rel-it .t{flex:1;min-width:0}.rel-it .t b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rel-it .t small{color:var(--creme2);font-size:12px}
 .rel-zap{background:#25D366;color:#fff;border:0;border-radius:99px;padding:7px 12px;font:inherit;font-weight:800;font-size:12.5px;cursor:pointer;display:flex;gap:5px;align-items:center;transition:transform .15s var(--mola);flex:none}
-.rel-zap:active{transform:scale(.94)}.rel-ok{background:none;border:1px solid var(--linha2);border-radius:99px;padding:6px 10px;font:inherit;font-size:12px;cursor:pointer;flex:none}
+.rel-zap:active{transform:scale(.94)}
+.rel-cp{background:#FFF4D6;color:#7a4a00;border:1px solid #F5B524;border-radius:99px;padding:6px 10px;font:inherit;font-weight:800;font-size:12px;cursor:pointer;display:flex;gap:4px;align-items:center;flex:none;transition:transform .15s var(--mola)}.rel-cp:active{transform:scale(.94)}
+.rel-cod{display:inline-flex;align-items:center;gap:5px;margin-top:4px;border:2px dashed #E3101F;border-radius:10px;padding:3px 9px;font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:800;letter-spacing:.04em;background:#fff6f6;color:#15100D;cursor:pointer;user-select:all;-webkit-user-select:all;font-size:13px}
+.rel-cod:active{transform:scale(.96)}
+@media (max-width:560px){.rel-it{flex-wrap:wrap}.rel-it .t{flex:1 1 calc(100% - 50px)}.rel-it .t+button{margin-left:auto}}.rel-ok{background:none;border:1px solid var(--linha2);border-radius:99px;padding:6px 10px;font:inherit;font-size:12px;cursor:pointer;flex:none}
 .bk-card{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .bk-card .st{display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:13px;padding:4px 12px;border-radius:99px}
 .bk-card .st.on{background:var(--ok-bg);color:var(--ok)}.bk-card .st.off{background:var(--warn-bg);color:var(--warn)}
@@ -52,7 +56,7 @@ pdvPintarComanda = function pdvPintarComanda(bater){
       if(stt === undefined){ ANIV.st[c.id] = null; anivStatus(c.id); }
       const fb = el.querySelector('.fid-card');
       if(fb && stt && stt.status==='usado') fb.insertAdjacentHTML('beforeend', `<div class="fid-cash"><span>🎂 <b style="color:#FFD98A">Mês do aniversário</b><br><small style="color:#FFE3A3">cupom de 10% já usado em ${esc(ddmm(String(stt.usado_em).slice(0,10)))}${stt.canal==='site'?' no site':' na loja'}</small></span></div>`);
-      else if(fb) fb.insertAdjacentHTML('beforeend', `<div class="fid-cash"><span>🎂 <b style="color:#FFD98A">Mês do aniversário!</b><br><small style="color:#FFE3A3">cupom de 10% de desconto${stt&&stt.codigo?' · '+esc(stt.codigo):''}</small></span><button class="${usando?'on':''}" onclick="relCupomAniv()">${usando?'✔ Aplicado':'Aplicar 10%'}</button></div>`);
+      else if(fb) fb.insertAdjacentHTML('beforeend', `<div class="fid-cash"><span>🎂 <b style="color:#FFD98A">Mês do aniversário!</b><br><small style="color:#FFE3A3">cupom de 10% de desconto</small>${stt&&stt.codigo?`<span class="rel-cod" title="Toque para copiar" onclick="relCopiarTexto('${esc(stt.codigo)}')">${esc(stt.codigo)} <i class="ti ti-copy"></i></span>`:''}</span><button class="${usando?'on':''}" onclick="relCupomAniv()">${usando?'✔ Aplicado':'Aplicar 10%'}</button></div>`);
     }
   }catch(e){}
   const ancora = el.querySelector('#fid-box') || el.querySelector('.pdv-cli') || el.querySelector('.pdv-fim');
@@ -128,9 +132,32 @@ async function relCarregar(forcar){
 function relNum(d){ return d && !d.semServidor ? (d.aniversarios?.length||0) + (d.cashback?.length||0) + (d.sumidas?.length||0) : 0; }
 function relMsg(tipo, x){
   const n = primeiroNome(x.nome);
-  if(tipo==='aniversario') return `*${x.dias===0?'Feliz aniversário':'Seu aniversário está chegando'}, ${n}!* 🎂💋\nA Las Vegas te deu um *cupom de 10% de desconto* pra usar no *mês do seu aniversário*${x.cupom?`:\n\n🎁 *${x.cupom.codigo}*\n\nVale na loja${x.cupom.site?' e no site *lasvegassexshop.com.br*':''} até *${ddmm(x.cupom.valido_ate)}* (uma compra).`:'. É só falar seu nome no caixa! 🎁'}\n_Te esperamos!_`;
+  if(tipo==='aniversario'){
+    const c = x.cupom;
+    if(!c) return `*${x.dias===0?'Feliz aniversário':'Seu aniversário está chegando'}, ${n}!* 🎂💋\nA Las Vegas te deu um *cupom de 10% de desconto* pra usar no *mês do seu aniversário*. É só falar seu nome no caixa! 🎁\n_Te esperamos!_`;
+    return `*${x.dias===0?'Feliz aniversário':'Seu aniversário está chegando'}, ${n}!* 🎂💋\nA Las Vegas te deu um *cupom de 10% de desconto* pra usar no *mês do seu aniversário*.\n\n🎁 Seu cupom:\n${c.codigo}\n\n👉 Toque pra ver e copiar: ${relLinkCupom(x)}\n\nVale na loja${c.site?' e no site *lasvegassexshop.com.br*':''} até *${ddmm(c.valido_ate)}* (uma compra).\n_Te esperamos!_`;
+  }
   if(tipo==='cashback') return `*Oi, ${n}!* 💋\nVocê tem *${brl2(x.valor)} de cashback* na Las Vegas${x.vence?` e ${x.vence_valor && x.vence_valor < x.valor ? brl2(x.vence_valor)+' dele vence' : 'ele vence'} em *${ddmm(x.vence)}*`:''}. Use no que quiser! 💸\n_Te esperamos na loja!_`;
   return `*Oi, ${n}! Que saudade de você aqui na Las Vegas* 💋\nChegou muita novidade desde a sua última visita. Passa pra conhecer!${x.selos?` Você já tem *${x.selos} ${x.selos===1?'selo':'selos'}* no cartão fidelidade 🎁`:''}\n_Te esperamos!_`;
+}
+function relLinkCupom(x){
+  const c = x.cupom; if(!c) return '';
+  return 'https://equipe.lasvegassexshop.com.br/cupom.html?c='+encodeURIComponent(c.codigo)+'&n='+encodeURIComponent(primeiroNome(x.nome))+'&ate='+encodeURIComponent(ddmm(c.valido_ate))+(c.site?'&s=1':'');
+}
+/* copiar o código: tenta direto; se o navegador não deixar, mostra o código grande pra tocar e copiar */
+async function relCopiarTexto(cod){
+  try{ await navigator.clipboard.writeText(cod); toast('📋 Cupom '+cod+' copiado!'); return true; }catch(e){}
+  $('#modal').innerHTML = `<div class="veu" onclick="if(event.target===this)fecharModal()"><div class="modal"><div class="modal-t"><h3 class="cresce">🎂 Cupom de aniversário</h3><button class="icone" onclick="fecharModal()"><i class="ti ti-x"></i></button></div><div class="modal-c" style="text-align:center"><div class="rel-cod" style="font-size:26px;padding:14px" onclick="relCopiarTexto('${esc(cod)}')">${esc(cod)}</div><button class="btn p" style="width:100%;margin-top:10px" onclick="relCopiarTexto('${esc(cod)}')">📋 Copiar cupom</button></div></div></div>`;
+  return false;
+}
+async function relCopiarCupom(id){
+  const x = relAchar('aniversario', id); if(!x) return;
+  if(!x.cupom){
+    try{ const r = S.tela==='admin'&&S.adm ? await api('admRelacionamento', {...S.adm.cred, op:'cupom', cliente_id:id, criar:1}) : await api('relacionamento', {eid:S.sess.eid, ...S.sess.cred, op:'cupom', cliente_id:id, criar:1});
+      if(r && r.codigo) x.cupom = r; }catch(e){ toast(e.message, true); return; }
+    relPintar();
+  }
+  if(x.cupom) relCopiarTexto(x.cupom.codigo);
 }
 function relItem(tipo, x, i){
   const k = tipo+'|'+x.id+'|'+x.ref, foi = REL.feitos.has(k);
@@ -138,8 +165,8 @@ function relItem(tipo, x, i){
   const sub = tipo==='aniversario' ? (x.dias===0?'<b style="color:var(--vermelho)">HOJE</b>':x.dias===1?'amanhã':`em ${x.dias} dias`)+` · ${ddmm(x.data)} · faz ${x.idade} anos`
     : tipo==='cashback' ? `${brl2(x.valor)} de saldo · vence ${x.dias===0?'hoje':x.dias===1?'amanhã':'em '+x.dias+' dias'}`
     : `última compra há ${x.dias} dias${x.origem==='antigo'?' (sistema antigo)':''} · ${x.compras} ${x.compras===1?'compra':'compras'}`;
-  return `<div class="rel-it ${foi?'foi':''}" style="animation-delay:${Math.min(i,12)*40}ms" id="rel-${tipo}-${x.id}"><span class="av">${ic}</span><div class="t"><b>${esc(x.nome)}</b><small>${sub}</small></div>
-    ${foi?`<button class="rel-ok" onclick="relFeito('${tipo}','${x.id}','${x.ref}',true)">Desfazer</button>`:`<button class="rel-zap" onclick="relZap('${tipo}','${x.id}')"><i class="ti ti-brand-whatsapp"></i> Mandar</button><button class="rel-ok" title="Já falei com ela" onclick="relFeito('${tipo}','${x.id}','${x.ref}')">✓</button>`}</div>`;
+  return `<div class="rel-it ${foi?'foi':''}" style="animation-delay:${Math.min(i,12)*40}ms" id="rel-${tipo}-${x.id}"><span class="av">${ic}</span><div class="t"><b>${esc(x.nome)}</b><small>${sub}</small>${tipo==='aniversario'&&x.cupom?`<span class="rel-cod" title="Toque para copiar" onclick="relCopiarTexto('${esc(x.cupom.codigo)}')">${esc(x.cupom.codigo)} <i class="ti ti-copy"></i></span>`:''}</div>
+    ${tipo==='aniversario'?`<button class="rel-cp" title="Copiar o cupom dela" onclick="relCopiarCupom('${x.id}')"><i class="ti ti-copy"></i> Cupom</button>`:''}${foi?`<button class="rel-ok" onclick="relFeito('${tipo}','${x.id}','${x.ref}',true)">Desfazer</button>`:`<button class="rel-zap" onclick="relZap('${tipo}','${x.id}')"><i class="ti ti-brand-whatsapp"></i> Mandar</button><button class="rel-ok" title="Já falei com ela" onclick="relFeito('${tipo}','${x.id}','${x.ref}')">✓</button>`}</div>`;
 }
 function relTela(){
   const d = REL.d;
