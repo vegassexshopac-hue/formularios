@@ -126,5 +126,7 @@ document.write('<script src="app34.js?v=35"><\/script>');
 document.write('<script src="app36.js?v=36"><\/script>');
 /* v38: compras do sistema antigo na ficha da cliente (Administração › Clientes) — servidor HISTORICO.gs (app38.js) */
 document.write('<script src="app38.js?v=38"><\/script>');
+/* v40: evolução do portal — 💡 em cada bloco, ideias com o nome de quem mandou, tela Evolução e uso das telas (evolucao.js; dados no motor do Railway) */
+document.write('<script src="evolucao.js?v=40"><\/script>');
 /* v12: layout novo — tema claro, menu lateral agrupado e movimento (app12.js carrega o tema.css) */
 document.write('<script src="app12.js?v=35"><\/script>');
