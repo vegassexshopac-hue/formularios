@@ -14,6 +14,12 @@ const EVO = { minhas:null, novidades:0, feitas:[], painel:null, filtro:'nova', f
 .ev-lamp:hover{transform:scale(1.15) rotate(-8deg)}.ev-lamp:active{transform:scale(.88)}
 .ev-lamp::after{content:attr(data-dica);position:absolute;right:calc(100% + 8px);top:50%;transform:translateY(-50%) scale(.9);background:#1C1416;color:#fff;font-size:12px;font-weight:600;white-space:nowrap;padding:5px 9px;border-radius:8px;opacity:0;pointer-events:none;transition:.15s}
 .ev-lamp:hover::after{opacity:1;transform:translateY(-50%) scale(1)}
+.ev-canto{position:absolute;top:-9px;right:-9px;width:24px;height:24px;font-size:12.5px;z-index:3;margin:0;opacity:.92}
+.ev-canto.dentro{top:6px;right:6px;opacity:.75}
+.ev-canto:hover{opacity:1}
+.ev-canto::after{right:auto;left:auto;top:auto;bottom:calc(100% + 6px);right:0;transform:translateY(0) scale(.9)}
+.ev-canto:hover::after{transform:translateY(0) scale(1)}
+@media(max-width:600px){.ev-canto{width:22px;height:22px;font-size:11.5px}.ev-canto::after{display:none}}
 .ev-flut{position:fixed;right:16px;bottom:86px;z-index:60;width:46px;height:46px;font-size:20px}
 @media(min-width:901px){.ev-flut{bottom:22px}}
 .ev-m{max-width:440px}
@@ -142,30 +148,75 @@ async function evEnviarUso(){
 setInterval(evEnviarUso, 60e3);
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') evEnviarUso(); });
 
-/* ───────── lampadazinhas ───────── */
+/* ───────── lampadazinhas ─────────
+   v40b: além dos títulos (.secao), cada cartão/balão/painel ganha a sua 💡 no canto
+   (pedido da Madu: "mais luzinhas — muitos balões não têm a opção"). */
+const EV_FORA = /(^|\s)(ev-|km-row|km-cli|fid-card|fid-selos|cp-it|cp-q|est-prod|pdv-prod|pdv-linha|veu|modal|letreiro|nav|menu|sub34|aba|selo|chip|contador|tecla|avatar|av\b|inp|campo|barra|trilho|trilha|pista|tr\b|pin-)/;   // listas com nome de cliente/produto, menus, campos e enfeites
+/* "parece um balão": fundo próprio + canto arredondado/sombra/borda e tamanho de cartão */
+function evEhBalao(el, cs){
+  const r = el.getBoundingClientRect(); if(r.width < 130 || r.height < 44) return null;
+  const bg = cs.backgroundColor, temFundo = (bg && bg!=='transparent' && !/rgba\([^)]*,\s*0\)$/.test(bg)) || (cs.backgroundImage && cs.backgroundImage!=='none');
+  if(!temFundo) return null;
+  if(!(parseFloat(cs.borderTopLeftRadius) >= 8 || cs.boxShadow!=='none' || parseFloat(cs.borderTopWidth) > 0)) return null;
+  if(!(el.textContent||'').trim()) return null;
+  return r;
+}
+function evNomeBloco(el){
+  const h = el.querySelector('h1,h2,h3,h4,.secao,b,strong,.t,.nm');
+  let t = h ? h.textContent : (el.textContent || '');
+  t = t.replace(/💡/g,'').replace(/\s+/g,' ').trim();
+  if(/R\$|\d{3,}/.test(t)) t = t.replace(/R\$\s?[\d.,]+/g,'').replace(/\d{3,}/g,'').trim();
+  return t.slice(0,60);
+}
+function evNovaLampada(bloco, dica, span){
+  const b = document.createElement(span ? 'span' : 'button');
+  if(span){ b.setAttribute('role','button'); b.tabIndex = 0; b.onkeydown = e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); e.stopPropagation(); evAbrir(bloco); } }; } else b.type = 'button';
+  b.className = 'ev-lamp'; b.innerHTML = '💡'; b.dataset.dica = dica || 'Ideia para melhorar este bloco';
+  b.setAttribute('aria-label', b.dataset.dica);
+  b.onclick = ev=>{ ev.preventDefault(); ev.stopPropagation(); evAbrir(bloco); };
+  b.onpointerdown = ev=>ev.stopPropagation();
+  return b;
+}
 function evLampadas(){
   document.querySelectorAll('.ev-flut').forEach(x=>{ if(!evLogado()) x.remove(); });
-  if(!evLogado()) return;
+  if(!evLogado()){ document.querySelectorAll('#app .ev-lamp').forEach(x=>x.remove()); return; }
   const app = document.getElementById('app'); if(!app) return;
-  let n = 0;
+  /* 1) títulos de bloco */
   app.querySelectorAll('.secao').forEach(sec=>{
-    if(sec.closest('#modal') || sec.querySelector('.ev-lamp')) { n++; return; }
+    if(sec.closest('#modal,button') || sec.querySelector(':scope > .ev-lamp')) return;
     const bloco = [...sec.childNodes].map(x=>x.nodeType===3 ? x.textContent : (x.matches&&x.matches('button,.contador,small') ? '' : x.textContent)).join(' ').replace(/\s+/g,' ').trim().slice(0,60);
-    const b = document.createElement('button');
-    b.className = 'ev-lamp'; b.type = 'button'; b.innerHTML = '💡'; b.dataset.dica = 'Ideia para melhorar este bloco';
-    b.setAttribute('aria-label', 'Ideia para melhorar este bloco');
-    b.onclick = ev=>{ ev.stopPropagation(); evAbrir(bloco); };
     if(getComputedStyle(sec).display!=='flex'){ sec.style.display='flex'; sec.style.alignItems='center'; sec.style.gap='10px'; }
-    sec.appendChild(b); n++;
+    sec.appendChild(evNovaLampada(bloco));
   });
+  /* 2) cartões, balões e painéis — tudo que parece um balão */
+  const ja = [...app.querySelectorAll('.ev-canto')].map(x=>x.getBoundingClientRect());
+  let n = ja.length;
+  for(const el of app.querySelectorAll('div,section,article,li,button,a,label,form')){
+    if(n >= 70) break;
+    if(el.dataset.evL || typeof el.className!=='string' || (!el.className && el.tagName!=='BUTTON') || EV_FORA.test(' '+el.className)) continue;
+    if(el.closest('#modal,.ev-hero,.ev-card,.ev-box,.ev-it,.ev-ini,.ev-lamp')) continue;
+    const cs = getComputedStyle(el); if(cs.display==='none' || cs.visibility==='hidden' || cs.position==='fixed' || cs.position==='sticky') continue;
+    const r = evEhBalao(el, cs); if(!r) continue;
+    const pai = el.parentElement, irmas = pai ? [...pai.children].filter(x=>x.className===el.className).length : 0;
+    if(irmas >= 6) continue;                                                     // item de lista (produtos, clientes…): fica a 💡 do título
+    if(ja.some(q=>Math.abs(q.right-(r.right+3)) < 34 && Math.abs(q.top-(r.top-3)) < 34)) continue;   // não empilha no mesmo canto
+    el.dataset.evL = '1';
+    if(cs.position==='static') el.style.position = 'relative';
+    const lamp = evNovaLampada(evNomeBloco(el), 'Ideia para melhorar este balão', true);
+    lamp.classList.add('ev-canto'); if(cs.overflow!=='visible' || cs.overflowX!=='visible' || el.tagName==='BUTTON') lamp.classList.add('dentro');
+    el.appendChild(lamp); ja.push(lamp.getBoundingClientRect()); n++;
+  }
   let f = document.querySelector('.ev-flut');
   if(!f){
     f = document.createElement('button'); f.className = 'ev-lamp ev-flut'; f.type='button'; f.innerHTML='💡';
     f.dataset.dica = 'Ideia para melhorar o portal'; f.setAttribute('aria-label','Ideia para melhorar o portal');
     f.onclick = ()=>evAbrir(''); document.body.appendChild(f);
   }
-  f.style.display = (n || S.tela==='lobby') ? 'none' : '';
+  f.style.display = (S.tela==='portal' || S.tela==='admin') ? '' : 'none';
 }
+/* telas que se redesenham sozinhas (Arena, Kommo…) também ganham as lâmpadas */
+try{ new MutationObserver(()=>{ clearTimeout(EVO._mo); EVO._mo = setTimeout(()=>{ try{ evLampadas(); }catch(_){} }, 400); })
+  .observe(document.getElementById('app') || document.body, {childList:true, subtree:true}); }catch(_){}
 
 /* ───────── modal "Como deixar o portal melhor?" ───────── */
 function evAbrir(bloco, aba){
