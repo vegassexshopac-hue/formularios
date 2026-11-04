@@ -44,6 +44,15 @@ pdvPintarComanda = function pdvPintarComanda(bater){
   kmvRestaurar();
   _pdvPintarComandaV41(bater);
   const el = $('#pdv-comanda'); if(!el) return;
+  /* 🎂 cupom de aniversário: 10% no mês do aniversário (usa o desconto da comanda; não soma com o 20% do cartão) */
+  try{
+    const c = typeof FID!=='undefined' ? FID.cli : null, k = pdvContas();
+    if(c && /^\d{4}-\d{2}-\d{2}$/.test(c.nascimento||'') && c.nascimento.slice(5,7)===hojeISO().slice(5,7) && PDV.car.length && !k.fid?.tem20){
+      const usando = /Cupom aniversário/.test(PDV.obs||'');
+      const fb = el.querySelector('.fid-card');
+      if(fb) fb.insertAdjacentHTML('beforeend', `<div class="fid-cash"><span>🎂 <b style="color:#FFD98A">Mês do aniversário!</b><br><small style="color:#FFE3A3">cupom de 10% de desconto</small></span><button class="${usando?'on':''}" onclick="relCupomAniv()">${usando?'✔ Aplicado':'Aplicar 10%'}</button></div>`);
+    }
+  }catch(e){}
   const ancora = el.querySelector('#fid-box') || el.querySelector('.pdv-cli') || el.querySelector('.pdv-fim');
   if(!ancora) return;
   const box = document.createElement('div');
@@ -61,6 +70,12 @@ api = async function api(a, dados={}){
   }
   return _apiV41(a, dados);
 };
+function relCupomAniv(){
+  const tag = '🎂 Cupom aniversário 10%';
+  if(/Cupom aniversário/.test(PDV.obs||'')){ PDV.obs = (PDV.obs||'').replace(tag,'').replace(/\s*·\s*$/,'').trim(); PDV.descV = ''; }
+  else { PDV.descTipo = '%'; PDV.descV = '10'; PDV.obs = ((PDV.obs||'').trim() ? PDV.obs.trim()+' · ' : '') + tag; }
+  pdvGuardar(); pdvPintarComanda(); toast(/Cupom aniversário/.test(PDV.obs||'') ? '🎂 Cupom de aniversário aplicado (10%)' : 'Cupom de aniversário retirado');
+}
 /* botão na ficha da Kommo (equipe) */
 if(typeof kmFicha === 'function'){
   const _kmFichaV41 = kmFicha;
@@ -101,7 +116,7 @@ async function relCarregar(forcar){
 function relNum(d){ return d && !d.semServidor ? (d.aniversarios?.length||0) + (d.cashback?.length||0) + (d.sumidas?.length||0) : 0; }
 function relMsg(tipo, x){
   const n = primeiroNome(x.nome);
-  if(tipo==='aniversario') return `*${x.dias===0?'Feliz aniversário':'Seu aniversário está chegando'}, ${n}!* 🎂💋\nA Las Vegas preparou um *mimo especial* pra você comemorar. Passa na loja ${x.dias===0?'essa semana':'no seu dia'} pra retirar! 🎁\n_Te esperamos!_`;
+  if(tipo==='aniversario') return `*${x.dias===0?'Feliz aniversário':'Seu aniversário está chegando'}, ${n}!* 🎂💋\nA Las Vegas te deu um *cupom de 10% de desconto* pra usar no *mês do seu aniversário*. É só falar seu nome no caixa! 🎁\n_Te esperamos!_`;
   if(tipo==='cashback') return `*Oi, ${n}!* 💋\nVocê tem *${brl2(x.valor)} de cashback* na Las Vegas${x.vence?` e ${x.vence_valor && x.vence_valor < x.valor ? brl2(x.vence_valor)+' dele vence' : 'ele vence'} em *${ddmm(x.vence)}*`:''}. Use no que quiser! 💸\n_Te esperamos na loja!_`;
   return `*Oi, ${n}! Que saudade de você aqui na Las Vegas* 💋\nChegou muita novidade desde a sua última visita. Passa pra conhecer!${x.selos?` Você já tem *${x.selos} ${x.selos===1?'selo':'selos'}* no cartão fidelidade 🎁`:''}\n_Te esperamos!_`;
 }
