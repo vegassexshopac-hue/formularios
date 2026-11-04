@@ -255,7 +255,7 @@ function aj46Pintar(){
   aj46PintarLista();
 }
 function aj46Botao(){
-  const quer = S.tela==='portal' && S.sess?.dados;
+  const quer = S.tela==='portal' && S.sess?.dados && S.portalTab!=='pdv';   // no PDV ele cobriria os produtos
   let b = document.getElementById('aj46-bt');
   if(!quer){ b?.remove(); return; }
   if(!b){ document.body.insertAdjacentHTML('beforeend', `<button id="aj46-bt" class="aj46-bt" onclick="aj46Abrir()" aria-label="Tirar dúvida"><span>💬</span><b>Tirar dúvida</b></button>`); }
@@ -413,6 +413,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 /* ── Tirar dúvida ── */
 .aj46-bt{position:fixed;left:16px;bottom:18px;z-index:61;display:flex;align-items:center;gap:8px;border:0;cursor:pointer;padding:10px 16px 10px 12px;border-radius:99px;
   background:#1d1d1f;color:#fff;font:inherit;font-weight:800;font-size:14px;box-shadow:0 10px 26px rgba(0,0,0,.25);animation:aj46b .5s cubic-bezier(.2,1.4,.5,1) both;transition:transform .15s}
+body:has(#modal .veu) .aj46-bt,body:has(.aj46-veu) .aj46-bt{display:none}
 .aj46-bt span{font-size:18px;animation:aj46w 3.2s ease-in-out 1s infinite}.aj46-bt:hover{transform:translateY(-3px)}.aj46-bt:active{transform:scale(.95)}
 @media (max-width:900px){.aj46-bt{bottom:84px;padding:10px 12px}.aj46-bt b{display:none}}
 .aj46-veu{position:fixed;inset:0;z-index:9000;background:rgba(20,10,12,.45);backdrop-filter:blur(3px);display:flex;align-items:flex-end;justify-content:center;animation:aj46f .2s both}

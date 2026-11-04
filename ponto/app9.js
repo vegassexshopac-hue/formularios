@@ -140,5 +140,5 @@ document.write('<script src="app44.js?v=44"><\/script>');
 /* v45: o que a equipe vê (liga/desliga telas das vendedoras, perfil Matheus › Ajustes) + zerar os testes para começar pra valer (app45.js; servidor VALER.gs) */
 document.write('<script src="app45.js?v=45"><\/script>');
 /* v46: cartão "Minha meta" animado no Início + botão "Tirar dúvida" monitorado (Comunicação › Dúvidas da equipe) (app46.js; servidor AJUDA.gs) */
-document.write('<script src="app46.js?v=46"><\/script>');
+document.write('<script src="app46.js?v=46b"><\/script>');
 document.write('<script src="app12.js?v=35"><\/script>');
