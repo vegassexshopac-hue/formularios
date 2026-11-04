@@ -189,3 +189,106 @@ rodar_ = function (req) {
   }
   return _relRodar(req);
 };
+
+/* ═════════ 5) cupom de aniversário (v41c): 10% no mês do aniversário, 1 por ano, vale na loja e no site ═════════
+   Código NIVER… por cliente e ano (aba CuponsAniv). Na loja: a comanda manda cupom_aniv=1 → confere e marca usado.
+   No site: cria o cupom na Nuvemshop (uso único, só no mês) quando a app tem a permissão de Cupons;
+   pedido do site com o código marca usado aqui. Cancelou a venda da loja → cupom volta a valer. */
+ABAS.CuponsAniv = ['codigo', 'cliente_id', 'cliente', 'ano', 'valido_de', 'valido_ate', 'status', 'criado_em', 'usado_em', 'canal', 'venda', 'ns_id', 'ns_status'];
+ABAS.VendasPDV = ABAS.VendasPDV.concat(['cupom_aniv']);
+var REL_ANIV_PCT = 10;
+function relFimMes_(ano, mes) { var d = new Date(Date.UTC(Number(ano), Number(mes), 0)); return d.toISOString().slice(0, 10); }
+function relCupomDe_(cliId, ano) { return ler_('CuponsAniv').filter(function (x) { return x.cliente_id === cliId && x.ano === String(ano) && x.status !== 'cancelado'; })[0] || null; }
+function relCupomNs_(cp) {
+  if (typeof nsConectado_ !== 'function' || !nsConectado_()) { cp.ns_status = 'site não conectado'; return; }
+  try {
+    var r = nsApi_('post', '/coupons', { code: cp.codigo, type: 'percentage', value: String(REL_ANIV_PCT) + '.00', max_uses: 1, start_date: cp.valido_de, end_date: cp.valido_ate });
+    cp.ns_id = String(r && r.id || ''); cp.ns_status = cp.ns_id ? 'criado' : 'sem resposta';
+  } catch (e) { cp.ns_status = ('erro: ' + String(e && e.message || e)).slice(0, 120); }
+}
+function relCupomNsDesligar_(cp) {
+  if (!cp.ns_id || typeof nsConectado_ !== 'function' || !nsConectado_()) return;
+  try { nsApi_('delete', '/coupons/' + cp.ns_id); cp.ns_status = 'usado (apagado no site)'; } catch (e) { cp.ns_status = ('erro ao apagar: ' + String(e && e.message || e)).slice(0, 120); }
+}
+/** Pega (ou cria) o cupom deste ano da cliente — só no mês do aniversário. */
+function relCupomAniv_(cliId, criar) {
+  var c = ler_('Clientes').filter(function (x) { return x.id === cliId && x.ativo !== 'NÃO'; })[0];
+  if (!c) throw new Error('Cliente não encontrada');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(c.nascimento || '')) throw new Error('Cliente sem data de aniversário no cadastro');
+  var hoje = hoje_(), ano = hoje.slice(0, 4), mes = c.nascimento.slice(5, 7);
+  var cp = relCupomDe_(c.id, ano);
+  if (cp || !criar) return { cliente: c, cupom: cp, mes: mes, noMes: hoje.slice(5, 7) === mes };
+  cp = { codigo: 'NIVER' + nsAleatorioRel_(5), cliente_id: c.id, cliente: c.nome, ano: ano, valido_de: ano + '-' + mes + '-01', valido_ate: relFimMes_(ano, mes), status: 'aberto', criado_em: agora_(), usado_em: '', canal: '', venda: '', ns_id: '', ns_status: '' };
+  relCupomNs_(cp);
+  gravar_('CuponsAniv', cp);
+  log_('Sistema', 'cupom aniversário', cp.cliente + ' · ' + cp.codigo + ' · site: ' + cp.ns_status);
+  return { cliente: c, cupom: cp, mes: mes, noMes: hoje.slice(5, 7) === mes };
+}
+function nsAleatorioRel_(n) { var s = '', a = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; for (var i = 0; i < n; i++) s += a.charAt(Math.floor(Math.random() * a.length)); return s; }
+function relCupomPublico_(r) {
+  var cp = r.cupom;
+  return { ok: true, noMes: r.noMes, mes: r.mes, codigo: cp ? cp.codigo : '', status: cp ? cp.status : 'nenhum', usado_em: cp ? cp.usado_em : '', canal: cp ? cp.canal : '',
+           valido_ate: cp ? cp.valido_ate : '', site: !!(cp && cp.ns_status === 'criado'), ns_status: cp ? cp.ns_status : '' };
+}
+/* venda na loja com o cupom */
+var _relVenderAniv = pdvVenderDentro_;
+pdvVenderDentro_ = function (c, req) {
+  if (!req || !req.cupom_aniv || !req.cliente_id) return _relVenderAniv(c, req);
+  var uid = String(req.uid || '').replace(/[^\w-]/g, '').slice(0, 40);
+  if (uid && ler_('VendasPDV').some(function (v) { return v.id === uid; })) return _relVenderAniv(c, req);
+  var r = relCupomAniv_(String(req.cliente_id), true), cp = r.cupom;
+  if (!r.noMes) throw new Error('O cupom de aniversário só vale no mês do aniversário da cliente');
+  if (cp.status === 'usado') throw new Error('Cupom de aniversário já usado em ' + String(cp.usado_em).slice(8, 10) + '/' + String(cp.usado_em).slice(5, 7) + (cp.canal === 'site' ? ' no site' : ' na loja'));
+  var d = _relVenderAniv(c, req);
+  if (d && d.pdvVenda && !d.pdvRepetida) {
+    cp = relCupomDe_(r.cliente.id, cp.ano);
+    cp.status = 'usado'; cp.usado_em = agora_(); cp.canal = 'loja'; cp.venda = d.pdvVenda.id;
+    relCupomNsDesligar_(cp);
+    gravar_('CuponsAniv', cp);
+    var v = ler_('VendasPDV').filter(function (x) { return x.id === d.pdvVenda.id; })[0];
+    if (v) { v.cupom_aniv = cp.codigo; gravar_('VendasPDV', v); d.pdvVenda = pdvVenda_(v, false); }
+    d.cupomAniv = { codigo: cp.codigo };
+  }
+  return d;
+};
+/* cancelou a venda → o cupom volta a valer (e volta para o site) */
+var _relCancelarAniv = pdvCancelarLinha_;
+pdvCancelarLinha_ = function (v, por, motivo) {
+  _relCancelarAniv(v, por, motivo);
+  try {
+    if (!v.cupom_aniv) return;
+    var cp = ler_('CuponsAniv').filter(function (x) { return x.codigo === v.cupom_aniv; })[0];
+    if (cp && cp.status === 'usado' && cp.venda === v.id) { cp.status = 'aberto'; cp.usado_em = ''; cp.canal = ''; cp.venda = ''; cp.ns_id = ''; relCupomNs_(cp); gravar_('CuponsAniv', cp); }
+  } catch (e) { log_('Sistema', 'erro reabrir cupom', String(e && e.message || e)); }
+};
+/* pedido do site com o cupom → marca usado */
+if (typeof nsProcessarPedido_ === 'function') {
+  var _relNsPedido = nsProcessarPedido_;
+  nsProcessarPedido_ = function (o, origem) {
+    var res = _relNsPedido(o, origem);
+    try {
+      var cods = [].concat(o.coupon || []).map(function (x) { return String(x && (x.code || x) || '').toUpperCase(); }).filter(function (x) { return /^NIVER/.test(x); });
+      if (cods.length && !/cancel/.test(String(o.status || ''))) relTrava_(function () {
+        ler_('CuponsAniv').forEach(function (cp) {
+          if (cods.indexOf(cp.codigo) >= 0 && cp.status !== 'usado') { cp.status = 'usado'; cp.usado_em = agora_(); cp.canal = 'site'; cp.venda = 'Site #' + (o.number || o.id); gravar_('CuponsAniv', cp); }
+        });
+      });
+    } catch (e) { log_('Sistema', 'erro cupom no pedido do site', String(e && e.message || e)); }
+    return res;
+  };
+}
+/* ações: a=relacionamento op=cupom (equipe) · admRelacionamento op=cupom */
+var _relRodarAniv = rodar_;
+rodar_ = function (req) {
+  if (req && req.a === 'relacionamento' && req.op === 'cupom') {
+    try { checarColab_(req); return relCupomPublico_(relCupomAniv_(String(req.cliente_id || ''), !!req.criar)); }
+    catch (e) { return { ok: false, erro: String(e && e.message || e) }; }
+  }
+  return _relRodarAniv(req);
+};
+var _relAdmRelAniv = ADMIN.admRelacionamento;
+ADMIN.admRelacionamento = function (req) {
+  if (req.op === 'cupom') return relCupomPublico_(relCupomAniv_(String(req.cliente_id || ''), !!req.criar));
+  if (req.op === 'cupons') return { ok: true, cupons: ler_('CuponsAniv').map(limpar_).reverse().slice(0, 300) };
+  return _relAdmRelAniv(req);
+};

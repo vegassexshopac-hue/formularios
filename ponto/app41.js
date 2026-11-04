@@ -48,9 +48,11 @@ pdvPintarComanda = function pdvPintarComanda(bater){
   try{
     const c = typeof FID!=='undefined' ? FID.cli : null, k = pdvContas();
     if(c && /^\d{4}-\d{2}-\d{2}$/.test(c.nascimento||'') && c.nascimento.slice(5,7)===hojeISO().slice(5,7) && PDV.car.length && !k.fid?.tem20){
-      const usando = /Cupom aniversário/.test(PDV.obs||'');
+      const usando = /Cupom aniversário/.test(PDV.obs||''), stt = ANIV.st[c.id];
+      if(stt === undefined){ ANIV.st[c.id] = null; anivStatus(c.id); }
       const fb = el.querySelector('.fid-card');
-      if(fb) fb.insertAdjacentHTML('beforeend', `<div class="fid-cash"><span>🎂 <b style="color:#FFD98A">Mês do aniversário!</b><br><small style="color:#FFE3A3">cupom de 10% de desconto</small></span><button class="${usando?'on':''}" onclick="relCupomAniv()">${usando?'✔ Aplicado':'Aplicar 10%'}</button></div>`);
+      if(fb && stt && stt.status==='usado') fb.insertAdjacentHTML('beforeend', `<div class="fid-cash"><span>🎂 <b style="color:#FFD98A">Mês do aniversário</b><br><small style="color:#FFE3A3">cupom de 10% já usado em ${esc(ddmm(String(stt.usado_em).slice(0,10)))}${stt.canal==='site'?' no site':' na loja'}</small></span></div>`);
+      else if(fb) fb.insertAdjacentHTML('beforeend', `<div class="fid-cash"><span>🎂 <b style="color:#FFD98A">Mês do aniversário!</b><br><small style="color:#FFE3A3">cupom de 10% de desconto${stt&&stt.codigo?' · '+esc(stt.codigo):''}</small></span><button class="${usando?'on':''}" onclick="relCupomAniv()">${usando?'✔ Aplicado':'Aplicar 10%'}</button></div>`);
     }
   }catch(e){}
   const ancora = el.querySelector('#fid-box') || el.querySelector('.pdv-cli') || el.querySelector('.pdv-fim');
@@ -63,13 +65,23 @@ pdvPintarComanda = function pdvPintarComanda(bater){
 };
 const _apiV41 = api;
 api = async function api(a, dados={}){
-  if(a==='venda' && dados && dados.pdv && !dados.cancelar && KMV.v){
-    const r = await _apiV41(a, {...dados, kommo:1, kommo_lead: KMV.v.lead||''});
-    KMV.v = null; kmvGuardar();
+  if(a==='venda' && dados && dados.pdv && !dados.cancelar && (KMV.v || /Cupom aniversário/.test(PDV.obs||''))){
+    const extra = {};
+    if(KMV.v){ extra.kommo = 1; extra.kommo_lead = KMV.v.lead||''; }
+    if(/Cupom aniversário/.test(PDV.obs||'') && typeof FID!=='undefined' && FID.cli) extra.cupom_aniv = 1;
+    const r = await _apiV41(a, {...dados, ...extra});
+    if(KMV.v){ KMV.v = null; kmvGuardar(); }
+    if(extra.cupom_aniv && FID.cli) delete ANIV.st[FID.cli.id];
     return r;
   }
   return _apiV41(a, dados);
 };
+const ANIV = {st:{}};
+async function anivStatus(id){
+  try{ const r = S.tela==='admin'&&S.adm ? await api('admRelacionamento', {...S.adm.cred, op:'cupom', cliente_id:id}) : await api('relacionamento', {eid:S.sess.eid, ...S.sess.cred, op:'cupom', cliente_id:id});
+    ANIV.st[id] = r; }catch(e){ ANIV.st[id] = {status:'?'}; }
+  if(typeof FID!=='undefined' && FID.cli && FID.cli.id===id) pdvPintarComanda();
+}
 function relCupomAniv(){
   const tag = '🎂 Cupom aniversário 10%';
   if(/Cupom aniversário/.test(PDV.obs||'')){ PDV.obs = (PDV.obs||'').replace(tag,'').replace(/\s*·\s*$/,'').trim(); PDV.descV = ''; }
@@ -116,7 +128,7 @@ async function relCarregar(forcar){
 function relNum(d){ return d && !d.semServidor ? (d.aniversarios?.length||0) + (d.cashback?.length||0) + (d.sumidas?.length||0) : 0; }
 function relMsg(tipo, x){
   const n = primeiroNome(x.nome);
-  if(tipo==='aniversario') return `*${x.dias===0?'Feliz aniversário':'Seu aniversário está chegando'}, ${n}!* 🎂💋\nA Las Vegas te deu um *cupom de 10% de desconto* pra usar no *mês do seu aniversário*. É só falar seu nome no caixa! 🎁\n_Te esperamos!_`;
+  if(tipo==='aniversario') return `*${x.dias===0?'Feliz aniversário':'Seu aniversário está chegando'}, ${n}!* 🎂💋\nA Las Vegas te deu um *cupom de 10% de desconto* pra usar no *mês do seu aniversário*${x.cupom?`:\n\n🎁 *${x.cupom.codigo}*\n\nVale na loja${x.cupom.site?' e no site *lasvegassexshop.com.br*':''} até *${ddmm(x.cupom.valido_ate)}* (uma compra).`:'. É só falar seu nome no caixa! 🎁'}\n_Te esperamos!_`;
   if(tipo==='cashback') return `*Oi, ${n}!* 💋\nVocê tem *${brl2(x.valor)} de cashback* na Las Vegas${x.vence?` e ${x.vence_valor && x.vence_valor < x.valor ? brl2(x.vence_valor)+' dele vence' : 'ele vence'} em *${ddmm(x.vence)}*`:''}. Use no que quiser! 💸\n_Te esperamos na loja!_`;
   return `*Oi, ${n}! Que saudade de você aqui na Las Vegas* 💋\nChegou muita novidade desde a sua última visita. Passa pra conhecer!${x.selos?` Você já tem *${x.selos} ${x.selos===1?'selo':'selos'}* no cartão fidelidade 🎁`:''}\n_Te esperamos!_`;
 }
@@ -144,9 +156,16 @@ function relAbrir(){
   $('#modal').innerHTML = `<div class="veu" onclick="if(event.target===this)fecharModal()"><div class="modal largo"><div class="modal-t"><h3 class="cresce">💌 Clientes para chamar hoje</h3><button class="icone" onclick="fecharModal()"><i class="ti ti-x"></i></button></div><div class="modal-c" id="rel-corpo">${relTela()}</div></div></div>`;
 }
 function relAchar(tipo, id){ const l = tipo==='aniversario'?REL.d?.aniversarios:tipo==='cashback'?REL.d?.cashback:REL.d?.sumidas; return (l||[]).find(x=>x.id===id); }
-function relZap(tipo, id){
+async function relZap(tipo, id){
   const x = relAchar(tipo, id); if(!x) return;
-  window.open('https://wa.me/'+telWa(x.tel)+'?text='+encodeURIComponent(relMsg(tipo, x)), '_blank');
+  let w = null;
+  if(tipo==='aniversario'){
+    w = window.open('', '_blank');   // abre já (o navegador bloqueia janela aberta depois de esperar)
+    try{ const r = S.tela==='admin'&&S.adm ? await api('admRelacionamento', {...S.adm.cred, op:'cupom', cliente_id:id, criar:1}) : await api('relacionamento', {eid:S.sess.eid, ...S.sess.cred, op:'cupom', cliente_id:id, criar:1});
+      if(r && r.codigo) x.cupom = r; }catch(e){}
+  }
+  const url = 'https://wa.me/'+telWa(x.tel)+'?text='+encodeURIComponent(relMsg(tipo, x));
+  if(w) w.location.href = url; else window.open(url, '_blank');
   relFeito(tipo, id, x.ref);
 }
 async function relFeito(tipo, id, ref, desfazer){
