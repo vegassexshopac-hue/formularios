@@ -143,4 +143,6 @@ document.write('<script src="app45.js?v=45"><\/script>');
 document.write('<script src="app46.js?v=46b"><\/script>');
 /* v47: relatório de vendas da equipe (dia, semana, mês) + desfazer em 15 min com motivo + pedido de cancelamento para a administração (app47.js; servidor VENDAS.gs) */
 document.write('<script src="app47.js?v=47"><\/script>');
+/* v48: caixa da loja — uma gaveta por loja: abrir o caixa (às cegas), passagem de turno com 2 PINs, suprimento, dinheiro só com caixa aberto, "Quem vendeu?" no PDV, misto dividido, crédito à vista × parcelado (app48.js; servidor CAIXA.gs) */
+document.write('<script src="app48.js?v=48"><\/script>');
 document.write('<script src="app12.js?v=35"><\/script>');
