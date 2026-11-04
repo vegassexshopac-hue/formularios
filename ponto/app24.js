@@ -134,11 +134,29 @@ const KM = { url: LS.get('lv_kommo_teste','') || KOMMO_URL_FIXO, tk:null, quem:n
 .km-rr{display:flex;flex-direction:column;align-items:flex-end;gap:2px}.km-rr small{font-size:10.5px;color:var(--creme3);text-transform:uppercase;letter-spacing:.04em}
 .km-mais{width:100%;margin-top:6px;border:1px dashed var(--linha2);background:none;border-radius:12px;padding:7px;font:inherit;font-weight:700;font-size:13px;cursor:pointer;color:var(--creme2)}
 .km-mais:hover{background:var(--veludo2)}
+.km-resp{background:#fff;border-radius:18px;box-shadow:var(--sh);margin:0 0 12px;overflow:hidden;animation:kmSobe .45s var(--mola) both}
+.km-resp-top{display:flex;align-items:center;gap:12px;width:100%;border:0;background:linear-gradient(90deg,#E9F9EF,#fff 70%);padding:11px 14px;font:inherit;text-align:left;cursor:pointer;color:var(--creme)}
+.km-resp-top:disabled{cursor:default}.km-resp-top b{display:block;font-size:15px}.km-resp-top small{color:var(--creme2);font-size:12.5px}
+.km-resp-ic{width:38px;height:38px;border-radius:12px;background:#22b864;color:#fff;display:grid;place-items:center;font-size:20px;flex:none}
+.km-resp-pct{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:12px;background:radial-gradient(#fff 58%,transparent 60%),conic-gradient(#22b864 calc(var(--p)*1%),#eee 0);flex:none}
+.km-resp-l{padding:4px 10px 10px;display:grid;gap:5px}
+.km-resp-i{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:12px;background:var(--veludo2);cursor:pointer;animation:kmEntra .3s var(--mola) both;min-width:0}
+.km-resp-i b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.km-resp-i small{font-size:11.5px;color:var(--creme2)}
+.km-resp-i .cresce{min-width:0}
+.km-cn.sm{width:28px;height:28px;font-size:15px;border-radius:9px}
+.km-resp-t{font-weight:800;font-size:13px;border-radius:99px;padding:2px 8px}.km-resp-t.ok{background:#E9F9EF;color:#178a4a}.km-resp-t.bad{background:#FDE8EA;color:var(--vermelho2)}
+.km-rq{display:block;font-size:12.5px;line-height:1.4;color:#178a4a;background:#E9F9EF;border-radius:10px;padding:4px 9px;margin:-2px 0 8px}
+.km-rq i{font-size:15px;vertical-align:-3px;margin-right:4px}
+.km-gcard.ok{background:linear-gradient(180deg,#EFFBF3,#fff 70px)}
+.km-gcard.robo{background:#F6F6F8;border:1px dashed var(--linha2)}.km-gcard.robo .km-gn{color:var(--creme3)}
+.km-voa{position:fixed;left:50%;top:84px;transform:translateX(-50%);z-index:60;display:grid;gap:6px;pointer-events:none}
+.km-voa span{display:flex;align-items:center;gap:6px;background:#22b864;color:#fff;font-weight:700;font-size:13.5px;border-radius:99px;padding:7px 14px;box-shadow:0 8px 24px rgba(34,184,100,.35);animation:kmVoa 3.6s var(--mola) both}
+@keyframes kmVoa{0%{transform:translateY(14px) scale(.9);opacity:0}12%{transform:none;opacity:1}80%{transform:none;opacity:1}100%{transform:translateY(-16px);opacity:0}}
 .km-hq,.km-hq .km-hero-k div,.km-hq .km-urg i,.km-quieto .km-row:not(.nova),.km-quieto .km-gcard,.km-quieto .km-prog i{animation:none}
 @keyframes kmEntra{from{transform:translateY(8px) scale(.98);opacity:0}to{transform:none;opacity:1}}
 @keyframes kmFlash{0%,100%{box-shadow:0 0 0 0 rgba(37,211,102,0)}50%{box-shadow:0 0 0 4px rgba(37,211,102,.45)}}
 @media(max-width:700px){.km-hero-k{grid-template-columns:repeat(3,1fr)}.km-hero-k div:nth-child(n+4){display:none}.km-big{font-size:44px;min-width:56px}.km-grade{grid-template-columns:1fr}.km-rt small span:nth-child(n+4){display:none}}
-@media(prefers-reduced-motion:reduce){.km-hero::after,.km-row,.km-row.nova,.km-row.atrasada .km-cn,.km-urg i,.km-prog i{animation:none}}
+@media(prefers-reduced-motion:reduce){.km-voa span,.km-resp,.km-resp-i,.km-hero::after,.km-row,.km-row.nova,.km-row.atrasada .km-cn,.km-urg i,.km-prog i{animation:none}}
 @media(prefers-reduced-motion:reduce){.km-topo::after,.km-topo .ic,.km-cli.atrasada .av,.km-vazio .em{animation:none}}`;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 })();
@@ -218,23 +236,26 @@ function kmErroHtml(){
 /* ───────── esperando resposta ───────── */
 function kmEsperando(adm){
   const e = KM.res?.esperando; if(!e || e.erro) return e?.erro ? `<p class="suave">${esc(e.erro)}</p>` : '';
-  const todas = e.itens||[], pz = e.prazoMin||10;
-  // quem chegou desde a última atualização pisca
-  const antes = KM._vistos || null; KM._vistos = new Set(todas.map(i=>i.k));
-  const novas = new Set(antes ? todas.filter(i=>!antes.has(i.k)).map(i=>i.k) : []);
+  const tudo = e.itens||[], pz = e.prazoMin||10, R = e.respondidas && !e.respondidas.erro ? e.respondidas : null;
+  // v24g: quem está com o robô fica num grupo à parte e não entra nos números
+  const robo = tudo.filter(i=>i.robo), todas = tudo.filter(i=>!i.robo);
+  // quem chegou desde a última atualização pisca; quem foi respondida sai com um ✓
+  const antes = KM._vistos || null; KM._vistos = new Set(tudo.map(i=>i.k));
+  const novas = new Set(antes ? tudo.filter(i=>!antes.has(i.k)).map(i=>i.k) : []);
+  if(antes && R) { const foram = (R.ultimas||[]).filter(u=>antes.has(u.k) && !KM._vistos.has(u.k)); if(foram.length) KM._okVoa = {em:Date.now(), l:foram.slice(0,3)}; }
   const atras = todas.filter(i=>i.atrasada).length, quase = todas.filter(i=>!i.atrasada && i.minUteis >= pz*.6).length, emDia = todas.length - atras - quase;
   const porCanal = c => todas.filter(i=>i.canal===c || (c==='instagram' && i.canal==='instagram_comentario')).length;
   const semAt = todas.filter(i=>!i.at).length, maior = todas.reduce((m,i)=>Math.max(m,i.minUteis),0), minhas = todas.filter(i=>i.minha).length;
   const F = KM.filtro || 'todas';
-  const filtros = [['todas','Todas',todas.length],...(adm?[]:[['minhas','Minhas',minhas]]),['atrasadas','Atrasadas',atras],['instagram','Instagram',porCanal('instagram')],['whatsapp','WhatsApp',porCanal('whatsapp')],['sem','Sem atendente',semAt]];
+  const filtros = [['todas','Todas',todas.length],...(adm?[]:[['minhas','Minhas',minhas]]),['atrasadas','Atrasadas',atras],['instagram','Instagram',porCanal('instagram')],['whatsapp','WhatsApp',porCanal('whatsapp')],['sem','Sem atendente',semAt],...(robo.length?[['robo','🤖 Com o robô',robo.length]]:[])];
   const passa = i => F==='todas' || (F==='minhas'&&i.minha) || (F==='atrasadas'&&i.atrasada) || (F==='sem'&&!i.at) || (F==='instagram'&&/instagram/.test(i.canal)) || (F==='whatsapp'&&i.canal==='whatsapp');
-  const it = todas.filter(passa);
+  const it = F==='robo' ? robo : todas.filter(passa);
   const vista = KM.vista || 'atendente';
   const sig = F+'|'+vista, quieto = KM._sigEsp === sig; KM._sigEsp = sig;
   const pct = (n)=> todas.length ? Math.round(n/todas.length*100) : 0;
 
   const topo = `<div class="km-hero ${atras?'alerta':''}">
-    <div class="km-hero-l"><span class="km-big" data-km-n="${todas.length}">0</span><div><b>${todas.length===1?'cliente esperando':'clientes esperando'}</b><small>${e.lojaAberta?'🟢 loja aberta · o relógio está correndo':'🌙 fora do horário · o relógio está parado'}</small></div></div>
+    <div class="km-hero-l"><span class="km-big" data-km-n="${todas.length}">0</span><div><b>${todas.length===1?'cliente esperando':'clientes esperando'}</b><small>${e.lojaAberta?'🟢 loja aberta · o relógio está correndo':'🌙 fora do horário · o relógio está parado'}${robo.length?` · 🤖 +${robo.length} com o robô`:''}</small></div></div>
     <div class="km-hero-k">
       <div class="${atras?'quente':''}"><span>⏰</span><b data-km-n="${atras}">0</b><small>passaram de ${pz} min</small></div>
       <div><span>⚡</span><b>${kmMin(maior)}</b><small>espera mais longa</small></div>
@@ -245,7 +266,8 @@ function kmEsperando(adm){
     ${todas.length?`<div class="km-urg" title="Em dia · quase no prazo · atrasadas"><i class="ok" style="width:${pct(emDia)}%"></i><i class="quase" style="width:${pct(quase)}%"></i><i class="atr" style="width:${pct(atras)}%"></i></div>
     <div class="km-urg-leg"><span><i class="ok"></i>${emDia} em dia</span><span><i class="quase"></i>${quase} quase no prazo</span><span><i class="atr"></i>${atras} atrasadas</span></div>`:''}
   </div>`;
-  if(!todas.length){ setTimeout(kmAnimar, 30); KM._sigEsp = null; return topo + kmVazio('💚','Todas as clientes foram respondidas.','A lista atualiza sozinha a cada 15 segundos.'); }
+  const resp = kmRespondidas(R, pz, quieto);
+  if(!tudo.length){ setTimeout(kmAnimar, 30); KM._sigEsp = null; return topo + resp + kmVazio('💚','Todas as clientes foram respondidas.','A lista atualiza sozinha a cada 15 segundos.'); }
 
   const barra = `<div class="km-barra2"><div class="km-chips">${filtros.map(([k,n,c])=>`<button class="${F===k?'on':''}" onclick="KM.filtro='${k}';render()">${n}<span>${c}</span></button>`).join('')}</div>
     <div class="km-vistas"><button class="${vista==='atendente'?'on':''}" title="Por atendente" onclick="KM.vista='atendente';render()"><i class="ti ti-layout-grid"></i></button><button class="${vista==='lista'?'on':''}" title="Lista" onclick="KM.vista='lista';render()"><i class="ti ti-list"></i></button></div></div>`;
@@ -261,21 +283,49 @@ function kmEsperando(adm){
     </div>`; };
 
   let corpo;
-  if(!it.length) corpo = kmVazio('🔎','Nada nesse filtro.','Toque em “Todas” para ver a fila inteira.');
-  else if(vista==='lista') corpo = `<div class="km-lista2">${it.map(linha).join('')}</div>`;
+  if(!it.length && !(F==='todas' && vista!=='lista')) corpo = kmVazio('🔎','Nada nesse filtro.','Toque em “Todas” para ver a fila inteira.');
+  else if(vista==='lista' || F==='robo') corpo = `<div class="km-lista2">${it.map(linha).join('')}</div>`;
   else {
     const grupos = {}; it.forEach(i=>{ const k = i.at ? String(i.at) : 'sem'; (grupos[k] ||= []).push(i); });
+    // v24g: na visão "Todas", quem não tem ninguém esperando mas já respondeu hoje aparece com "tudo respondido"
+    if(F==='todas' && R) (e.atendentes||[]).forEach(a=>{ if(!grupos[a.id] && R.porAt?.[a.id]?.n) grupos[a.id] = []; });
+    const nomeAt = k => (e.atendentes||[]).find(a=>String(a.id)===k)?.nome;
     const ord = Object.keys(grupos).sort((a,b)=> (a==='sem'?-1:b==='sem'?1:0) || (grupos[b].filter(x=>x.atrasada).length - grupos[a].filter(x=>x.atrasada).length) || (grupos[b].length-grupos[a].length));
-    corpo = `<div class="km-grade">${ord.map((k,gi)=>{ const ls = grupos[k], nome = k==='sem' ? 'Sem atendente' : (ls[0].atNome||'Atendente'), at = ls.filter(x=>x.atrasada).length, aberto = KM.abertos?.[k], mostra = aberto ? ls : ls.slice(0,4);
-      const p = Math.round(at/ls.length*100), eu = ls.some(x=>x.minha);
-      return `<section class="km-gcard ${k==='sem'?'sem':''} ${eu?'eu':''}" style="animation-delay:${gi*70}ms">
-        <header><span class="km-gav" style="--p:${p}">${k==='sem'?'🙋':esc(iniciais(nome))}</span><div class="cresce"><b>${esc(nome)}${eu?' <em>você</em>':''}</b><small>${ls.length} ${ls.length===1?'esperando':'esperando'}${at?` · <span class="neg">${at} atrasada${at>1?'s':''}</span>`:' · tudo no prazo'}</small></div><span class="km-gn">${ls.length}</span></header>
-        <div class="km-glist">${mostra.map(linha).join('')}</div>
+    const roboCard = (F==='todas' && robo.length) ? `<section class="km-gcard robo" style="animation-delay:${ord.length*70}ms">
+        <header><span class="km-gav" style="--p:0">🤖</span><div class="cresce"><b>Com o robô</b><small>${robo.length} na etapa do robô · não contam como atrasadas</small></div><span class="km-gn">${robo.length}</span></header>
+        ${KM.abertos?.robo?`<div class="km-glist">${robo.map(linha).join('')}</div>`:''}
+        <button class="km-mais" onclick="KM.abertos={...(KM.abertos||{}),robo:${!KM.abertos?.robo}};render()">${KM.abertos?.robo?'Esconder':'Ver quem está com o robô'} <i class="ti ti-chevron-${KM.abertos?.robo?'up':'down'}"></i></button>
+      </section>` : '';
+    corpo = `<div class="km-grade">${ord.map((k,gi)=>{ const ls = grupos[k], nome = k==='sem' ? 'Sem atendente' : (ls[0]?.atNome||nomeAt(k)||'Atendente'), at = ls.filter(x=>x.atrasada).length, aberto = KM.abertos?.[k], mostra = aberto ? ls : ls.slice(0,4);
+      const p = ls.length ? Math.round(at/ls.length*100) : 0, eu = ls.some(x=>x.minha) || (!adm && (e.atendentes||[]).find(a=>String(a.id)===k)?.eid===S.sess?.eid), rq = R?.porAt?.[k];
+      return `<section class="km-gcard ${k==='sem'?'sem':''} ${eu?'eu':''} ${ls.length?'':'ok'}" style="animation-delay:${gi*70}ms">
+        <header><span class="km-gav" style="--p:${p}">${k==='sem'?'🙋':esc(iniciais(nome))}</span><div class="cresce"><b>${esc(nome)}${eu?' <em>você</em>':''}</b><small>${ls.length?`${ls.length} esperando${at?` · <span class="neg">${at} atrasada${at>1?'s':''}</span>`:' · tudo no prazo'}`:'💚 tudo respondido'}</small></div><span class="km-gn">${ls.length}</span></header>
+        ${rq?.n?`<div class="km-rq"><i class="ti ti-circle-check"></i><b data-km-n="${rq.n}">0</b> respondida${rq.n>1?'s':''} hoje${rq.mediana!=null?` · média ${kmSeg(rq.mediana)}`:''}${rq.dentro!=null?` · ${rq.dentro}% no prazo`:''}</div>`:''}
+        ${ls.length?`<div class="km-glist">${mostra.map(linha).join('')}</div>`:''}
         ${ls.length>4?`<button class="km-mais" onclick="KM.abertos={...(KM.abertos||{}),'${k}':${!aberto}};render()">${aberto?'Mostrar menos':`Ver mais ${ls.length-4}`} <i class="ti ti-chevron-${aberto?'up':'down'}"></i></button>`:''}
-      </section>`; }).join('')}</div>`;
+      </section>`; }).join('')}${roboCard}</div>`;
   }
   setTimeout(kmAnimar, 30);
-  return (quieto ? topo.replace('class="km-hero','class="km-hq km-hero') : topo) + barra + `<div class="${quieto?'km-quieto':''}">` + corpo + `</div><p class="apagado" style="font-size:12.5px;margin-top:10px">⏱️ O tempo conta só no horário da loja e a barrinha mostra quanto do prazo de ${pz} min já passou. Toque na cliente para ver a ficha; no botão colorido para responder na Kommo. Atualiza sozinho a cada 15 s.</p>`;
+  return (quieto ? topo.replace('class="km-hero','class="km-hq km-hero') : topo) + resp + barra + `<div class="${quieto?'km-quieto':''}">` + corpo + `</div><p class="apagado" style="font-size:12.5px;margin-top:10px">⏱️ O tempo conta só no horário da loja e a barrinha mostra quanto do prazo de ${pz} min já passou. Toque na cliente para ver a ficha; no botão colorido para responder na Kommo. Atualiza sozinho a cada 15 s.</p>`;
+}
+function kmSeg(s){ s = Math.round(s||0); return s < 60 ? s+' s' : kmMin(Math.round(s/60)); }
+/* v24g: respondidas hoje — faixa com o total + lista recolhida das 10 últimas + ✓ voando quando alguém responde */
+function kmRespondidas(R, pz, quieto){
+  if(!R) return '';
+  const voa = KM._okVoa && Date.now()-KM._okVoa.em < 4000 ? KM._okVoa : null;
+  const ab = !!KM.respAberto, ult = R.ultimas||[];
+  return `${voa?`<div class="km-voa" aria-live="polite">${voa.l.map(u=>`<span><i class="ti ti-circle-check"></i>${esc(u.nome)}${u.atNome?` · ${esc(u.atNome)}`:''} respondeu</span>`).join('')}</div>`:''}
+  <div class="km-resp ${quieto?'km-hq':''}">
+    <button class="km-resp-top" onclick="KM.respAberto=${!ab};render()" ${R.n?'':'disabled'}>
+      <span class="km-resp-ic"><i class="ti ti-checks"></i></span>
+      <span class="cresce"><b><span data-km-n="${R.n||0}">0</span> respondida${R.n===1?'':'s'} hoje</b><small>${R.n?`tempo médio ${kmSeg(R.mediana)} · ${R.dentro}% dentro de ${pz} min`:'quando alguém responder na Kommo, aparece aqui'}</small></span>
+      ${R.n?`<span class="km-resp-pct" style="--p:${R.dentro||0}">${R.dentro||0}%</span><i class="ti ti-chevron-${ab?'up':'down'}"></i>`:''}
+    </button>
+    ${ab&&ult.length?`<div class="km-resp-l">${ult.map((u,n)=>{ const cn = kmCanal(u.canal); return `<div class="km-resp-i" style="animation-delay:${n*30}ms" onclick="${u.lead?`kmFicha(${u.lead})`:''}">
+      <span class="km-cn sm" style="background:${cn.bg}" title="${cn.n}"><i class="ti ${cn.i}"></i></span>
+      <span class="cresce"><b>${esc(u.nome)}</b><small>${u.atNome?esc(u.atNome)+(u.minha?' (você)':''):'sem atendente'} · ${new Date(u.t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</small></span>
+      <span class="km-resp-t ${u.noPrazo?'ok':'bad'}">${kmSeg(u.s)}</span></div>`; }).join('')}<p class="apagado" style="font-size:12px;margin:6px 2px 0">As 10 últimas de hoje. O tempo conta só no horário da loja.</p></div>`:''}
+  </div>`;
 }
 const bonitoEt = t => String(t||'').toLowerCase().replace(/(^|\s|\/)\S/g, x=>x.toUpperCase());
 /* números contando (só quando o valor muda) */
