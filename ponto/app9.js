@@ -145,4 +145,6 @@ document.write('<script src="app46.js?v=46b"><\/script>');
 document.write('<script src="app47.js?v=47"><\/script>');
 /* v48: caixa da loja — uma gaveta por loja: abrir o caixa (às cegas), passagem de turno com 2 PINs, suprimento, dinheiro só com caixa aberto, "Quem vendeu?" no PDV, misto dividido, crédito à vista × parcelado (app48.js; servidor CAIXA.gs) */
 document.write('<script src="app48.js?v=48d"><\/script>');
+/* v49: Início no computador em 2 colunas — meta e vendas à esquerda, ponto, números e atalhos à direita (app49.js) */
+document.write('<script src="app49.js?v=49"><\/script>');
 document.write('<script src="app12.js?v=35"><\/script>');
