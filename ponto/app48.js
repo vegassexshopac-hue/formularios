@@ -57,6 +57,15 @@
 .cx48-cfg label.sw{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid #eee;font-size:14px}
 .cx48-cfg label.sw input{width:20px;height:20px;margin-top:2px}
 @media(max-width:900px){.cx48-mix{grid-template-columns:1fr 1fr}}
+/* v48b: a comanda ficou alta (fidelidade, roleta, Kommo, quem vendeu) e o botão Finalizar sumia embaixo:
+   a parte de baixo rola sozinha e o Finalizar fica sempre à vista */
+.pdv-dir .pdv-fecha{overflow-y:auto;min-height:0;flex-shrink:1;overscroll-behavior:contain}
+.pdv-dir .pdv-itens{flex:1 1 90px;min-height:90px}
+.pdv-fecha .pdv-fim{position:sticky;bottom:0;z-index:3;box-shadow:0 -8px 16px rgba(255,255,255,.9),0 6px 18px rgba(227,16,31,.25)}
+.cx48-quem{padding:6px 12px 8px}
+.cx48-quem .t{margin-bottom:4px}
+.cx48-quem .cx48-chip{flex-direction:row;min-width:0;padding:3px 12px 3px 3px;border-radius:99px;gap:6px;flex:0 0 auto}
+.cx48-quem .cx48-chip .av,.cx48-quem .cx48-chip img,.cx48-quem .cx48-chip>span:first-child{flex:0 0 auto}
 `;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 })();
@@ -123,7 +132,7 @@ function cx48BarraQuem(){
   const pede = !PDV.vend;
   return `<div class="cx48-quem"><div class="t ${pede?'pede':''}"><span>${pede?'👆 Toque em quem vendeu':'Quem vendeu?'}</span>
       <button class="cx48-modo" onclick="cx48TrocarModo()"><i class="ti ${comp?'ti-device-tablet':'ti-user'}"></i> ${comp?'aparelho da loja':'aparelho pessoal'}</button></div>
-    <div class="cx48-chips">${L.map(p=>`<button class="cx48-chip ${PDV.vend===p.id?'on':''}" onclick="cx48Quem('${p.id}')">${avatar(p,'',40)}<b>${esc(primeiroNome(p.nome))}</b>${p.st&&p.st!=='ativa'?`<small>${p.st==='almoco'?'almoço':'pausa'}</small>`:p.eu&&!comp?'<small>eu</small>':''}</button>`).join('')}</div></div>`;
+    <div class="cx48-chips">${L.map(p=>`<button class="cx48-chip ${PDV.vend===p.id?'on':''}" onclick="cx48Quem('${p.id}')">${avatar(p,'',30)}<b>${esc(primeiroNome(p.nome))}</b>${p.st&&p.st!=='ativa'?`<small>${p.st==='almoco'?'almoço':'pausa'}</small>`:p.eu&&!comp?'<small>eu</small>':''}</button>`).join('')}</div></div>`;
 }
 
 /* ═════════ PDV: misto dividido ═════════ */
@@ -203,7 +212,7 @@ function cx48TravaHtml(){
         if(ob) ob.closest('.pdv-extra').outerHTML = cx48MixHtml();
       }
       const pags = el.querySelector('.pdv-pags'); if(pags) pags.insertAdjacentHTML('afterend', cx48TravaHtml());
-      cx48Botao();
+      cx48Botao(); cx48Altura();
     }catch(e){ console.warn('v48 comanda', e); }
     return r;
   };
@@ -241,6 +250,15 @@ function cx48TravaHtml(){
     return h;
   };
 }
+/* v48b: a comanda cabe na tela a partir de onde ela começa (antes passava do fim da janela e o Finalizar ficava escondido) */
+function cx48Altura(){
+  const el = document.getElementById('pdv-comanda'); if(!el) return;
+  if(window.innerWidth<=900){ el.style.maxHeight = ''; return; }
+  const topo = Math.max(12, el.getBoundingClientRect().top);
+  el.style.maxHeight = Math.max(380, window.innerHeight - topo - 12) + 'px';
+}
+window.addEventListener('scroll', ()=>{ if(document.getElementById('pdv-comanda')) requestAnimationFrame(cx48Altura); }, {passive:true});
+window.addEventListener('resize', ()=>requestAnimationFrame(cx48Altura));
 function cx48BannerPDV(){
   if(!cx48D()) return '';
   const loja = PDV.loja || lojaAtual(), L = cx48Loja(loja); if(!L) return '';
