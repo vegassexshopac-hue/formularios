@@ -8,7 +8,7 @@
 const F39 = { local:{}, pend:null };
 
 function fotosMapa39(){
-  return Object.assign({}, S.boot?.fotosEquipe||{}, S.sess?.dados?.fotosEquipe||{}, S.adm?.dados?.fotosEquipe||{}, F39.local);
+  return Object.assign({}, F39.fotos||{}, S.boot?.fotosEquipe||{}, S.sess?.dados?.fotosEquipe||{}, S.adm?.dados?.fotosEquipe||{}, F39.local);
 }
 function fotoDe39(c){
   if(!c) return '';
@@ -138,8 +138,42 @@ async function fotoRemover39(){
   }catch(e){ toast(e.message, true); }
 }
 
+
+/* ───────── link do mutirão / produtos (#fotos=…): corrida, "Acabou de acontecer" e quem mexeu ───────── */
+function nomeChave39(n){
+  return String(n||'').trim().split(/\s+/)[0].normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase()
+    .replace(/ph/g,'f').replace(/y/g,'i').replace(/^es(?=t)/,'s').replace(/(.)\1+/g,'$1').replace(/e$/,'');
+}
+function fotoPorNome39(nome){
+  const m = fotosMapa39(); if(!nome) return '';
+  const eq = [].concat(S.adm?.dados?.colaboradoras||[], S.boot?.colaboradoras||[], S.sess?.dados?.equipe||[], F39.equipe||[]).filter(p=>p && p.id && m[p.id]);
+  const exato = eq.find(p=>p.nome===nome); if(exato) return m[exato.id];
+  const k = nomeChave39(nome), v = eq.filter(p=>nomeChave39(p.nome)===k), ids = [...new Set(v.map(p=>p.id))];
+  return ids.length===1 ? m[ids[0]] : '';
+}
+const desesc39 = t => String(t).replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
+function pintarMutirao39(h){
+  h = h.replace(/<span class="pl-av" data-nome="([^"]*)"([^>]*)>([^<]*)<\/span>/g, (t, nome, resto, ini)=>{
+    const f = fotoPorNome39(desesc39(nome)); return f ? `<span class="pl-av av39" data-nome="${nome}"${resto} style="${fotoCss39(f,160)}"></span>` : t; });
+  h = h.replace(/<span class="b" style="background:([^"]*)">([^<]*)<\/span><span class="t"><b>([^<]*)<\/b>/g, (t, cor, ini, nome)=>{
+    const f = fotoPorNome39(desesc39(nome)); return f ? `<span class="b av39" style="${fotoCss39(f,120)}"></span><span class="t"><b>${nome}</b>` : t; });
+  return h;
+}
+/* o link do mutirão não carrega a tela inicial: busca as fotos da equipe uma vez (boot é público) e redesenha o placar */
+let _fotosBoot39 = false;
+async function fotosBoot39(){
+  if(_fotosBoot39 || S.boot?.fotosEquipe || F39.fotos) return; _fotosBoot39 = true;
+  try{
+    const b = await api('boot');
+    if(b && b.fotosEquipe){ F39.fotos = b.fotosEquipe; F39.equipe = b.colaboradoras || []; if(typeof plRepintar==='function') plRepintar(); }
+  }catch(e){}
+}
+if(typeof plHtml==='function'){ const _plHtmlV39 = plHtml; plHtml = function plHtml(){ if(S.tela==='fotos') fotosBoot39(); return pintarMutirao39(_plHtmlV39.apply(this, arguments)); }; }
+if(typeof edAv==='function'){ const _edAvV39 = edAv; edAv = function edAv(n){ const h = _edAvV39.apply(this, arguments), f = fotoPorNome39(n); return f ? h.replace('class="ed-av"', 'class="ed-av av39"').replace('style="', `style="${fotoCss39(f,120)}`) : h; }; }
+
 document.head.insertAdjacentHTML('beforeend', `<style>
 .av39{color:transparent!important;font-size:0!important}
+.pl-av.av39,.pl-feed .b.av39,.ed-av.av39{background-color:#eee}
 .eq39{display:inline-flex;align-items:center;gap:10px}
 .eq39 .lob-av{box-shadow:0 0 0 2px #fff,0 0 0 3px var(--linha2)}
 .eq39-sem{font-size:11.5px;color:var(--creme3);font-weight:600;white-space:nowrap}
