@@ -141,4 +141,6 @@ document.write('<script src="app44.js?v=44"><\/script>');
 document.write('<script src="app45.js?v=45"><\/script>');
 /* v46: cartão "Minha meta" animado no Início + botão "Tirar dúvida" monitorado (Comunicação › Dúvidas da equipe) (app46.js; servidor AJUDA.gs) */
 document.write('<script src="app46.js?v=46b"><\/script>');
+/* v47: relatório de vendas da equipe (dia, semana, mês) + desfazer em 15 min com motivo + pedido de cancelamento para a administração (app47.js; servidor VENDAS.gs) */
+document.write('<script src="app47.js?v=47"><\/script>');
 document.write('<script src="app12.js?v=35"><\/script>');
