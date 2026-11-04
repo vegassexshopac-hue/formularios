@@ -501,7 +501,7 @@ if(typeof admCaixa==='function'){
       const cfg = C.cfg||{};
       return `<h2 class="secao" style="margin-top:0">Caixa de hoje</h2><div class="op-kpis">${lojas}</div>
         <div class="linha quebra" style="gap:8px;margin:0 0 10px"><button class="btn" onclick="cx48AdmCfg()"><i class="ti ti-shield-lock"></i> Regras do caixa</button>
-        <span class="suave" style="align-self:center;font-size:13px">${cfg.so_terminal?'Só no computador da loja':'Em qualquer aparelho'} · ${cfg.bloquear_dinheiro?'dinheiro só com caixa aberto':'dinheiro liberado sempre'} · sangria acima de ${brl(cfg.limite_sangria||0)}</span></div>
+        <span class="suave" style="align-self:center;font-size:13px">${cfg.so_terminal?'Só no computador da loja':'Em qualquer aparelho'} · ${cfg.bloquear_dinheiro?'dinheiro só com caixa aberto':'dinheiro liberado sempre'} · sangria acima de ${brl(cfg.limite_sangria||0)} · WhatsApp: ${C.whats ? (C.whats.ligado && C.whats.chave && C.whats.numeros ? '✅ ligado' : '⚠️ falta configurar') : '—'}</span></div>
         <h2 class="secao">Abertura, passagem e suprimento <small>${ym}</small></h2>
         <div style="margin-bottom:16px">${lista||'<p class="suave">Nada neste mês ainda.</p>'}</div>` + h;
     }catch(e){ console.warn('v48 admCaixa', e); return h; }
@@ -543,7 +543,31 @@ function cx48AdmCfg(){
       <label class="sw"><input type="checkbox" id="cx48-din" ${c.bloquear_dinheiro?'checked':''}><span><b>Venda em dinheiro só com o caixa aberto</b><br><small class="suave">Cartão e Pix passam sempre.</small></span></label>
       <div class="campo" style="margin-top:10px"><label>Avisar "hora da sangria" quando a gaveta passar de (R$)</label><input class="inp num" id="cx48-lim" inputmode="decimal" value="${esc(String(c.limite_sangria??500).replace('.',','))}"></div>
       <p class="suave" style="font-size:13px">Fundo de troco e tolerância ficam no botão "Fundo de troco e tolerância", mais abaixo.</p>
-      <button class="btn pri largo" onclick="cx48AdmCfgSalvar()"><i class="ti ti-check"></i> Salvar</button></div></div></div>`;
+      <button class="btn pri largo" onclick="cx48AdmCfgSalvar()"><i class="ti ti-check"></i> Salvar</button>
+      ${cx48WhatsHtml()}</div></div></div>`;
+}
+/* v48e: avisos do caixa no WhatsApp (saem do WhatsApp da loja direto da planilha) */
+function cx48WhatsHtml(){
+  const w = (cx48D()||{}).whats; if(!w) return '';
+  return `<div style="border-top:1px solid #eee;margin-top:16px;padding-top:12px">
+    <h4 style="margin:0 0 4px">📱 Avisos do caixa no WhatsApp</h4>
+    <p class="suave" style="font-size:13px;margin:0 0 8px">Saem do WhatsApp da loja na hora: diferença na abertura ou na passagem, resumo de cada fechamento, venda em dinheiro cancelada, sangria, gaveta cheia e caixa sem fechar.</p>
+    <label class="sw"><input type="checkbox" id="cx48-wl" ${w.ligado?'checked':''}><span><b>Ligado</b></span></label>
+    <div class="campo"><label>Número que recebe (pode pôr mais de um, separado por vírgula)</label><input class="inp" id="cx48-wn" inputmode="tel" placeholder="(68) 9 9999-9999" value="${esc(w.numeros||'')}"></div>
+    <div class="campo"><label>Chave do WhatsApp da loja ${w.chave?'<span class="cx48-st aberto">✔ já colada</span>':'<span class="cx48-st nao">falta colar</span>'}</label>
+      <input class="inp" id="cx48-wk" type="password" autocomplete="off" placeholder="${w.chave?'Só cole de novo se a chave mudar':'Cole aqui a chave (AUTHENTICATION_API_KEY da Evolution API)'}">
+      <small class="suave">Fica guardada no servidor e não aparece mais na tela.</small></div>
+    <label class="sw"><input type="checkbox" id="cx48-wg" ${w.gatilho?'checked':''}><span><b>Conferir sozinho a cada 15 min</b><br><small class="suave">Para avisar "caixa sem fechar" e "gaveta cheia" mesmo se ninguém estiver usando o portal.</small></span></label>
+    <div class="linha" style="gap:8px;margin-top:8px"><button class="btn pri" onclick="cx48WhatsSalvar(false)"><i class="ti ti-check"></i> Salvar WhatsApp</button><button class="btn" onclick="cx48WhatsSalvar(true)"><i class="ti ti-send"></i> Salvar e enviar teste</button></div>
+  </div>`;
+}
+async function cx48WhatsSalvar(teste){
+  try{
+    const chave = $('#cx48-wk').value.trim();
+    const d = await api('admCaixa48', {...S.adm.cred, op:'whats', whats:$('#cx48-wn').value, whats_ligado:$('#cx48-wl').checked, gatilho:$('#cx48-wg').checked, ...(chave?{chave}:{}), teste:!!teste});
+    S.adm.dados = d; fecharModal(); render();
+    if(teste) toast(d.whatsTeste==='ok' ? 'Teste enviado ✔ Confira o WhatsApp.' : 'Não enviou: '+d.whatsTeste, d.whatsTeste!=='ok'); else toast('WhatsApp do caixa salvo ✔');
+  }catch(e){ toast(e.message, true); }
 }
 async function cx48AdmCfgSalvar(){
   try{ S.adm.dados = await api('admCaixa48', {...S.adm.cred, op:'cfg', so_terminal:$('#cx48-term').checked, bloquear_dinheiro:$('#cx48-din').checked, limite_sangria:$('#cx48-lim').value}); fecharModal(); render(); toast('Regras salvas ✔'); }

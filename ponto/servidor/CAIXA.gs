@@ -181,7 +181,9 @@ function cx48Alertas_() {
 }
 function cx48AdmPacote_() {
   var desde = diaMais_(-62);
-  return { cfg: cx48Cfg_(), movs: ler_('CaixaMov').filter(function (m) { return m.data >= desde; }).map(function (m) {
+  var wc = cx48WhatsCfg_(), c48 = cfgJson_('caixa48', {}) || {};
+  var whats = { numeros: String(c48.whats || ''), ligado: c48.whats_ligado !== false, chave: wc.chave, gatilho: !!cx48Gatilho_() };
+  return { whats: whats, cfg: cx48Cfg_(), movs: ler_('CaixaMov').filter(function (m) { return m.data >= desde; }).map(function (m) {
              var o = limpar_(m); o.contado = cx48Num_(m.contado); o.esperado = m.esperado === '' ? null : cx48Num_(m.esperado);
              o.diferenca = m.diferenca === '' ? null : cx48Num_(m.diferenca); o.valor = cx48Num_(m.valor); return o; }).reverse(),
            alertas: cx48Alertas_(), hoje: cx48Pacote_(true) };
@@ -271,8 +273,125 @@ function cx48Suprimento_(req, c) {
   });
 }
 
+/* ───────── avisos no WhatsApp da administração (lidos pelo motor, mesma chave KOMMO_SEGREDO) ─────────
+   O motor chama a cada ~2 min e manda o que ainda não mandou (cada item tem uma chave única).
+   Nunca vai produto nem cliente — só loja, pessoa, hora e valores do caixa. */
+function cx48Brl_(n) {
+  var v = opxR2_(n), s = v < 0 ? '-' : '', t = Math.abs(v).toFixed(2).split('.');
+  return s + 'R$ ' + t[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ',' + t[1];
+}
+function cx48AvisosMotor_(req) {
+  var segredo = PropertiesService.getScriptProperties().getProperty('KOMMO_SEGREDO');
+  if (!segredo || String(req.segredo || '') !== segredo) return { ok: false, erro: 'Chave da Kommo não confere' };
+  return { ok: true, hoje: hoje_(), itens: cx48ItensAvisos_() };
+}
+function cx48ItensAvisos_() {
+  var hoje = hoje_(), lojas = JSON.parse(cfg_('lojas')), cfg = cx48Cfg_(), itens = [];
+  var nome = function (k) { return (lojas[k] || {}).nome || k; };
+  var pn = function (s) { return String(s || '').split(' ')[0]; };
+  var hm = function (s) { return String(s || '').slice(11, 16); };
+  /* abertura / passagem com diferença */
+  ler_('CaixaMov').forEach(function (m) {
+    if (m.data !== hoje || m.status !== 'diferenca') return;
+    var dif = cx48Num_(m.diferenca), tit = m.tipo === 'abertura' ? 'Abertura do caixa' : 'Passagem de turno';
+    itens.push({ k: 'cxmov|' + m.id, txt: '⚠️ *' + tit + ' com diferença — ' + nome(m.loja) + '*\n' +
+      (m.tipo === 'passagem' ? pn(m.por) + ' → ' + pn(m.por2) : pn(m.por)) + ' às ' + hm(m.criado_em) + '\n' +
+      'Contado ' + cx48Brl_(cx48Num_(m.contado)) + ' · esperado ' + cx48Brl_(cx48Num_(m.esperado)) + ' · *' + (dif > 0 ? '+' : '') + cx48Brl_(dif) + '*' +
+      (m.obs ? '\nMotivo: ' + String(m.obs).slice(0, 120) : '') });
+  });
+  /* resumo de cada fechamento (refazer manda de novo) */
+  var formas = [['dinheiro', 'Dinheiro'], ['pix', 'Pix'], ['debito', 'Débito'], ['credito_vista', 'Crédito à vista'], ['credito_parc', 'Crédito parcelado']];
+  ler_('Caixa').forEach(function (r) {
+    if (r.data !== hoje || r.status === 'reaberto') return;
+    var cont = opxJson_(r.contado, {}), esp = opxJson_(r.esperado, {}), dif = opxJson_(r.diferenca, {}), maior = 0;
+    var linhas = [];
+    formas.forEach(function (f) {
+      if (!(f[0] in cont) && !(f[0] in esp)) return;
+      var d = opxR2_(dif[f[0]]); maior = Math.max(maior, Math.abs(d));
+      linhas.push((Math.abs(d) < 0.005 ? '✔ ' : '✖ ') + f[1] + ': ' + cx48Brl_(cont[f[0]]) + (Math.abs(d) < 0.005 ? '' : ' (esperado ' + cx48Brl_(esp[f[0]]) + ' · ' + (d > 0 ? '+' : '') + cx48Brl_(d) + ')'));
+    });
+    var vend = opxJson_(r.vendas, {});
+    itens.push({ k: 'cxfech|' + r.id + '|' + r.criado_em, txt: (r.status === 'diferenca' ? '⚠️' : '✅') + ' *Caixa fechado — ' + nome(r.loja) + '*\n' +
+      pn(r.por) + ' às ' + hm(r.criado_em) + ' · ' + (r.status === 'diferenca' ? '*diferença de ' + cx48Brl_(maior) + '*' : 'bateu') + '\n\n' + linhas.join('\n') + '\n\n' +
+      '🛒 ' + (Number(r.qtd_vendas) || 0) + ' venda(s) · ' + cx48Brl_(vend.total) + ' · 💸 sangrias ' + cx48Brl_(cx48Num_(r.sangrias)) + ' · 🪙 fundo ' + cx48Brl_(cx48Num_(r.fundo)) +
+      (r.obs ? '\nObs.: ' + String(r.obs).slice(0, 120) : '') });
+  });
+  /* venda com dinheiro cancelada hoje */
+  ler_('VendasPDV').forEach(function (v) {
+    if (v.status !== 'cancelada' || String(v.cancelada_em).slice(0, 10) !== hoje) return;
+    var p = cx48Partes_(v); if (!(p.dinheiro > 0)) return;
+    itens.push({ k: 'cxcanc|' + v.id, txt: '💸 *Venda em dinheiro cancelada — ' + nome(v.loja) + '*\n#' + v.numero + ' de ' + pn(v.colaboradora) + ' (' + String(v.hora || '') + ') · ' +
+      cx48Brl_(p.dinheiro) + ' em dinheiro\nCancelou: ' + pn(v.cancelada_por) + ' às ' + hm(v.cancelada_em) + (v.motivo_cancel ? '\nMotivo: ' + String(v.motivo_cancel).slice(0, 120) : '') });
+  });
+  /* sangria registrada */
+  try {
+    ler_('Sangrias').forEach(function (sg) {
+      if (sg.data !== hoje) return;
+      itens.push({ k: 'cxsang|' + sg.id, txt: '💵 *Sangria — ' + nome(sg.loja) + '*: ' + cx48Brl_(cx48Num_(sg.valor)) + ' por ' + pn(sg.tirou) + ' às ' + String(sg.hora || '') +
+        (sg.conferiu ? ' · conferiu: ' + pn(sg.conferiu) : '') + (sg.video_url ? '\nFoto do envelope: ' + sg.video_url : '') });
+    });
+  } catch (e) {}
+  /* estados do dia: caixa sem fechar, gaveta cheia, vendendo sem abrir */
+  cx48Alertas_().forEach(function (a) {
+    if (a.data !== hoje) return;
+    if (a.tipo === 'naoFechou') itens.push({ k: 'cxnaofechou|' + hoje + '|' + a.loja, txt: '🔓 *Caixa da loja ' + a.lojaNome + ' ainda não foi fechado* (a loja fecha às ' + a.hora + ').' });
+    if (a.tipo === 'gaveta' && cfg.limite_sangria > 0) itens.push({ k: 'cxgaveta|' + hoje + '|' + a.loja + '|' + Math.floor(a.valor / cfg.limite_sangria), txt: '💰 *Dinheiro demais na gaveta — ' + a.lojaNome + '*: passou de ' + cx48Brl_(cfg.limite_sangria) + '. Hora de pedir a sangria.' });
+    if (a.tipo === 'semAbertura') itens.push({ k: 'cxsemab|' + hoje + '|' + a.loja, txt: '⛔ *Loja ' + a.lojaNome + ' vendendo sem abrir o caixa* — só cartão e Pix estão passando.' });
+  });
+  return itens;
+}
+
+/* ───────── WhatsApp direto da planilha (Evolution API do WhatsApp da loja) ─────────
+   Propriedades do Script: EVOLUTION_KEY (a administração cola na tela Regras do caixa — nunca volta para a tela),
+   EVOLUTION_URL e EVOLUTION_INSTANCE (padrões abaixo). Config › caixa48: whats (números), whats_ligado. */
+var CX48_EVO_URL = 'https://evolution-api-production-43cd.up.railway.app', CX48_EVO_INST = 'lasvegas';
+function cx48Prop_(k) { return PropertiesService.getScriptProperties().getProperty(k) || ''; }
+function cx48WhatsCfg_() {
+  var c = cfgJson_('caixa48', {}) || {};
+  var nums = String(c.whats || '').split(/[,;\n\/]+/).map(function (n) { var d = n.replace(/\D/g, ''); if (d.length === 10 || d.length === 11) d = '55' + d; return d.length >= 12 ? d : ''; }).filter(String);
+  return { ligado: c.whats_ligado !== false && nums.length > 0, numeros: nums, chave: !!cx48Prop_('EVOLUTION_KEY') };
+}
+function cx48WhatsEnviar_(numero, texto) {
+  var url = (cx48Prop_('EVOLUTION_URL') || CX48_EVO_URL).replace(/\/+$/, '') + '/message/sendText/' + (cx48Prop_('EVOLUTION_INSTANCE') || CX48_EVO_INST);
+  var op = function (corpo) { return { method: 'post', contentType: 'application/json', headers: { apikey: cx48Prop_('EVOLUTION_KEY') }, payload: JSON.stringify(corpo), muteHttpExceptions: true }; };
+  var r = UrlFetchApp.fetch(url, op({ number: numero, text: texto }));
+  if (r.getResponseCode() === 400) r = UrlFetchApp.fetch(url, op({ number: numero, textMessage: { text: texto } }));
+  var c = r.getResponseCode();
+  if (c < 200 || c >= 300) throw new Error('WhatsApp respondeu ' + c + ' ' + String(r.getContentText()).slice(0, 120));
+}
+function cx48Enviados_() { try { var o = JSON.parse(cx48Prop_('CX48_ENVIADOS') || '{}'); return o && o.dia === hoje_() ? o : { dia: hoje_(), k: {} }; } catch (e) { return { dia: hoje_(), k: {} }; } }
+var CX48_RODAPE = '\n\n_aviso automático do Portal Equipe · caixa da loja_';
+/* manda o que ainda não foi (nunca derruba a ação de quem chamou) */
+function cx48Avisar_(marcarSo) {
+  try {
+    var w = cx48WhatsCfg_();
+    if (!marcarSo && (!w.ligado || !w.chave)) return { enviados: 0, motivo: !w.chave ? 'sem chave' : 'sem número' };
+    var env = cx48Enviados_(), n = 0, erro = '';
+    cx48ItensAvisos_().forEach(function (it) {
+      if (env.k[it.k]) return;
+      if (!marcarSo) {
+        try { w.numeros.forEach(function (num) { cx48WhatsEnviar_(num, it.txt + CX48_RODAPE); }); n++; }
+        catch (e) { erro = String(e && e.message || e); log_('Sistema', 'whats caixa erro', erro); return; }
+      }
+      env.k[it.k] = 1;
+    });
+    PropertiesService.getScriptProperties().setProperty('CX48_ENVIADOS', JSON.stringify(env));
+    return { enviados: n, erro: erro };
+  } catch (e) { try { log_('Sistema', 'whats caixa erro', String(e && e.message || e)); } catch (x) {} return { enviados: 0, erro: String(e && e.message || e) }; }
+}
+/* depois das ações que mexem no caixa; e de vez em quando (no máximo a cada 5 min) quando alguém usa o portal */
+function cx48AvisarDepois_() { cx48Avisar_(false); }
+function cx48AvisarAsVezes_() {
+  try { var c = CacheService.getScriptCache(); if (c.get('cx48av')) return; c.put('cx48av', '1', 300); } catch (e) { return; }
+  cx48Avisar_(false);
+}
+/* gatilho (Regras do caixa › verificar a cada 15 min): pega "caixa sem fechar" e "gaveta cheia" mesmo sem ninguém usando o portal */
+function caixaAvisosGatilho() { cx48Avisar_(false); }
+function cx48Gatilho_() { return ScriptApp.getProjectTriggers().filter(function (t) { return t.getHandlerFunction() === 'caixaAvisosGatilho'; })[0] || null; }
+
 var _cx48Rodar = rodar_;
 rodar_ = function (req) {
+  if (req && req.a === 'caixaAvisos48') { try { return cx48AvisosMotor_(req); } catch (e0) { return { ok: false, erro: String(e0 && e0.message || e0) }; } }
   if (req && req.a === 'caixa' && /^(abrir|passagem|suprimento|status48)$/.test(req.op || '')) {
     try {
       var c = checarColab_(req), r;
@@ -282,12 +401,22 @@ rodar_ = function (req) {
         var fica = checarColab_({ eid: req.eid2, pin: req.pin2, pinHash: req.pin2Hash });
         r = cx48Passagem_(req, c, fica);
       } else r = {};
+      if (req.op !== 'status48') cx48AvisarDepois_();
       return { ok: true, feito: r, caixa48: cx48Pacote_(false) };
     } catch (e) { return { ok: false, erro: String(e && e.message || e) }; }
   }
   if (req && req.a === 'caixa' && req.op === 'fechar') {
     try { cx48Terminal_(req, req.loja); } catch (e2) { return { ok: false, erro: String(e2 && e2.message || e2) }; }
+    var rf = _cx48Rodar(req);
+    if (rf && rf.ok !== false) cx48AvisarDepois_();
+    return rf;
   }
+  if (req && (req.a === 'sangria' || (req.a === 'venda' && req.pdv && req.cancelar))) {
+    var rv = _cx48Rodar(req);
+    if (rv && rv.ok !== false) cx48AvisarDepois_();
+    return rv;
+  }
+  if (req && (req.a === 'dados' || req.a === 'entrar' || req.a === 'admDados' || req.a === 'admAoVivo')) cx48AvisarAsVezes_();
   return _cx48Rodar(req);
 };
 
@@ -370,9 +499,28 @@ COLAB.venda = function (c, req) {
 };
 
 /* ───────── administração ───────── */
+var _cx48AdmCancelar = ADMIN.admPdvCancelar;
+ADMIN.admPdvCancelar = function (req) { var d = _cx48AdmCancelar(req); cx48AvisarDepois_(); return d; };
+if (ADMIN.admPdvPedidoCancel) { var _cx48AdmPedido = ADMIN.admPdvPedidoCancel; ADMIN.admPdvPedidoCancel = function (req) { var d = _cx48AdmPedido(req); cx48AvisarDepois_(); return d; }; }
 ADMIN.admCaixa48 = function (req) {
+  if (req.op === 'whats') {
+    var c0 = cfgJson_('caixa48', {}) || {};
+    if (req.whats != null) c0.whats = String(req.whats).slice(0, 120);
+    if (req.whats_ligado != null) c0.whats_ligado = !!req.whats_ligado;
+    setCfg_('caixa48', JSON.stringify(c0));
+    if (req.chave) PropertiesService.getScriptProperties().setProperty('EVOLUTION_KEY', String(req.chave).trim());
+    if (req.gatilho === true && !cx48Gatilho_()) ScriptApp.newTrigger('caixaAvisosGatilho').timeBased().everyMinutes(15).create();
+    if (req.gatilho === false && cx48Gatilho_()) ScriptApp.deleteTrigger(cx48Gatilho_());
+    cx48Avisar_(true);       // começa a partir de agora: o que já aconteceu hoje não é mandado de uma vez
+    log_('Administração', 'whats do caixa', 'números ' + String(c0.whats || '').replace(/\d(?=\d{4})/g, '•') + (req.chave ? ' · chave nova' : ''));
+    var d0 = ADMIN.admDados(req);
+    if (req.teste) { try { var w0 = cx48WhatsCfg_(); if (!w0.chave) throw new Error('Falta colar a chave do WhatsApp'); if (!w0.numeros.length) throw new Error('Falta o número'); w0.numeros.forEach(function (n) { cx48WhatsEnviar_(n, '✅ *Teste do Portal Equipe* — os avisos do caixa da loja vão chegar aqui.' + CX48_RODAPE); }); d0.whatsTeste = 'ok'; } catch (e) { d0.whatsTeste = String(e && e.message || e); } }
+    return d0;
+  }
   if (req.op === 'cfg') {
-    var c = cx48Cfg_();
+    var c = cx48Cfg_(), velho = cfgJson_('caixa48', {}) || {};
+    if (velho.whats != null) c.whats = velho.whats;
+    if (velho.whats_ligado != null) c.whats_ligado = velho.whats_ligado;
     if (req.so_terminal != null) c.so_terminal = !!req.so_terminal;
     if (req.bloquear_dinheiro != null) c.bloquear_dinheiro = !!req.bloquear_dinheiro;
     if (req.limite_sangria != null && req.limite_sangria !== '') c.limite_sangria = Math.max(0, cx48Num_(req.limite_sangria));
