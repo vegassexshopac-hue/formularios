@@ -10,7 +10,8 @@
 const KMA = {vistos:null};
 function kmArenaVendas(){
   const P = pdvD();
-  return (P.kommo||[]).map(r=>{ const mesmoDia = String(r.criado_em).slice(0,10) === r.data;
+  const lancadas = new Set((P.vendas||[]).filter(v=>v.origem==='kommo' && v.kommo_lead && v.status!=='cancelada').map(v=>String(v.kommo_lead)));   // v41: já lançada no PDV com produtos → não repete
+  return (P.kommo||[]).filter(r=>!lancadas.has(String(r.lead))).map(r=>{ const mesmoDia = String(r.criado_em).slice(0,10) === r.data;
     return {id:'K'+r.lead, numero:'', criada_em: mesmoDia ? r.criado_em : r.data+' 23:59:00', data:r.data, hora: mesmoDia ? String(r.criado_em).slice(11,16) : '—', loja:r.loja,
       colaboradora_id:r.colaboradora_id, colaboradora:r.colaboradora, itens:[], qtd_itens:0, subtotal:r.valor, desconto:0, total:r.valor, pagamento:'Kommo', parcelas:1, status:'ok', kommo:true}; });
 }

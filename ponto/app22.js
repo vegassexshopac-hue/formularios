@@ -356,7 +356,7 @@ function admClientes(){
   if(!FA.L){ fidAdmCarregar(); return `<div class="cartao pad"><p class="suave" style="margin:0"><i class="ti ti-loader-2"></i> Carregando as clientes…</p></div>`; }
   const L = FA.L, cfg = fidCfg(), hoje = hojeISO(), d30 = new Date(Date.now()-30*864e5).toISOString().slice(0,10);
   const k = {n:L.length, ativas:L.filter(c=>c.ultima>=d30).length, cash:L.reduce((s,c)=>s+(c.cashback?.saldo||0),0), pend:L.reduce((s,c)=>s+(c.pendentes||0),0), ind:L.reduce((s,c)=>s+(c.indicacoes_validas||0),0)};
-  const subs = [['lista','ti-users','Clientes'],['presentes','ti-gift','Presentes'],['importar','ti-file-import','Importar'],['regras','ti-adjustments','Regras']];
+  const subs = [['lista','ti-users','Clientes'],['chamar','ti-heart','Para chamar'],['presentes','ti-gift','Presentes'],['importar','ti-file-import','Importar'],['regras','ti-adjustments','Regras']].filter(x=>x[0]!=='chamar' || typeof relTela==='function');
   return `<div class="fid-kpis">
       <div class="fid-kpi"><b class="num">${k.n}</b><small>clientes no cadastro</small></div>
       <div class="fid-kpi" style="animation-delay:.05s"><b class="num">${k.ativas}</b><small>compraram nos últimos 30 dias</small></div>
@@ -365,7 +365,7 @@ function admClientes(){
       <div class="fid-kpi" style="animation-delay:.2s"><b class="num">${k.ind}</b><small>indicações que viraram compra</small></div></div>
     <div class="fid-sub">${subs.map(([s,i,n])=>`<button class="${FA.sub===s?'on':''}" onclick="FA.sub='${s}';render()"><i class="ti ${i}"></i>${n}</button>`).join('')}
       <button style="margin-left:auto" onclick="fidAdmCarregar(true)"><i class="ti ti-refresh"></i>Atualizar</button></div>
-    ${FA.sub==='presentes'?fidAdmPresentes():FA.sub==='importar'?fidAdmImportar():FA.sub==='regras'?fidAdmRegras():fidAdmLista()}`;
+    ${FA.sub==='chamar' && typeof relTela==='function'?`<div class="cartao pad" id="rel-corpo">${relTela()}</div>`:FA.sub==='presentes'?fidAdmPresentes():FA.sub==='importar'?fidAdmImportar():FA.sub==='regras'?fidAdmRegras():fidAdmLista()}`;
 }
 function fidAdmLista(){
   const q = semAcento(FA.q), dig = FA.q.replace(/\D/g,''), ci = fidCfg().ciclo;

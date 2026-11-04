@@ -97,7 +97,7 @@ document.write('<script src="app20.js?v=21"><\/script>');
 /* v21b: placar do mutirão + tirar produto do catálogo (app21.js) — antes do app12 */
 document.write('<script src="app21.js?v=21b"><\/script>');
 /* v22: clientes e fidelidade — cartão de selos, presentes, cashback e indicação na comanda + Administração › Clientes (app22.js) */
-document.write('<script src="app22.js?v=22b"><\/script>');
+document.write('<script src="app22.js?v=41"><\/script>');
 /* v23: cupom da roleta da loja na comanda (código LV…, baixa ligada à cliente) + Administração › Roletas (app23.js) */
 document.write('<script src="app23.js?v=23"><\/script>');
 /* v24: WhatsApp · Kommo — esperando resposta, tarefas, funil/ficha e vendas pelo motor no Railway (app24.js) */
@@ -117,7 +117,7 @@ document.write('<script src="campanha.js?v=37"><\/script>');
 /* v32: portal mais rápido — abre na hora com os dados guardados no aparelho e atualiza sozinho; arquivos guardados (sw.js) (app32.js) */
 document.write('<script src="app32.js?v=32"><\/script>');
 /* v33: vendas da Kommo na Arena — "Acabou de vender", flash, nº de vendas e ticket (app33.js) */
-document.write('<script src="app33.js?v=33b"><\/script>');
+document.write('<script src="app33.js?v=41"><\/script>');
 /* v39: foto das colaboradoras — cadastro com foto e foto no lugar das iniciais (app39.js) */
 document.write('<script src="app39.js?v=39b"><\/script>');
 /* v34: Administração organizada — 6 áreas no menu + abas por dentro + "O que precisa de mim hoje" (app34.js) */
@@ -129,4 +129,6 @@ document.write('<script src="app38.js?v=38"><\/script>');
 /* v40: evolução do portal — 💡 em cada bloco, ideias com o nome de quem mandou, tela Evolução e uso das telas (evolucao.js; dados no motor do Railway) */
 document.write('<script src="evolucao.js?v=40"><\/script>');
 /* v12: layout novo — tema claro, menu lateral agrupado e movimento (app12.js carrega o tema.css) */
+/* v41: relacionamento — venda da Kommo no PDV (estoque + fidelidade), clientes para chamar (aniversário, cashback vencendo, sumidas), backup automático (app41.js) */
+document.write('<script src="app41.js?v=41"><\/script>');
 document.write('<script src="app12.js?v=35"><\/script>');
