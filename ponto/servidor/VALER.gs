@@ -162,8 +162,7 @@ function valerZerar_(req) {
 ADMIN.admZerarTestes = function (req) {
   if (req.op === 'zerar') {
     if (String(req.confirmar || '').trim().toUpperCase() !== 'ZERAR') throw new Error('Digite ZERAR para confirmar');
-    var lock = LockService.getScriptLock(); lock.waitLock(30000);
-    try { return valerZerar_(req); } finally { lock.releaseLock(); }
+    return valerZerar_(req);   // o rodar_ do Código.gs já roda as ações de administração dentro da trava (comTrava_)
   }
   return valerResumo_(valerPlanoTudo_(req));
 };
