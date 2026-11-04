@@ -54,7 +54,7 @@ function cx48Abertura_(data, loja) {
   return cx48Movs_(data, loja).filter(function (m) { return m.tipo === 'abertura'; })[0] || null;
 }
 function cx48Fechado_(data, loja) {
-  return ler_('Caixa').some(function (r) { return r.data === data && r.loja === loja; });
+  return ler_('Caixa').some(function (r) { return r.data === data && r.loja === loja && r.status !== 'reaberto'; });
 }
 function cx48Suprimentos_(data, loja) {
   return cx48Movs_(data, loja).filter(function (m) { return m.tipo === 'suprimento'; })
@@ -128,7 +128,7 @@ function cx48NoPonto_(data) {
 function cx48Pacote_(admin) {
   var hoje = hoje_(), lojas = JSON.parse(cfg_('lojas')), cfg = cx48Cfg_(), pc = {};
   var movs = ler_('CaixaMov').filter(function (m) { return m.data === hoje; });
-  var fech = {}; ler_('Caixa').forEach(function (r) { if (r.data === hoje) fech[r.loja] = r; });
+  var fech = {}; ler_('Caixa').forEach(function (r) { if (r.data === hoje && r.status !== 'reaberto') fech[r.loja] = r; });
   Object.keys(lojas).forEach(function (k) {
     var ab = movs.filter(function (m) { return m.loja === k && m.tipo === 'abertura'; })[0];
     var o = { aberto: !!ab && !fech[k], fechado: !!fech[k], abertura: null, passagens: [], suprimentos: 0, pedirSangria: false };
@@ -385,6 +385,21 @@ ADMIN.admCaixa48 = function (req) {
     if (req.conferido) m.status = m.status === 'diferenca' ? 'conferido' : m.status;
     gravar_('CaixaMov', m);
     log_('Administração', 'caixa mov conferido', m.tipo + ' ' + m.data + ' ' + m.loja);
+  } else if (req.op === 'reabrir') {
+    /* desfaz o fechamento de HOJE da loja (ex.: fechado por engano/teste): a versão fechada vai para o CaixaHistorico,
+       o caixa volta a ficar aberto e o próximo fechamento substitui esta linha */
+    comTrava_(function () {
+      var hoje = hoje_(), loja = String(req.loja || '');
+      var r = ler_('Caixa').filter(function (x) { return x.data === hoje && x.loja === loja; })[0];
+      if (!r || r.status === 'reaberto') throw new Error('O caixa de hoje desta loja não está fechado');
+      gravar_('CaixaHistorico', { id: 'H' + new Date().getTime() + Math.floor(Math.random() * 1e3), orig_id: r.id, data: r.data, loja: r.loja,
+        criado_em: r.criado_em, por: r.por, colaboradora_id: r.colaboradora_id, fundo: r.fundo, esperado: r.esperado, contado: r.contado,
+        diferenca: r.diferenca, sangrias: r.sangrias, qtd_vendas: r.qtd_vendas, status: r.status, obs: r.obs, substituido_em: agora_(), substituido_por: 'Administração (reabriu)' });
+      r.status = 'reaberto'; r.conferido_por = ''; r.conferido_em = '';
+      r.obs_adm = (String(r.obs_adm || '') + ' · reaberto em ' + agora_() + (req.motivo ? ': ' + String(req.motivo).slice(0, 150) : '')).replace(/^ · /, '');
+      gravar_('Caixa', r);
+      log_('Administração', 'caixa reaberto (v48)', hoje + ' ' + loja);
+    });
   } else throw new Error('Operação desconhecida');
   return ADMIN.admDados(req);
 };

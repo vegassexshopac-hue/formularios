@@ -437,6 +437,10 @@ if(typeof opFormas!=='undefined'){
         const n = [...box.querySelectorAll('.nota.info')].find(x=>/Contagem às cegas/.test(x.textContent));
         if(n) n.querySelector('div').textContent = 'Contagem às cegas: o valor esperado só aparece depois que você fecha. Dinheiro = abertura + suprimentos + vendas em dinheiro − sangrias do dia.';
       }
+      if(L && hoje && !opAdmin()){
+        const bt = box.querySelector('#btn-cx');
+        if(bt && !box.querySelector('.cx48-aviso-fech')) bt.insertAdjacentHTML('beforebegin', '<div class="nota warn cx48-aviso-fech" style="margin:0 0 10px"><i class="ti ti-alert-triangle"></i><div><b>Feche só no fim do expediente.</b> Depois de fechar, venda em dinheiro fica bloqueada até amanhã.</div></div>');
+      }
     }catch(e){ console.warn('v48 fechamento', e); }
   };
   const _resV48 = opCaixaResultado;
@@ -488,7 +492,7 @@ if(typeof admCaixa==='function'){
       const C = cx48D(); if(!C) return `<div class="nota warn"><i class="ti ti-plug-connected-x"></i><div><b>Falta publicar o CAIXA.gs</b> (abertura, passagem de turno, "quem vendeu?").</div></div>` + h;
       const lojas = Object.keys(S.boot.lojas).map(k=>{ const L = (C.hoje?.lojas||{})[k]; if(!L) return '';
         const st = L.fechado?'🔒 fechado':L.aberto?'🔓 aberto':'⛔ não aberto';
-        return `<span class="op-kpi ${L.aberto?'pos':''}"><b style="font-size:13px">${esc(cx48LojaNome(k))}</b>${st}${L.abertura?` por ${esc(primeiroNome(L.abertura.por))} ${esc(L.abertura.hora)} (${brl2(L.abertura.contado)})`:''}${L.passagens?.length?` · ${L.passagens.length} passagem(ns)`:''}</span>`; }).join('');
+        return `<span class="op-kpi ${L.aberto?'pos':''}"><b style="font-size:13px">${esc(cx48LojaNome(k))}</b>${st}${L.abertura?` por ${esc(primeiroNome(L.abertura.por))} ${esc(L.abertura.hora)} (${brl2(L.abertura.contado)})`:''}${L.passagens?.length?` · ${L.passagens.length} passagem(ns)`:''}${L.fechado?` <button class="btn p" style="height:28px;padding:0 10px;margin-left:6px" onclick="cx48AdmReabrir('${k}')"><i class="ti ti-lock-open"></i> Reabrir</button>`:''}</span>`; }).join('');
       const ym = S.adm.mes || hojeISO().slice(0,7);
       const movs = (C.movs||[]).filter(m=>String(m.data).startsWith(ym));
       const ico = {abertura:'🔓', passagem:'🔁', suprimento:'➕'};
@@ -514,6 +518,17 @@ function cx48AdmMov(id){
       <tr><td>Aparelho</td><td>${esc(m.terminal||'—')}</td></tr><tr><td>Obs.</td><td>${esc(m.obs||'—')}</td></tr></tbody></table></div>
       <div class="campo" style="margin-top:10px"><label>Observação da administração</label><input class="inp" id="cx48-obsadm" placeholder="Ex.: conferido, era troco da outra loja"></div>
       <button class="btn pri largo" onclick="cx48AdmConferir('${m.id}')"><i class="ti ti-check"></i> ${m.status==='diferenca'?'Marcar como conferido':'Salvar observação'}</button></div></div></div>`;
+}
+function cx48AdmReabrir(loja){
+  $('#modal').innerHTML = `<div class="veu" onclick="if(event.target===this)fecharModal()"><div class="modal">
+    <div class="modal-t"><h3 class="cresce">🔓 Reabrir o caixa de hoje — ${esc(cx48LojaNome(loja))}</h3><button class="icone" onclick="fecharModal()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-c"><p class="suave" style="margin:0 0 10px">O fechamento de hoje vai para o histórico (nada é apagado) e o caixa volta a ficar <b>aberto</b>: dinheiro liberado de novo e o próximo fechamento vale no lugar deste.</p>
+      <div class="campo"><label>Motivo</label><input class="inp" id="cx48-reab" placeholder="Ex.: fechado por engano / teste"></div>
+      <button class="btn pri largo" onclick="cx48AdmReabrirOk('${loja}')"><i class="ti ti-lock-open"></i> Reabrir o caixa</button></div></div></div>`;
+}
+async function cx48AdmReabrirOk(loja){
+  try{ S.adm.dados = await api('admCaixa48', {...S.adm.cred, op:'reabrir', loja, motivo:$('#cx48-reab')?.value||''}); fecharModal(); render(); toast('Caixa reaberto ✔'); }
+  catch(e){ toast(e.message, true); }
 }
 async function cx48AdmConferir(id){
   try{ S.adm.dados = await api('admCaixa48', {...S.adm.cred, op:'obs', id, obs:$('#cx48-obsadm')?.value||'conferido', conferido:true}); fecharModal(); render(); toast('Conferido ✔'); }
