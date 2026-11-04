@@ -130,6 +130,8 @@ document.write('<script src="app38.js?v=38"><\/script>');
 document.write('<script src="evolucao.js?v=40b"><\/script>');
 /* v42: Painel da loja (Ao vivo) + Produtividade da equipe no estilo do painel do escritório — gráficos, ranking, linha do dia, modo TV (app42.js) */
 document.write('<script src="app42.js?v=42"><\/script>');
+/* v43: avisos no WhatsApp — Comunicação › Avisos + sino: o que cada pessoa e a administração recebem, teste, pausa (app43.js; motor da Kommo + Evolution API) */
+document.write('<script src="app43.js?v=43"><\/script>');
 /* v12: layout novo — tema claro, menu lateral agrupado e movimento (app12.js carrega o tema.css) */
 /* v41: relacionamento — venda da Kommo no PDV (estoque + fidelidade), clientes para chamar (aniversário, cashback vencendo, sumidas), backup automático (app41.js) */
 document.write('<script src="app41.js?v=41d"><\/script>');

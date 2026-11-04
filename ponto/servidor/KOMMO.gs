@@ -53,10 +53,28 @@ function kmVendas_(req) {
   });
 }
 
-/* ───────── ação pública (só com a chave): a = 'kommoVendas' ───────── */
+/* ───────── v43: o motor lê a equipe (número do WhatsApp) e o dia de hoje (ponto, escala, vendas) para os avisos no WhatsApp ─────────
+   Mesma chave KOMMO_SEGREDO. Não devolve PIN nem foto; o telefone é o do Cadastro da equipe. */
+function kmEquipe_(req) {
+  var segredo = PropertiesService.getScriptProperties().getProperty('KOMMO_SEGREDO');
+  if (!segredo || String(req.segredo || '') !== segredo) return { ok: false, erro: 'Chave da Kommo não confere' };
+  var hoje = hoje_(), v = {};
+  try { v = ADMIN.admAoVivo({}); } catch (e) { v = { erro: String(e && e.message || e) }; }
+  var colabs = colabs_().filter(function (c) { return c.ativa === 'SIM'; }).map(function (c) {
+    return { id: c.id, nome: c.nome, loja: c.loja, cargo: c.cargo || '', telefone: String(c.telefone || '').replace(/\D/g, '') };
+  });
+  var pend = 0; try { pend = Number(v.pendentes) || ler_('Solicitacoes').filter(function (s) { return s.status === 'pendente'; }).length; } catch (e) {}
+  return { ok: true, hoje: hoje, hora: hora_(), lojas: JSON.parse(cfg_('lojas') || '{}'), turnos: v.turnos || {}, colaboradoras: colabs,
+    pontos: (v.pontos || []).filter(function (p) { return p.data === hoje; }), escala: (v.escala || []).filter(function (e) { return !e.data || e.data === hoje; }),
+    vendas: (v.vendas || []).filter(function (x) { return x.data === hoje; }).map(function (x) { return { colaboradora_id: x.colaboradora_id, valor: Number(x.valor) || 0, loja: x.loja }; }),
+    pendentes: pend };
+}
+
+/* ───────── ação pública (só com a chave): a = 'kommoVendas' · 'kommoEquipe' (v43) ───────── */
 var _kmRodar = rodar_;
 rodar_ = function (req) {
   if (req && req.a === 'kommoVendas') { try { return kmVendas_(req); } catch (e) { return { ok: false, erro: String(e && e.message || e) }; } }
+  if (req && req.a === 'kommoEquipe') { try { return kmEquipe_(req); } catch (e) { return { ok: false, erro: String(e && e.message || e) }; } }
   return _kmRodar(req);
 };
 
