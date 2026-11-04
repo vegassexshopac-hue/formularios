@@ -137,4 +137,6 @@ document.write('<script src="app43.js?v=43"><\/script>');
 document.write('<script src="app41.js?v=41d"><\/script>');
 /* v44: pedidos do site para a equipe — Vendas › Pedidos do site: separar, enviar e entregar, bolinha e cartão no Início para o Bosque (app44.js; servidor SITE.gs) */
 document.write('<script src="app44.js?v=44"><\/script>');
+/* v45: o que a equipe vê (liga/desliga telas das vendedoras, perfil Matheus › Ajustes) + zerar os testes para começar pra valer (app45.js; servidor VALER.gs) */
+document.write('<script src="app45.js?v=45"><\/script>');
 document.write('<script src="app12.js?v=35"><\/script>');
