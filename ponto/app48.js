@@ -246,7 +246,14 @@ function cx48TravaHtml(){
   const _portalPDVV48 = portalPDV;
   portalPDV = function portalPDV(){
     const h = _portalPDVV48.apply(this, arguments);
-    try{ const b = cx48BannerPDV(); if(b) return h.replace('<div class="pdv">', b+'<div class="pdv">'); }catch(e){ console.warn('v48 pdv', e); }
+    try{
+      let b = cx48BannerPDV();
+      if(typeof vr47Abrir==='function'){        // v48b: "Minhas vendas" à vista no topo (o selo antigo ficava lá embaixo, depois dos produtos)
+        const hoje = hojeISO(), eu = S.sess?.eid, n = pdvD().vendas.filter(v=>v.data===hoje && (v.colaboradora_id===eu || v.lancada_por_id===eu) && v.status!=='cancelada').length;
+        b = `<div class="linha" style="gap:8px;margin:0 0 10px;flex-wrap:wrap"><button class="btn p" id="cx48-minhas" onclick="vr47Abrir('hoje')"><i class="ti ti-receipt"></i> Minhas vendas de hoje · <b class="num">${n}</b></button><small class="suave" style="align-self:center">Errou? Toque aqui e em <b>Desfazer venda</b> (até ${vr47Lim()} min).</small></div>` + b;
+      }
+      if(b) return h.replace('<div class="pdv">', b+'<div class="pdv">');
+    }catch(e){ console.warn('v48 pdv', e); }
     return h;
   };
 }
