@@ -147,4 +147,6 @@ document.write('<script src="app47.js?v=47"><\/script>');
 document.write('<script src="app48.js?v=48e"><\/script>');
 /* v49: Início no computador em 2 colunas — meta e vendas à esquerda, ponto, números e atalhos à direita (app49.js) */
 document.write('<script src="app49.js?v=49"><\/script>');
+/* v50: entregas com moto — cadastrar, sair com a moto (GPS do celular), mapa ao vivo e link da cliente estilo iFood em /e/ (entregas.js; motor /api/entregas e /api/rastreio) */
+document.write('<script src="entregas.js?v=50"><\/script>');
 document.write('<script src="app12.js?v=35"><\/script>');

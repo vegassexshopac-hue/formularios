@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Sua entrega · Las Vegas</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#15100D">
+<meta name="description" content="Acompanhe sua entrega em tempo real.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" defer></script>
+<!-- Portal Equipe Las Vegas · v50 — link da cliente para acompanhar a entrega com moto.
+     Mostra só o primeiro nome, a situação, o tempo e a moto no mapa quando é a vez dela. Nada de produto. -->
+<style>
+:root{--preto:#15100D;--vermelho:#E3101F;--amarelo:#F5B524;--verde:#1a7f4b;--fundo:#F3F1F2;--texto:#1C1416;--suave:#6b5f62;--linha:#e6e0e2}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--fundo);color:var(--texto);font-family:'Bricolage Grotesque',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+body{display:flex;flex-direction:column;min-height:100dvh}
+header{background:var(--preto);color:#fff;padding:calc(12px + env(safe-area-inset-top)) 18px 12px;display:flex;align-items:center;gap:10px;position:relative;z-index:2}
+.marca{font-weight:800;font-size:20px;letter-spacing:-.02em}.marca span{color:var(--vermelho)}
+.marca small{display:block;font-size:11px;font-weight:600;letter-spacing:.14em;color:var(--amarelo);text-transform:uppercase}
+header .ao{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;background:rgba(255,255,255,.1);border-radius:99px;padding:5px 11px}
+.ao i{width:8px;height:8px;border-radius:50%;background:#25D366;box-shadow:0 0 0 0 rgba(37,211,102,.6);animation:radar 1.6s infinite}
+.ao.parado i{background:#999;animation:none}
+#mapa{flex:1;min-height:46vh;background:#e8e3e4;position:relative;z-index:1}
+#mapa.escondido{display:none}
+.folha{background:#fff;border-radius:26px 26px 0 0;margin-top:-22px;position:relative;z-index:3;padding:18px 18px calc(22px + env(safe-area-inset-bottom));box-shadow:0 -10px 30px rgba(0,0,0,.12);animation:sobe .45s cubic-bezier(.2,1.3,.4,1) both}
+.folha.cheia{margin-top:0;border-radius:0;flex:1}
+.puxador{width:44px;height:5px;border-radius:99px;background:var(--linha);margin:-6px auto 12px}
+h1{font-size:clamp(24px,6.5vw,30px);line-height:1.08;letter-spacing:-.03em;margin:0 0 6px;font-weight:800}
+h1 mark{background:linear-gradient(transparent 58%,rgba(227,16,31,.25) 58%);color:inherit}
+.sub{color:var(--suave);font-size:15px;margin:0 0 14px;line-height:1.4}
+.tempo{display:flex;align-items:center;gap:14px;background:var(--preto);color:#fff;border-radius:20px;padding:14px 16px;margin:0 0 16px;position:relative;overflow:hidden}
+.tempo::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.12) 48%,transparent 60%);background-size:260% 100%;animation:brilho 5s ease-in-out infinite}
+.tempo .n{font-size:44px;font-weight:800;line-height:1;letter-spacing:-.04em;color:var(--amarelo)}.tempo .n small{font-size:16px;margin-left:3px;color:#fff}
+.tempo b{display:block;font-size:15px}.tempo span{font-size:13px;opacity:.85}
+.tempo.chegando{background:var(--vermelho)}.tempo.chegando .n{color:#fff;animation:pulsa 1s ease-in-out infinite}
+.passos{display:flex;align-items:flex-start;margin:4px 0 14px}
+.passo{flex:0 0 auto;width:76px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.passo .b{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:#f1edee;color:#a99ea1;font-size:18px;transition:all .4s}
+.passo b{font-size:11.5px;margin-top:5px;color:#a99ea1;line-height:1.15}
+.passo.feito .b{background:var(--verde);color:#fff}.passo.feito b{color:var(--verde)}
+.passo.agora .b{background:var(--vermelho);color:#fff;animation:anel 1.8s infinite}.passo.agora b{color:var(--vermelho)}
+.linha{flex:1;height:3px;border-radius:3px;background:#f1edee;margin-top:17px;min-width:8px;position:relative;overflow:hidden}
+.linha.feito{background:var(--verde)}.linha.agora::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,var(--vermelho),transparent);animation:corre 1.4s linear infinite}
+.info{display:flex;gap:10px;align-items:center;background:#faf8f8;border:1px solid var(--linha);border-radius:16px;padding:11px 13px;font-size:14px;margin-top:10px}
+.info i{font-style:normal;font-size:20px}
+.info.alerta{background:#FFF4D6;border-color:#F5B524}
+.lema{text-align:center;color:var(--suave);font-size:12.5px;margin:18px 0 0}.lema b{color:var(--texto)}
+.zap{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;background:#25D366;color:#fff;font-weight:800;text-decoration:none;border-radius:16px;padding:13px;font-size:15px;transition:transform .15s}
+.zap:active{transform:scale(.97)}
+.grande{font-size:70px;text-align:center;margin:10px 0 0;animation:balanca 2.4s ease-in-out infinite}
+.pin{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:19px;background:#fff;border:2px solid var(--preto);box-shadow:0 3px 10px rgba(0,0,0,.25)}
+.pin.moto{width:46px;height:46px;font-size:25px;background:var(--vermelho);border-color:#fff;animation:pulso 2s infinite}
+.pin.casa{background:var(--amarelo);border-color:#fff}
+.pin.loja{background:var(--preto);border-color:var(--amarelo)}
+.leaflet-control-attribution{font-size:9px}
+@keyframes radar{0%{box-shadow:0 0 0 0 rgba(37,211,102,.6)}70%{box-shadow:0 0 0 9px rgba(37,211,102,0)}100%{box-shadow:0 0 0 0 rgba(37,211,102,0)}}
+@keyframes pulso{0%{box-shadow:0 0 0 0 rgba(227,16,31,.5)}70%{box-shadow:0 0 0 16px rgba(227,16,31,0)}100%{box-shadow:0 0 0 0 rgba(227,16,31,0)}}
+@keyframes anel{0%{box-shadow:0 0 0 0 rgba(227,16,31,.45)}70%{box-shadow:0 0 0 10px rgba(227,16,31,0)}100%{box-shadow:0 0 0 0 rgba(227,16,31,0)}}
+@keyframes corre{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+@keyframes brilho{0%,100%{background-position:100% 0}50%{background-position:-60% 0}}
+@keyframes sobe{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@keyframes pulsa{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@keyframes balanca{0%,100%{transform:rotate(0)}25%{transform:rotate(-7deg)}75%{transform:rotate(7deg)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+@media(min-width:900px){body{flex-direction:row;flex-wrap:wrap}header{width:100%}#mapa{min-height:calc(100dvh - 60px)}.folha{width:420px;margin:0;border-radius:0;box-shadow:-10px 0 30px rgba(0,0,0,.08);overflow:auto;max-height:calc(100dvh - 60px)}.folha.cheia{width:100%}.puxador{display:none}}
+</style>
+</head>
+<body>
+<header><div class="marca">Las <span>Vegas</span><small>sua entrega</small></div><div class="ao parado" id="ao"><i></i><span>conectando…</span></div></header>
+<div id="mapa" class="escondido"></div>
+<main class="folha cheia" id="folha"><div class="puxador"></div><h1>Carregando sua entrega…</h1><p class="sub">Um instante 💛</p></main>
+<script>
+(function(){
+  'use strict';
+  var MOTOR = 'https://entregas-las-vegas-production.up.railway.app';
+  var LOJA_WHATS = '5568992822275';
+  var cod = (new URLSearchParams(location.search).get('c') || location.hash.replace(/^#/, '') || '').replace(/[^\w-]/g, '').slice(0, 20);
+  var $ = function(id){ return document.getElementById(id); };
+  var D = null, mapa = null, mk = {}, linha = null, enquadrou = false, timer = null, falhas = 0, anim = null;
+
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function hora(t){ return t ? new Date(t).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : ''; }
+  function minutos(s){ return Math.max(1, Math.round(s / 60)); }
+
+  function passos(st, antes, chegando){
+    var at = st === 'aguardando' ? 0 : st === 'a_caminho' ? (chegando ? 2 : 1) : st === 'entregue' ? 3 : 1;
+    var L = [['🧾','Pedido confirmado'],['🛵','Saiu para entrega'],['📍','Chegando'],['💛','Entregue']], h = '';
+    L.forEach(function(p, i){
+      var c = i < at || (i === at && st === 'entregue') ? 'feito' : i === at ? 'agora' : '';
+      if(i) h += '<div class="linha ' + (i <= at ? (i === at && st !== 'entregue' ? 'agora' : 'feito') : '') + '"></div>';
+      h += '<div class="passo ' + c + '"><div class="b">' + (c === 'feito' ? '✓' : p[0]) + '</div><b>' + p[1] + '</b></div>';
+    });
+    return '<div class="passos">' + h + '</div>';
+  }
+  function pintar(){
+    var d = D, f = $('folha'), nome = d.nome ? ', ' + esc(d.nome) : '', h = '<div class="puxador"></div>';
+    var temMapa = (d.status === 'a_caminho' || d.status === 'aguardando') && (d.moto || d.dest);
+    $('mapa').classList.toggle('escondido', !temMapa); f.classList.toggle('cheia', !temMapa);
+    var ao = $('ao'), vivo = d.status === 'a_caminho' && d.moto && d.sinal != null && d.sinal < 120;
+    ao.classList.toggle('parado', !vivo); ao.lastChild.textContent = vivo ? 'ao vivo' : d.status === 'a_caminho' ? 'a caminho' : d.status === 'entregue' ? 'entregue' : 'acompanhando';
+    if(d.status === 'aguardando'){
+      h += '<h1>Oi' + nome + '! Seu pedido está <mark>sendo preparado</mark> 💛</h1><p class="sub">Assim que a entregadora sair, você acompanha a moto aqui, em tempo real. Pode deixar esta página aberta.</p>' + passos('aguardando');
+    } else if(d.status === 'a_caminho'){
+      var eta = d.etaSeg ? minutos(d.etaSeg) : null;
+      if(d.antes > 0){
+        h += '<h1>Seu pedido <mark>saiu para entrega</mark> 🛵</h1><p class="sub">' + (d.entregadora ? esc(d.entregadora) + ' está' : 'A entregadora está') + ' finalizando ' + (d.antes === 1 ? 'uma entrega' : d.antes + ' entregas') + ' antes da sua. A moto aparece no mapa quando for a sua vez.</p>';
+        if(eta) h += '<div class="tempo"><div class="n">~' + eta + '<small>min</small></div><div><b>Previsão de chegada</b><span>por volta das ' + esc(d.chegaAs || '') + '</span></div></div>';
+      } else if(d.chegando){
+        h += '<h1><mark>Está chegando!</mark> 📍</h1><p class="sub">' + (d.entregadora ? esc(d.entregadora) : 'A entregadora') + ' está pertinho' + nome + '. Fica de olho 😉</p><div class="tempo chegando"><div class="n">' + (eta && eta > 1 ? eta + '<small>min</small>' : 'já já') + '</div><div><b>Quase aí</b><span>' + (d.m != null ? (d.m < 1000 ? Math.round(d.m / 10) * 10 + ' m' : (d.m / 1000).toFixed(1).replace('.', ',') + ' km') + ' de distância' : 'na sua região') + '</span></div></div>';
+      } else {
+        h += '<h1>A caminho' + nome + '! <mark>🛵</mark></h1><p class="sub">' + (d.entregadora ? esc(d.entregadora) + ' saiu' : 'Seu pedido saiu') + (d.saiuEm ? ' às ' + hora(d.saiuEm) : '') + '. Acompanhe a moto no mapa.</p>';
+        if(eta) h += '<div class="tempo"><div class="n">' + eta + '<small>min</small></div><div><b>Chega por volta das ' + esc(d.chegaAs || '') + '</b><span>' + (d.m != null ? (d.m < 1000 ? Math.round(d.m / 10) * 10 + ' m' : (d.m / 1000).toFixed(1).replace('.', ',') + ' km') + ' até você · ' : '') + 'pode variar com o trânsito</span></div></div>';
+      }
+      h += passos('a_caminho', d.antes, d.chegando);
+      if(d.sinal != null && d.sinal > 180 && d.antes === 0) h += '<div class="info alerta"><i>📶</i><div>O sinal do celular da entregadora está fraco — a última posição é de ' + minutos(d.sinal) + ' min atrás. Ela continua a caminho.</div></div>';
+    } else if(d.status === 'entregue'){
+      h += '<div class="grande">💛</div><h1 style="text-align:center">Entregue' + nome + '!</h1><p class="sub" style="text-align:center">Seu pedido foi entregue' + (d.fimEm ? ' às ' + hora(d.fimEm) : '') + '. Obrigada pela preferência!</p>' + passos('entregue');
+    } else if(d.status === 'nao_entregue'){
+      h += '<div class="grande">📦</div><h1 style="text-align:center">Não conseguimos entregar agora</h1><p class="sub" style="text-align:center">Não se preocupe — a loja vai falar com você para combinar outro horário.</p><a class="zap" href="https://wa.me/' + LOJA_WHATS + '" target="_blank" rel="noopener">💬 Falar com a loja</a>';
+    } else if(d.status === 'cancelada'){
+      h += '<div class="grande">🗂️</div><h1 style="text-align:center">Esta entrega foi cancelada</h1><p class="sub" style="text-align:center">Qualquer dúvida, é só chamar a loja.</p><a class="zap" href="https://wa.me/' + LOJA_WHATS + '" target="_blank" rel="noopener">💬 Falar com a loja</a>';
+    } else if(d.status === 'expirado'){
+      h += '<div class="grande">⏳</div><h1 style="text-align:center">Este link expirou</h1><p class="sub" style="text-align:center">O acompanhamento fica disponível até algumas horas depois da entrega.</p>';
+    }
+    if(d.status === 'aguardando' || d.status === 'a_caminho') h += '<div class="info"><i>🔒</i><div>Entrega discreta: aqui aparece só o seu primeiro nome e a moto.</div></div>';
+    h += '<p class="lema"><b>O que acontece em Vegas, fica em Vegas.</b></p>';
+    f.innerHTML = h;
+    if(temMapa) pintarMapa();
+  }
+  function icone(tipo){ var e = {moto:'🛵', casa:'🏠', loja:'🏬'}[tipo]; var s = tipo === 'moto' ? 46 : 36; return L.divIcon({className:'', html:'<div class="pin ' + tipo + '">' + e + '</div>', iconSize:[s, s], iconAnchor:[s / 2, s / 2]}); }
+  function pintarMapa(){
+    if(!window.L){ setTimeout(pintarMapa, 300); return; }
+    var d = D;
+    if(!mapa){
+      mapa = L.map('mapa', {zoomControl:false, attributionControl:true}).setView([d.loja.lat, d.loja.lng], 14);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'© OpenStreetMap'}).addTo(mapa);
+      setTimeout(function(){ mapa.invalidateSize(); }, 60);
+    }
+    var pts = [];
+    if(d.dest){ if(!mk.casa) mk.casa = L.marker([d.dest.lat, d.dest.lng], {icon:icone('casa')}).addTo(mapa); pts.push([d.dest.lat, d.dest.lng]); }
+    var lojaVisivel = d.status === 'aguardando' || (d.status === 'a_caminho' && !d.moto && d.antes === 0);
+    if(lojaVisivel){ if(!mk.loja) mk.loja = L.marker([d.loja.lat, d.loja.lng], {icon:icone('loja')}).addTo(mapa); pts.push([d.loja.lat, d.loja.lng]); }
+    else if(mk.loja){ mk.loja.remove(); mk.loja = null; }
+    if(d.moto){
+      var alvo = [d.moto.lat, d.moto.lng];
+      if(!mk.moto) mk.moto = L.marker(alvo, {icon:icone('moto'), zIndexOffset:1000}).addTo(mapa); else deslizar(mk.moto, alvo);
+      pts.push(alvo);
+      var rota = d.rota && d.rota.length > 1 ? d.rota : (d.dest ? [alvo, [d.dest.lat, d.dest.lng]] : null);
+      if(rota){ if(!linha) linha = L.polyline(rota, {color:'#E3101F', weight:5, opacity:.8, dashArray: d.rota ? null : '8 10'}).addTo(mapa); else linha.setLatLngs(rota); }
+    } else { if(mk.moto){ mk.moto.remove(); mk.moto = null; } if(linha){ linha.remove(); linha = null; } }
+    if(!enquadrou && pts.length){ enquadrou = true; if(pts.length === 1) mapa.setView(pts[0], 16); else mapa.fitBounds(pts, {padding:[50, 50], maxZoom:17}); }
+    else if(d.moto && d.dest && !mapa.getBounds().pad(-0.08).contains([d.moto.lat, d.moto.lng])) mapa.fitBounds(pts, {padding:[50, 50], maxZoom:17});
+  }
+  function deslizar(m, alvo){
+    var de = m.getLatLng(), t0 = performance.now(), dur = 1800;
+    if(anim) cancelAnimationFrame(anim);
+    (function passo(t){ var k = Math.min(1, (t - t0) / dur), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; m.setLatLng([de.lat + (alvo[0] - de.lat) * e, de.lng + (alvo[1] - de.lng) * e]); if(k < 1) anim = requestAnimationFrame(passo); })(t0);
+  }
+  function proxima(){
+    clearTimeout(timer);
+    if(!D || ['entregue','cancelada','expirado','nao_entregue'].indexOf(D.status) >= 0){ timer = setTimeout(buscar, 60000); return; }
+    timer = setTimeout(buscar, D.status === 'a_caminho' ? 7000 : 20000);
+  }
+  function buscar(){
+    if(!cod){ D = {status:'expirado'}; pintar(); $('folha').innerHTML = '<div class="puxador"></div><div class="grande">🔗</div><h1 style="text-align:center">Link incompleto</h1><p class="sub" style="text-align:center">Abra o link exatamente como chegou no WhatsApp.</p>'; return; }
+    if(document.visibilityState === 'hidden'){ proxima(); return; }
+    fetch(MOTOR + '/api/rastreio/' + encodeURIComponent(cod), {cache:'no-store'}).then(function(r){ return r.json().then(function(j){ return {st:r.status, j:j}; }); }).then(function(x){
+      falhas = 0;
+      if(x.st === 404){ D = null; clearTimeout(timer); $('folha').innerHTML = '<div class="puxador"></div><div class="grande">🔗</div><h1 style="text-align:center">Não encontramos esta entrega</h1><p class="sub" style="text-align:center">Confira se o link está completo, ou fale com a loja.</p><a class="zap" href="https://wa.me/' + LOJA_WHATS + '" target="_blank" rel="noopener">💬 Falar com a loja</a>'; $('mapa').classList.add('escondido'); $('folha').classList.add('cheia'); return; }
+      if(!x.j.ok){ proxima(); return; }
+      D = x.j; pintar(); proxima();
+    }).catch(function(){ falhas++; var ao = $('ao'); ao.classList.add('parado'); ao.lastChild.textContent = 'sem internet'; clearTimeout(timer); timer = setTimeout(buscar, Math.min(30000, 5000 * falhas)); });
+  }
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'visible') buscar(); });
+  buscar();
+})();
+</script>
+</body>
+</html>
