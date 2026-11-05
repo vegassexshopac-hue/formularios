@@ -149,4 +149,6 @@ document.write('<script src="app48.js?v=48e"><\/script>');
 document.write('<script src="app49.js?v=49"><\/script>');
 /* v50: entregas com moto — cadastrar, sair com a moto (GPS do celular), mapa ao vivo e link da cliente estilo iFood em /e/ (entregas.js; motor /api/entregas e /api/rastreio) */
 document.write('<script src="entregas.js?v=50"><\/script>');
+/* v51: vídeos do portal dentro do próprio portal — faixa no Tirar dúvida e "Ver o vídeo" toca aqui (videos51.js; arquivos em ponto/videos/) */
+document.write('<script src="videos51.js?v=51"><\/script>');
 document.write('<script src="app12.js?v=35"><\/script>');
