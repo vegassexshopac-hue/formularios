@@ -11,11 +11,12 @@ const VID51 = [
   {n:'03', t:'Fazer uma venda no PDV', d:'Quem vendeu, pagamento e finalizar'},
   {n:'04', t:'Abrir, sangria e fechar o caixa', d:'Abertura às cegas, sangria, passagem e fechamento'},
   {n:'05', t:'Produtos e estoque', d:'Consultar, catálogo e produto novo'},
+  {n:'06', t:'Pedidos do site', d:'Separar, enviar e entregar'},
   {n:'07', t:'Metas, Arena e prêmios', d:'Metinhas, corrida e prêmios'},
   {n:'08', t:'Meu mês, escala e pedidos', d:'Banco de horas, folga, atestado'},
   {n:'09', t:'Tirar dúvida no portal', d:'Pergunte do seu jeito'},
 ];
-const VID51_V = 'v51';
+const VID51_V = 'v51b';
 function vid51Url(n){ return `videos/${n}.mp4?${VID51_V}`; }
 function vid51Capa(n){ return `videos/${n}.jpg?${VID51_V}`; }
 
