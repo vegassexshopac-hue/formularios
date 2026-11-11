@@ -153,6 +153,6 @@ document.write('<script src="entregas.js?v=50"><\/script>');
 document.write('<script src="videos51.js?v=51b"><\/script>');
 /* v52: comanda do PDV com mais espaço no computador (Total e Finalizar presos embaixo), acréscimo ao lado do desconto e parcelas com o valor — até 6× sem juros (app52.js; servidor PDV.gs) */
 document.write('<script src="app52.js?v=52"><\/script>');
-/* v53: botão Comprovante envia pela conversa da Kommo (robô), com o WhatsApp de reserva; configuração em Atendimento · Kommo › Configurar (app53.js; motor /api/comprovante) */
-document.write('<script src="app53.js?v=53"><\/script>');
+/* v53: botão Comprovante envia pela conversa da Kommo (robô), com o WhatsApp de reserva; situação em Atendimento · Kommo › Configurar (app53.js; serviço próprio comprovante-kommo-las-vegas no Railway) */
+document.write('<script src="app53.js?v=53b"><\/script>');
 document.write('<script src="app12.js?v=35"><\/script>');
