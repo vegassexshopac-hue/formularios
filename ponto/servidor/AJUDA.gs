@@ -62,7 +62,7 @@ function ajIA_(req) {
     resp = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
       method: 'post', contentType: 'application/json', muteHttpExceptions: true,
       headers: { 'x-api-key': chave, 'anthropic-version': '2023-06-01' },
-      payload: JSON.stringify({ model: modelo, max_tokens: 800, temperature: 0, messages: [{ role: 'user', content: prompt }] }) });
+      payload: JSON.stringify({ model: modelo, max_tokens: 800, messages: [{ role: 'user', content: prompt }] }) });
     var ja = JSON.parse(resp.getContentText() || '{}');
     if (resp.getResponseCode() >= 300) return { ok: true, ia: false, erro: 'IA indisponível agora' };
     txt = (ja.content || []).map(function (p) { return p.text || ''; }).join('');
