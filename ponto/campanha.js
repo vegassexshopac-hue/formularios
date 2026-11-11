@@ -125,6 +125,10 @@ const CP = { sub:'raspadinha', ouro:null, rank:null, sonhos:null, adm:null, admS
 /* ───────── pedacinhos ───────── */
 const cpD = () => S.sess?.dados?.campanha || null;
 const cpDia = iso => { const [a,m,d] = String(iso||'').split('-'); return d ? d+'/'+m : ''; };
+/* v54: raspadinha ganha com os pontos da Missão do Dia tem ref "2026-11-M02" */
+const cpRaspM = ref => { const m = String(ref||'').match(/-M(\d+)$/); return m ? Number(m[1]) : 0; };
+const cpRaspNome = ref => cpRaspM(ref) ? 'Raspadinha da Missão nº '+cpRaspM(ref) : 'Raspadinha de '+cpDia(ref);
+const cpRaspRef = ref => cpRaspM(ref) ? 'Missão do Dia nº '+cpRaspM(ref) : 'dia '+cpDia(ref);
 const cpSemanaTxt = (a, b) => cpDia(a)+' a '+cpDia(b);
 function cpHojeMin(){ const d = new Date(); return d.getHours()*60 + d.getMinutes() + (Number(S.offset)||0); }
 function cpMin(hhmm){ const [h,m] = String(hhmm||'').split(':').map(Number); return isNaN(h) ? null : h*60+(m||0); }
@@ -173,17 +177,17 @@ function cpTopo(c){
 /* ───────── raspadinha ───────── */
 function cpRaspadinha(c){
   const disp = c.raspadinhas||[], meus = (c.premios||[]).filter(p=>p.tipo==='raspadinha');
-  const tickets = disp.length ? `<div class="cp-grade" style="margin-bottom:14px">${disp.map((r,i)=>`<button class="cp-tick" style="animation-delay:${i*70}ms" onclick="cpAbrirRaspa('${r.data}')"><span class="em">🎟️</span><b>Raspadinha de ${cpDia(r.data)}</b><small>você vendeu ${brl(r.vendido)}</small></button>`).join('')}</div>`
+  const tickets = disp.length ? `<div class="cp-grade" style="margin-bottom:14px">${disp.map((r,i)=>`<button class="cp-tick" style="animation-delay:${i*70}ms" onclick="cpAbrirRaspa('${r.data}')"><span class="em">🎟️</span><b>${cpRaspNome(r.data)}</b><small>${r.missao?'ganha com os pontos da Missão ⭐':'você vendeu '+brl(r.vendido)}</small></button>`).join('')}</div>`
     : cpVazio('🎟️', 'Nenhuma raspadinha esperando', `Venda ${brl(c.valor_dia)} num dia e ela aparece aqui. Vale por alguns dias, então não esquece de raspar!`);
-  const hist = meus.length ? `<h3 class="secao" style="margin-top:6px">Seus prêmios</h3><div class="cp-lista">${meus.map((p,i)=>`<div class="cp-it" style="animation-delay:${Math.min(i,10)*35}ms"><span class="av">${p.nada?'😅':'🎁'}</span><div class="t"><b>${esc(p.premio)}</b><small>raspadinha de ${cpDia(p.ref)}</small></div>${p.nada?'':p.status==='entregue'?'<span class="cp-ok">entregue</span>':'<span class="cp-pend">a receber</span>'}</div>`).join('')}</div>` : '';
+  const hist = meus.length ? `<h3 class="secao" style="margin-top:6px">Seus prêmios</h3><div class="cp-lista">${meus.map((p,i)=>`<div class="cp-it" style="animation-delay:${Math.min(i,10)*35}ms"><span class="av">${p.nada?'😅':'🎁'}</span><div class="t"><b>${esc(p.premio)}</b><small>${cpRaspNome(p.ref).toLowerCase()}</small></div>${p.nada?'':p.status==='entregue'?'<span class="cp-ok">entregue</span>':'<span class="cp-pend">a receber</span>'}</div>`).join('')}</div>` : '';
   return tickets + hist;
 }
 async function cpAbrirRaspa(data){
-  cpModal('🎟️ Raspadinha de '+cpDia(data), `<p class="suave" style="text-align:center"><i class="ti ti-loader-2"></i> Preparando a sua raspadinha…</p>`);
+  cpModal('🎟️ '+cpRaspNome(data), `<p class="suave" style="text-align:center"><i class="ti ti-loader-2"></i> Preparando a sua raspadinha…</p>`);
   let r; try{ r = await cpApi('raspar', {data}); }catch(e){ fecharModal(); return toast(e.message, true); }
   cpAtualizar(r.campanha);
   const p = r.premio, em = (p.premio.match(/^\p{Extended_Pictographic}️?/u)||['🎁'])[0], nome = p.premio.replace(/^\p{Extended_Pictographic}️?\s*/u, '');
-  cpModal('🎟️ Raspadinha de '+cpDia(data), `<p style="text-align:center;margin:0 0 8px" class="suave">Raspe com o dedo 👇</p>
+  cpModal('🎟️ '+cpRaspNome(data), `<p style="text-align:center;margin:0 0 8px" class="suave">Raspe com o dedo 👇</p>
     <div class="cp-raspa" id="cp-raspa"><div class="premio"><span class="em">${em}</span><b>${esc(nome)}</b><small class="suave">${p.nada?'Amanhã tem mais!':'A administração entrega para você 💋'}</small></div><canvas id="cp-canvas"></canvas></div>
     <p id="cp-raspa-fim" style="text-align:center;min-height:22px;font-weight:800;margin:0"></p>
     <button class="btn pri" style="width:100%;margin-top:8px" onclick="cpFechar()">Fechar</button>`);
@@ -330,8 +334,9 @@ function cpTela(){
   if(!c.ativa) return `<h2 class="secao">🎯 Campanha do mês</h2>`+cpVazio('⏸️','A campanha está pausada','Quando a administração ligar de novo, os jogos voltam a aparecer aqui.');
   const subs = c.participa ? [['raspadinha','ti-ticket','Raspadinha',(c.raspadinhas||[]).length],['bingo','ti-grid-dots','Bingo'],['ouro','ti-clock-hour-3','Hora de Ouro'],['ranking','ti-trophy','Ranking'],['sonhos','ti-sparkles','Mural dos sonhos']]
                            : [['ouro','ti-clock-hour-3','Hora de Ouro'],['ranking','ti-trophy','Ranking'],['sonhos','ti-sparkles','Mural dos sonhos']];
+  if(typeof msSubs==='function') msSubs(c, subs);      /* v54: Missão do Dia (missao.js) */
   const sub = subs.some(s=>s[0]===CP.sub) ? CP.sub : subs[0][0];
-  const corpo = ({raspadinha:()=>cpRaspadinha(c), bingo:()=>cpBingo(c), ouro:()=>cpOuro(c), ranking:()=>cpRanking(c), sonhos:cpSonhos})[sub]();
+  const corpo = ({missao:()=>msTela(c), raspadinha:()=>cpRaspadinha(c), bingo:()=>cpBingo(c), ouro:()=>cpOuro(c), ranking:()=>cpRanking(c), sonhos:cpSonhos})[sub]();
   return `<div class="linha entre quebra" style="gap:8px;margin-bottom:10px"><h2 class="secao" style="margin:0">🎯 Campanha do mês</h2><button class="icone" title="Atualizar" onclick="cpRecarregar()"><i class="ti ti-refresh"></i></button></div>
     ${c.participa?cpTopo(c):`<div class="nota info" style="margin-bottom:12px"><i class="ti ti-heart-handshake"></i><div>Você está como <b>suporte</b> este mês: não entra na meta nem nos jogos de venda, mas a Hora de Ouro, o ranking e o mural dos sonhos são seus também 💛</div></div>`}
     <div class="cp-hub">${subs.map(([k,i,n,b])=>`<button class="${sub===k?'on':''}" onclick="CP.sub='${k}';render()"><i class="ti ${i}"></i>${n}${b?`<span class="contador">${b}</span>`:''}</button>`).join('')}</div>
@@ -348,8 +353,10 @@ function cpCartaoInicio(){
   const c = cpD(); if(!c || c.erro || !c.ativa) return '';
   const r = (c.raspadinhas||[]).length, st = cpOuroAgora(c.janela), falta = Math.max(0, c.valor_dia - (c.hoje||0));
   const ouro = st==='agora' ? `<button class="ouro" onclick="S.portalTab='campanha';CP.sub='ouro';CP.ouro=null;render()"><span class="ic">⏰</span><span><b>É Hora de Ouro!</b><small>${c.chamadas_hoje||0} de ${c.qtd_ouro} clientes chamadas</small></span></button>` : '';
-  if(!c.participa) return ouro ? `<div class="cp-ini">${ouro}</div>` : '';
+  const ms = typeof msInicio==='function' ? msInicio(c) : '';
+  if(!c.participa) return (ouro||ms) ? `<div class="cp-ini">${ms}${ouro}</div>` : '';
   return `<div class="cp-ini">
+    ${ms}
     ${r?`<button class="rasp" onclick="S.portalTab='campanha';CP.sub='raspadinha';render()"><span class="ic">🎟️</span><span><b>${r===1?'1 raspadinha':r+' raspadinhas'} para raspar!</b><small>toque para raspar</small></span></button>`
        :`<button onclick="S.portalTab='campanha';CP.sub='raspadinha';render()"><span class="ic">🎯</span><span><b>${falta?'Faltam '+brl(falta):'Valor do dia batido!'}</b><small>${falta?'para liberar a raspadinha de hoje':'boa! 🎉'}</small></span></button>`}
     ${ouro}
@@ -430,10 +437,10 @@ function cpAdmTela(){
   const A = CP.adm;
   if(!A){ cpAdmCarregar(); return `<div class="cpa-topo"><h2>🎯 Campanha do mês</h2><p><i class="ti ti-loader-2"></i> Carregando…</p></div>`; }
   if(A.erro) return `<div class="cpa-topo"><h2>🎯 Campanha do mês</h2></div><div class="nota" style="border-color:var(--vermelho)"><i class="ti ti-plug-x"></i><div>${/desconhecida/i.test(A.erro)?'<b>Falta instalar o servidor da campanha.</b> Cole o arquivo CAMPANHA.gs no Apps Script e publique uma Nova versão.':esc(A.erro)}<br><button class="btn p" style="margin-top:8px" onclick="CP.adm=null;render()">Tentar de novo</button></div></div>`;
-  const sub = ['resumo','premios','prints','ranking','cartelas','sonhos','config'].includes(CP.admSub) ? CP.admSub : 'resumo';
+  const sub = ['resumo','missao','premios','prints','ranking','cartelas','sonhos','config'].includes(CP.admSub) ? CP.admSub : 'resumo';
   if(sub==='resumo') return cpAdmResumo();
-  const nomes = {premios:'🎁 Prêmios', prints:'📸 Prints', ranking:'🏆 Ranking e mensagem do grupo', cartelas:'🎱 Cartelas do bingo', sonhos:'💭 Mural dos sonhos', config:'⚙️ Configurar a campanha'};
-  const corpo = ({premios:cpAdmPremios, prints:cpAdmPrints, ranking:cpAdmRanking, cartelas:cpAdmCartelas, sonhos:cpAdmSonhos, config:cpAdmConfig})[sub]();
+  const nomes = {missao:'📲 Missão do Dia', premios:'🎁 Prêmios', prints:'📸 Prints', ranking:'🏆 Ranking e mensagem do grupo', cartelas:'🎱 Cartelas do bingo', sonhos:'💭 Mural dos sonhos', config:'⚙️ Configurar a campanha'};
+  const corpo = ({missao:()=>msAdmTela(), premios:cpAdmPremios, prints:cpAdmPrints, ranking:cpAdmRanking, cartelas:cpAdmCartelas, sonhos:cpAdmSonhos, config:cpAdmConfig})[sub]();
   return `<button class="cpa-volta" onclick="CP.admSub='resumo';render()"><i class="ti ti-arrow-left"></i> Voltar para a campanha</button>
     <h2 class="cpa-tit">${nomes[sub]}</h2>${corpo}`;
 }
@@ -445,11 +452,12 @@ function cpAdmResumo(){
   const noRitmo = pctEq >= ritmo - 2;
   const tipo = t => t==='raspadinha'?'Raspadinha':t==='bingo_linha'?'Linha do bingo':'Cartela cheia';
   const precisa = [];
+  if(typeof msAdmPrecisa==='function') msAdmPrecisa(precisa);
   prn.forEach(p=>precisa.push(`<div class="c34-it warn cpa-it"><img class="cpa-mini" src="${esc(p.url)}" alt="" onclick="window.open('${esc(p.url)}','_blank')">
       <span class="cresce"><b>${esc(p.colaboradora)} mandou um print</b><small>${esc(p.texto)} · confira se está certo</small></span>
       <span class="cpa-bts"><button class="btn pri" onclick="cpAdmPrint('${p.id}',true)"><i class="ti ti-check"></i> Aprovar</button><button class="btn" onclick="cpAdmPrint('${p.id}',false)">Recusar</button></span></div>`));
   pend.forEach(p=>precisa.push(`<div class="c34-it info cpa-it"><span class="c34-ic" style="background:var(--ouro-claro);color:#A86F00">🎁</span>
-      <span class="cresce"><b>Entregar para ${esc(p.colaboradora)}: ${esc(p.premio)}</b><small>${tipo(p.tipo)} · ${p.tipo==='raspadinha'?'dia '+cpDia(p.ref):'semana de '+cpDia(p.ref)}</small></span>
+      <span class="cresce"><b>Entregar para ${esc(p.colaboradora)}: ${esc(p.premio)}</b><small>${tipo(p.tipo)} · ${p.tipo==='raspadinha'?cpRaspRef(p.ref):'semana de '+cpDia(p.ref)}</small></span>
       <span class="cpa-bts"><button class="btn pri" onclick="cpAdmEntregar('${esc(p.id)}')"><i class="ti ti-check"></i> Já entreguei</button></span></div>`));
   const cont = {}; (A.contatos.porPessoa||[]).forEach(p=>cont[p.id]=p);
   const pessoa = (p,i) => {
@@ -475,6 +483,7 @@ function cpAdmResumo(){
     <div class="cpa-ps">${R.pessoas.map(pessoa).join('') || '<p class="suave">Ninguém participando — veja em Configurar.</p>'}</div>
     <h2 class="secao" style="margin-top:18px">Mais</h2>
     <div class="cpa-tiles">
+      ${typeof msAdmTela==='function'?tile('📲','Missão do Dia','stories das ofertas, pontos e prints','missao', msAdmPend()):''}
       ${tile('🏆','Ranking da semana','e a mensagem pronta para o grupo','ranking')}
       ${tile('🎱','Cartelas do bingo','o que cada uma já marcou','cartelas')}
       ${tile('💭','Mural dos sonhos','pelo que cada uma está correndo','sonhos')}
@@ -495,7 +504,7 @@ async function cpAdmCarregar(){
 function cpAdmPremios(){
   const L = CP.adm.premios.filter(p=>!p.nada), pend = L.filter(p=>p.status==='entregar'), feitos = L.filter(p=>p.status==='entregue').slice(0, 30);
   const tipo = t => t==='raspadinha'?'🎟️ Raspadinha':t==='bingo_linha'?'🎱 Linha do bingo':'🏆 Cartela cheia';
-  const it = (p,i,ok) => `<div class="cp-it ${ok?'ok':''}" style="animation-delay:${Math.min(i,12)*30}ms"><span class="av">${esc(iniciais(p.colaboradora))}</span><div class="t"><b>${esc(p.premio)}</b><small>${esc(p.colaboradora)} · ${tipo(p.tipo)} · ${p.tipo==='raspadinha'?'dia '+cpDia(p.ref):'semana de '+cpDia(p.ref)}${ok&&p.entregue_em?' · entregue '+cpDia(p.entregue_em.slice(0,10)):''}</small></div>
+  const it = (p,i,ok) => `<div class="cp-it ${ok?'ok':''}" style="animation-delay:${Math.min(i,12)*30}ms"><span class="av">${esc(iniciais(p.colaboradora))}</span><div class="t"><b>${esc(p.premio)}</b><small>${esc(p.colaboradora)} · ${tipo(p.tipo)} · ${p.tipo==='raspadinha'?cpRaspRef(p.ref):'semana de '+cpDia(p.ref)}${ok&&p.entregue_em?' · entregue '+cpDia(p.entregue_em.slice(0,10)):''}</small></div>
     ${ok?`<button class="btn p" onclick="cpAdmEntregar('${esc(p.id)}',true)">Desfazer</button>`:`<button class="btn pri" onclick="cpAdmEntregar('${esc(p.id)}')"><i class="ti ti-check"></i> Entregue</button>`}</div>`;
   return (pend.length?`<div class="cp-lista">${pend.map((p,i)=>it(p,i,false)).join('')}</div>`:cpVazio('🎁','Nenhum prêmio esperando entrega'))
     + (feitos.length?`<h3 class="secao" style="margin-top:14px">Já entregues</h3><div class="cp-lista">${feitos.map((p,i)=>it(p,i,true)).join('')}</div>`:'');
@@ -628,6 +637,7 @@ function cpGancho34(){
       const ir = () => { S.adm.tab = 'campanha'; CP.admSub = 'resumo'; };
       if(prn.length) I.push({c:'warn', i:'ti-photo-check', t:`${prn.length===1?'1 print':prn.length+' prints'} do bingo para aprovar`, s:prn.slice(0,3).map(p=>p.colaboradora).join(' · '), b:'Aprovar', go:ir});
       if(pend.length) I.push({c:'info', i:'ti-gift', t:`${pend.length===1?'1 prêmio':pend.length+' prêmios'} da campanha para entregar`, s:pend.slice(0,3).map(p=>p.colaboradora+': '+p.premio).join(' · '), b:'Ver', go:ir});
+      if(typeof msAdm34==='function') msAdm34(I);
     }catch(e){}
     return I;
   };
