@@ -115,7 +115,7 @@ document.write('<script src="app30.js?v=30"><\/script>');
 /* v31: campanha do mês — raspadinha do dia, bingo de vendas, hora de ouro, ranking da semana e mural dos sonhos (campanha.js) */
 document.write('<script src="campanha.js?v=55"><\/script>');
 /* v54: Missão do Dia — stories das Ofertas do Dia do site valendo pontos, print conferido por IA, pontos viram raspadinha (missao.js; servidor MISSAO.gs) */
-document.write('<script src="missao.js?v=55b"><\/script>');
+document.write('<script src="missao.js?v=55d"><\/script>');
 /* v55: Campanha do mês com tela inicial — o que fazer agora + um cartão explicando cada jogo; dentro de cada jogo, "Como funciona" em 3 passos (camphub.js) */
 document.write('<script src="camphub.js?v=55c"><\/script>');
 /* v32: portal mais rápido — abre na hora com os dados guardados no aparelho e atualiza sozinho; arquivos guardados (sw.js) (app32.js) */

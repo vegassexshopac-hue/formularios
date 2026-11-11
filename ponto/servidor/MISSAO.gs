@@ -382,7 +382,7 @@ function missPostar_(c, req) {
   var of = itens.filter(function (i) { return i.handle === handle; })[0];
   if (!of) throw new Error('Escolha um dos produtos da oferta de hoje');
   var stories = ler_('MissaoStories'), meu = stories.filter(function (s) { return s.id === id; })[0];
-  if (meu && missPostado_(meu)) throw new Error(meu.status === 'ok' ? 'O seu story de hoje já está valendo ✔' : 'O seu story de hoje está esperando a conferência da administração');
+  if (meu && meu.status === 'ok') throw new Error('O seu story de hoje já está valendo ✔');      // em conferência ela pode trocar o print (mesmo produto ou outro livre)
   var part = missParticipantes_(cfg);
   if (itens.length >= part.length && stories.some(function (s) { return s.data === hoje && s.handle === handle && s.colaboradora_id !== c.id && missPostado_(s); }))
     throw new Error('Esse produto já foi postado hoje por outra pessoa — escolha outro da lista');
