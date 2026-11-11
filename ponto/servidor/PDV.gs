@@ -12,7 +12,7 @@
 ABAS.Produtos = ['id', 'codigo', 'sku', 'nome', 'categoria', 'preco', 'preco_promo', 'ativo', 'origem', 'atualizado_em'];
 ABAS.VendasPDV = ['id', 'numero', 'criada_em', 'data', 'hora', 'loja', 'colaboradora_id', 'colaboradora', 'itens', 'qtd_itens',
                   'subtotal', 'desconto', 'total', 'pagamento', 'parcelas', 'recebido', 'troco', 'cliente', 'cliente_tel', 'obs',
-                  'status', 'cancelada_em', 'cancelada_por', 'motivo_cancel'];
+                  'status', 'cancelada_em', 'cancelada_por', 'motivo_cancel', 'acrescimo'];   // v52: acrescimo (entra sozinha no fim do cabeçalho)
 
 var PDV_FORMAS = ['pix', 'dinheiro', 'debito', 'credito', 'misto'];
 /* Trava única do sistema (reentrante): duas lojas vendendo/recebendo ao mesmo tempo não se atropelam.
@@ -24,7 +24,7 @@ function comTrava_(fn) {
   _travaNivel++;
   try { return fn(); } finally { _travaNivel--; lock.releaseLock(); }
 }
-var PDV_PADRAO = { desconto_max: 15, cancelar_min: 15 };
+var PDV_PADRAO = { desconto_max: 15, cancelar_min: 15, acrescimo: 1 };   // acrescimo: 1 = este servidor já sabe somar acréscimo (o site só mostra o campo se vier 1)
 CONFIG_PADRAO.push(['pdv', JSON.stringify(PDV_PADRAO), 'Regras do PDV (JSON): desconto_max em % e minutos para a vendedora desfazer a própria venda']);
 
 function pdvCfg_() { var c = cfgJson_('pdv', {}); var o = {}; for (var k in PDV_PADRAO) o[k] = (c && c[k] != null) ? Number(c[k]) : PDV_PADRAO[k]; return o; }
@@ -41,7 +41,7 @@ function pdvVenda_(v, admin) {
   var o = limpar_(v), itens = [];
   try { itens = JSON.parse(v.itens || '[]'); } catch (e) {}
   o.itens = itens;
-  ['qtd_itens', 'subtotal', 'desconto', 'total', 'parcelas', 'recebido', 'troco', 'numero'].forEach(function (k) { o[k] = Number(o[k]) || 0; });
+  ['qtd_itens', 'subtotal', 'desconto', 'acrescimo', 'total', 'parcelas', 'recebido', 'troco', 'numero'].forEach(function (k) { o[k] = Number(o[k]) || 0; });
   if (!admin) delete o.cliente_tel;
   return o;
 }
@@ -129,7 +129,10 @@ function pdvVenderDentro_(c, req) {
   var desconto = req.desconto ? valor_(req.desconto) : 0;
   if (desconto > subtotal) throw new Error('Desconto maior que a venda');
   if (desconto > subtotal * cfg.desconto_max / 100 + 0.01) throw new Error('Desconto acima de ' + cfg.desconto_max + '% precisa da administração.');
-  var total = r2_(subtotal - desconto);
+  var acrescimo = req.acrescimo ? r2_(valor_(req.acrescimo)) : 0;      // v52: acréscimo em R$ (taxa de entrega, juros do parcelado…)
+  if (acrescimo < 0) acrescimo = 0;
+  if (acrescimo > subtotal) throw new Error('Acréscimo maior que a própria venda — confira o valor.');
+  var total = r2_(subtotal - desconto + acrescimo);
   var forma = PDV_FORMAS.indexOf(req.pagamento) >= 0 ? req.pagamento : '';
   if (!forma) throw new Error('Escolha a forma de pagamento');
   var recebido = forma === 'dinheiro' && req.recebido ? valor_(req.recebido) : 0;
@@ -138,7 +141,7 @@ function pdvVenderDentro_(c, req) {
   var numero = ler_('VendasPDV').filter(function (v) { return mesDe_(v.data) === mes; }).length + 1;
   var v = { id: uid || ('V' + new Date().getTime() + Math.floor(Math.random() * 1e3)), numero: String(numero), criada_em: agora_(),
             data: data, hora: hora_(), loja: loja, colaboradora_id: c.id, colaboradora: c.nome, itens: JSON.stringify(itens),
-            qtd_itens: String(itens.reduce(function (s, i) { return s + i.qtd; }, 0)), subtotal: String(subtotal), desconto: String(r2_(desconto)),
+            qtd_itens: String(itens.reduce(function (s, i) { return s + i.qtd; }, 0)), subtotal: String(subtotal), desconto: String(r2_(desconto)), acrescimo: acrescimo ? String(acrescimo) : '',
             total: String(total), pagamento: forma, parcelas: String(forma === 'credito' ? Math.max(1, Math.min(12, Number(req.parcelas) || 1)) : 1),
             recebido: String(recebido), troco: String(recebido ? r2_(recebido - total) : 0),
             cliente: String(req.cliente || '').slice(0, 80), cliente_tel: String(req.cliente_tel || '').replace(/\D/g, '').slice(0, 13),

@@ -252,7 +252,7 @@ function pdvCelebrar(v, antes, depois, cli){
     <svg class="festa-check" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46"/><path d="M30 52 L45 66 L72 36"/></svg>
     <small class="top">Venda #${v.numero} · ${esc(f.n)}${v.parcelas>1?' '+v.parcelas+'×':''}${v.troco?' · troco '+brl2(v.troco):''}</small>
     <b class="festa-valor num" id="festa-v">${brl2(0)}</b>
-    <div class="suave">${v.qtd_itens} ${v.qtd_itens===1?'item':'itens'}${v.desconto?' · desconto '+brl2(v.desconto):''}</div>
+    <div class="suave">${v.qtd_itens} ${v.qtd_itens===1?'item':'itens'}${v.desconto?' · desconto '+brl2(v.desconto):''}${v.acrescimo?' · acréscimo '+brl2(v.acrescimo):''}</div>
     ${mt?`<div class="festa-meta">${anel(pctA, Math.floor(pctD)+'%', 'da meta', 92)}<div><b>${brl(depois.val)} no mês</b><p>${prox?`Faltam <b class="num">${brl(prox[1]-depois.val)}</b> para a ${prox[0]}`:'Hiper meta batida! Você é demais 👑'}</p></div></div>`:''}
     ${subiu?`<div class="festa-sobe">🚀 Você subiu para ${depois.rank}º lugar na Arena!</div>`:''}
     ${bateu?`<div class="festa-trofeu">🏆 ${FAIXA_NOME[depois.faixa].toUpperCase()}!</div>`:''}
@@ -285,8 +285,8 @@ function textoComprovante(v){
   const loja = S.boot.lojas[v.loja]?.nome||v.loja;
   return `*Las Vegas Sex Shop* · Loja ${loja}\n_Comprovante da compra #${v.numero} · ${ddmm(v.data)} às ${v.hora}_\n\n`
     + v.itens.map(i=>`• ${i.qtd}× ${i.nome} — ${brl2(i.preco*i.qtd)}`).join('\n')
-    + (v.desconto?`\nDesconto: − ${brl2(v.desconto)}`:'')
-    + `\n*Total: ${brl2(v.total)}* (${FORMAS[v.pagamento]?.n||v.pagamento}${v.parcelas>1?' '+v.parcelas+'×':''})\n\nObrigada pela preferência! 💋\n_O que acontece em Vegas, fica em Vegas._`;
+    + (v.desconto?`\nDesconto: − ${brl2(v.desconto)}`:'') + (v.acrescimo?`\nAcréscimo: + ${brl2(v.acrescimo)}`:'')
+    + `\n*Total: ${brl2(v.total)}* (${FORMAS[v.pagamento]?.n||v.pagamento}${v.parcelas>1?' '+v.parcelas+'×':''})\n` + (Number(v.cashback_gerado)>0 && typeof fidCashAte==='function' ? `\n💸 *Você ganhou ${brl2(v.cashback_gerado)} de cashback* para usar na próxima compra, até *${fidCashAte(v.data)}*.\n` : '') + `\nObrigada pela preferência! 💋\n_O que acontece em Vegas, fica em Vegas._`;
 }
 function pdvComprovante(id, tel){
   const v = pdvAchar(id); if(!v) return;
@@ -302,9 +302,9 @@ function pdvCupom(id){
     </style></head><body><h1>LAS VEGAS SEX SHOP</h1><p class="c">CNPJ ${EMPRESA.cnpj} · Loja ${esc(loja)}</p><hr>
     <p>Venda #${v.numero} · ${ddmm(v.data)}/${v.data.slice(0,4)} ${v.hora}</p><p>Vendedora: ${esc(primeiroNome(v.colaboradora))}</p>${v.cliente?`<p>Cliente: ${esc(v.cliente)}</p>`:''}<hr>
     ${v.itens.map(i=>`<p>${esc(i.nome)}</p><div class="l"><span>${i.qtd} x ${brl2(i.preco)}</span><span>${brl2(i.qtd*i.preco)}</span></div>`).join('')}<hr>
-    <div class="l"><span>Subtotal</span><span>${brl2(v.subtotal)}</span></div>${v.desconto?`<div class="l"><span>Desconto</span><span>- ${brl2(v.desconto)}</span></div>`:''}
+    <div class="l"><span>Subtotal</span><span>${brl2(v.subtotal)}</span></div>${v.desconto?`<div class="l"><span>Desconto</span><span>- ${brl2(v.desconto)}</span></div>`:''}${v.acrescimo?`<div class="l"><span>Acréscimo</span><span>+ ${brl2(v.acrescimo)}</span></div>`:''}
     <div class="l"><b>TOTAL</b><b>${brl2(v.total)}</b></div><div class="l"><span>${FORMAS[v.pagamento]?.n||v.pagamento}${v.parcelas>1?' '+v.parcelas+'x':''}</span><span>${v.recebido?'recebido '+brl2(v.recebido):''}</span></div>${v.troco?`<div class="l"><span>Troco</span><span>${brl2(v.troco)}</span></div>`:''}
-    <hr><p class="c">*** CUPOM SEM VALOR FISCAL ***</p><p class="c">Obrigada pela preferência!</p><p class="c">O que acontece em Vegas, fica em Vegas.</p></body></html>`;
+    ${Number(v.cashback_gerado)>0 && typeof fidCashAte==='function'?`<hr><p class="c"><b>CASHBACK: ${brl2(v.cashback_gerado)}</b></p><p class="c">para usar ate ${fidCashAte(v.data)}</p>`:''}<hr><p class="c">*** CUPOM SEM VALOR FISCAL ***</p><p class="c">Obrigada pela preferência!</p><p class="c">O que acontece em Vegas, fica em Vegas.</p></body></html>`;
   const f = document.createElement('iframe'); f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';
   document.body.appendChild(f); f.contentDocument.open(); f.contentDocument.write(html); f.contentDocument.close();
   setTimeout(()=>{ try{ f.contentWindow.focus(); f.contentWindow.print(); }catch(e){} setTimeout(()=>f.remove(), 2000); }, 250);

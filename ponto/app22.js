@@ -303,9 +303,13 @@ pdvFinalizar = async function pdvFinalizar(){
 const _pdvLimparV22 = pdvLimpar;
 pdvLimpar = function pdvLimpar(){ const tinha = PDV.car.length; _pdvLimparV22(); if(!PDV.car.length && tinha){ Object.assign(FID, {cli:null, escolhas:{}, usarCash:false}); fidGuardar(); pdvPintarComanda(); } };
 
+/* v52: data exata do fim do cashback (dia da compra + validade, a mesma conta do servidor) */
+function fidCashData(iso){ const s = String(iso||'').slice(0,10); return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s.slice(8,10)+'/'+s.slice(5,7)+'/'+s.slice(0,4) : ''; }
+function fidCashAte(dataVenda){ const s = /^\d{4}-\d{2}-\d{2}/.test(String(dataVenda||'')) ? String(dataVenda).slice(0,10) : hojeISO(); const d = new Date(s+'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + (Number(fidCfg().cashback_dias)||30)); return fidCashData(d.toISOString()); }
 /* ═════════ a comemoração — bem grande ═════════ */
 const _pdvCelebrarV22 = pdvCelebrar;
 pdvCelebrar = function pdvCelebrar(v, antes, depois, cli){
+  try{ const L = pdvD().vendas, i = L.findIndex(x=>x.id===v.id); if(i>=0) Object.assign(L[i], v); }catch(e){}   // v52: a lista de vendas ganha o cashback desta venda (comprovante e cupom mostram valor e validade)
   _pdvCelebrarV22(v, antes, depois, cli);
   const F = FID.ultimo; FID.ultimo = null; if(!F) return;
   const card = document.querySelector('#festa .festa-card'), acoes = card?.querySelector('.festa-acoes'); if(!card) return;
@@ -319,7 +323,7 @@ pdvCelebrar = function pdvCelebrar(v, antes, depois, cli){
     ${prox && !F.premios.length && !F.novo_premio?`<p>Faltam <b>${prox[1]}</b> ${prox[1]===1?'compra':'compras'} para o ${prox[0]}.</p>`:''}
     ${F.premios.map(p=>`<p style="color:#FFD98A;font-weight:800;font-size:15px">${p.tipo===10?'⭐':'🎁'} Ganhou: ${esc(p.presente)}${p.tipo===10?` + ${cfg.desconto10}% OFF`:''}</p>`).join('')}
     ${F.novo_premio?`<p style="color:#FFD98A;font-weight:800">🎁 Presente da ${fidOrd(F.novo_premio.n)} compra liberado — entrega na próxima visita.</p>`:''}
-    ${F.cashback_gerado?`<p>💸 Ganhou <b style="color:#7CF0B5">${brl2(F.cashback_gerado)}</b> de cashback${K.cashback?.saldo?` · saldo ${brl2(K.cashback.saldo)}`:''} · vale ${cfg.cashback_dias} dias</p>`:''}
+    ${F.cashback_gerado?`<p class="fid-cashfesta">💸 Ganhou <b style="color:#7CF0B5;font-size:17px">${brl2(F.cashback_gerado)}</b> de cashback nesta compra<br>Vale até <b style="color:#FFD98A;font-size:16px">${fidCashAte(v && v.data)}</b> <small>(${cfg.cashback_dias} dias)</small>${K.cashback?.saldo && Math.abs(K.cashback.saldo - F.cashback_gerado) > .009 ?`<br><small>Saldo total de cashback: <b>${brl2(K.cashback.saldo)}</b>${K.cashback.vence?` · ${brl2(K.cashback.vence.valor)} vence primeiro, em ${fidCashData(K.cashback.vence.data)}`:''}</small>`:''}</p>`:''}
     ${F.cashback_usado?`<p>Usou ${brl2(F.cashback_usado)} de cashback nesta compra.</p>`:''}
   </div>`;
   if(acoes) acoes.insertAdjacentHTML('beforebegin', html); else card.insertAdjacentHTML('beforeend', html);

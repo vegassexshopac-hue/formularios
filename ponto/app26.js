@@ -117,7 +117,7 @@ function arVendaVer(id){
         return `<div class="it" style="--i:${n}">${ft}<div style="min-width:0"><div class="nm">${esc(i.nome)}</div><small>${i.qtd} × ${brl2(i.preco)}${i.codigo?' · cód. '+esc(i.codigo):''}</small></div><span class="vl">${brl2(i.qtd*i.preco)}</span></div>`; }).join('')}
       <div class="soma">
         <div><span>Subtotal · ${pecas} ${pecas===1?'peça':'peças'}</span><span>${brl2(v.subtotal||v.total)}</span></div>
-        ${Number(v.desconto)>0?`<div><span>Desconto</span><span class="neg">− ${brl2(v.desconto)}</span></div>`:''}
+        ${Number(v.desconto)>0?`<div><span>Desconto</span><span class="neg">− ${brl2(v.desconto)}</span></div>`:''}${Number(v.acrescimo)>0?`<div><span>Acréscimo</span><span>+ ${brl2(v.acrescimo)}</span></div>`:''}
         <div class="tot"><span>Total</span><span>${brl2(v.total)}</span></div>
       </div>
       <div class="tags"><span>💳 ${esc(forma)}</span>${v.pagamento==='dinheiro'&&Number(v.troco)>0?`<span>💵 Troco ${brl2(v.troco)}</span>`:''}<span>🛍️ ${pecas} ${pecas===1?'peça':'peças'}</span></div>

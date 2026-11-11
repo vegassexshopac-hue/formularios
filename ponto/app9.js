@@ -97,13 +97,13 @@ document.write('<script src="app20.js?v=21"><\/script>');
 /* v21b: placar do mutirão + tirar produto do catálogo (app21.js) — antes do app12 */
 document.write('<script src="app21.js?v=21b"><\/script>');
 /* v22: clientes e fidelidade — cartão de selos, presentes, cashback e indicação na comanda + Administração › Clientes (app22.js) */
-document.write('<script src="app22.js?v=41"><\/script>');
+document.write('<script src="app22.js?v=52"><\/script>');
 /* v23: cupom da roleta da loja na comanda (código LV…, baixa ligada à cliente) + Administração › Roletas (app23.js) */
 document.write('<script src="app23.js?v=23"><\/script>');
 /* v24: WhatsApp · Kommo — esperando resposta, tarefas, funil/ficha e vendas pelo motor no Railway (app24.js) */
 document.write('<script src="app24.js?v=24g"><\/script>');
 /* v26: miniaturas — comanda do PDV + "Acabou de vender" da Arena com detalhes da venda (app26.js) */
-document.write('<script src="app26.js?v=26"><\/script>');
+document.write('<script src="app26.js?v=52"><\/script>');
 /* v27: login fixo no aparelho pessoal (não no computador da loja) — só sai pelo "Sair do portal" (app27.js) */
 document.write('<script src="app27.js?v=27"><\/script>');
 /* v28: caixa — imprimir comprovante e relatório do mês, histórico de fechamentos refeitos, foto obrigatória do envelope na sangria (app28.js) */
@@ -142,7 +142,7 @@ document.write('<script src="app45.js?v=45"><\/script>');
 /* v46: cartão "Minha meta" animado no Início + botão "Tirar dúvida" monitorado (Comunicação › Dúvidas da equipe) (app46.js; servidor AJUDA.gs) */
 document.write('<script src="app46.js?v=46b"><\/script>');
 /* v47: relatório de vendas da equipe (dia, semana, mês) + desfazer em 15 min com motivo + pedido de cancelamento para a administração (app47.js; servidor VENDAS.gs) */
-document.write('<script src="app47.js?v=47"><\/script>');
+document.write('<script src="app47.js?v=52"><\/script>');
 /* v48: caixa da loja — uma gaveta por loja: abrir o caixa (às cegas), passagem de turno com 2 PINs, suprimento, dinheiro só com caixa aberto, "Quem vendeu?" no PDV, misto dividido, crédito à vista × parcelado (app48.js; servidor CAIXA.gs) */
 document.write('<script src="app48.js?v=48e"><\/script>');
 /* v49: Início no computador em 2 colunas — meta e vendas à esquerda, ponto, números e atalhos à direita (app49.js) */
@@ -151,4 +151,8 @@ document.write('<script src="app49.js?v=49"><\/script>');
 document.write('<script src="entregas.js?v=50"><\/script>');
 /* v51: vídeos do portal dentro do próprio portal — faixa no Tirar dúvida e "Ver o vídeo" toca aqui (videos51.js; arquivos em ponto/videos/) */
 document.write('<script src="videos51.js?v=51b"><\/script>');
+/* v52: comanda do PDV com mais espaço no computador (Total e Finalizar presos embaixo), acréscimo ao lado do desconto e parcelas com o valor — até 6× sem juros (app52.js; servidor PDV.gs) */
+document.write('<script src="app52.js?v=52"><\/script>');
+/* v53: botão Comprovante envia pela conversa da Kommo (robô), com o WhatsApp de reserva; configuração em Atendimento · Kommo › Configurar (app53.js; motor /api/comprovante) */
+document.write('<script src="app53.js?v=53"><\/script>');
 document.write('<script src="app12.js?v=35"><\/script>');

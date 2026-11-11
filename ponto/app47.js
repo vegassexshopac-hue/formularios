@@ -99,7 +99,7 @@ function vr47Card(v, i){
   else if(resta) selo = `<span class="vr47-tag tempo" data-vr47-t="${v.id}"></span>`;
   const detalhe = aberta ? `<div class="vr47-det">
       <div class="vr47-itens">${v.itens.map(x=>`<div><span>${x.qtd}×</span><b>${esc(x.nome)}</b><span class="num">${brl2(x.preco*x.qtd)}</span></div>`).join('')}</div>
-      <div class="vr47-tot">Subtotal ${brl2(v.subtotal)}${v.desconto?` · desconto <b class="neg">− ${brl2(v.desconto)}</b>`:''} · <b>Total ${brl2(v.total)}</b> · ${FORMAS[v.pagamento]?.n||esc(v.pagamento)}${v.parcelas>1?' '+v.parcelas+'×':''}${v.cliente?' · cliente '+esc(v.cliente):''}</div>
+      <div class="vr47-tot">Subtotal ${brl2(v.subtotal)}${v.desconto?` · desconto <b class="neg">− ${brl2(v.desconto)}</b>`:''}${v.acrescimo?` · acréscimo <b>+ ${brl2(v.acrescimo)}</b>`:''} · <b>Total ${brl2(v.total)}</b> · ${FORMAS[v.pagamento]?.n||esc(v.pagamento)}${v.parcelas>1?' '+v.parcelas+'×':''}${v.cliente?' · cliente '+esc(v.cliente):''}</div>
       ${canc ? `<div class="vr47-hist bad"><i class="ti ti-ban"></i><div><b>${esc(v.cancelada_por||'')}</b> em ${esc(quando(v.cancelada_em))}<br>Motivo: ${esc(v.motivo_cancel||'—')}</div></div>` : ''}
       ${ped && !canc ? `<div class="vr47-hist ${ped.status==='recusado'?'':'warn'}"><i class="ti ${ped.status==='recusado'?'ti-message-reply':'ti-hourglass'}"></i><div>
           Você pediu o cancelamento em ${esc(quando(ped.pedido_em))}: “${esc(ped.motivo)}”<br>
