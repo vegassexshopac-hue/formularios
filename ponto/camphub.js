@@ -178,4 +178,5 @@ function chInicio(c, subs, tem){
 }
 /* a campanha passa a abrir na tela inicial; os atalhos (Início, busca) continuam levando direto ao jogo */
 CP.sub = 'inicio';
+CP.admSub = 'resumo';      /* v55c: a administração abre no resumo (jogos ligados, Missão do Dia, como está cada uma), não na lista de prêmios */
 if(typeof sair === 'function'){ const _sairCh = sair; sair = function sair(){ CP.sub = 'inicio'; return _sairCh.apply(this, arguments); }; }
