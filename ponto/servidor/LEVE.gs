@@ -82,3 +82,22 @@ function velDiag2() {
   t = Date.now(); Sheets.Spreadsheets.Values.batchGet(ss.getId(), { ranges: semProd.map(function (n) { return "'" + n + "'"; }), valueRenderOption: 'FORMATTED_VALUE' });
   Logger.log('VELDIAG2 lote de ' + semProd.length + ' abas sem as grandes: ' + (Date.now() - t) + 'ms');
 }
+
+/* diagnóstico 3: monta "entrar" e "boot" 3 vezes com o código salvo (1ª vez aprende a lista, depois usa o lote). Só lê. */
+function velDiag3() {
+  var c = colabs_().filter(function (x) { return x.ativa === 'SIM'; })[0];
+  for (var i = 1; i <= 3; i++) {
+    perfNovaExecucao_(); _cfg = null; _abaOk = {}; _cabs = {}; perfAbaOkCarregar_();
+    _perfStat = { diretas: 0, msDiretas: 0, abasDiretas: [], doLote: 0, lotes: [], erros: [] };
+    var t = Date.now();
+    perfListasCarregar_({ a: 'entrar' }); _perfChave = 'entrar'; perfCtx_('ini:entrar');
+    colabs_(); var d = dadosColab_(c);
+    var ms = Date.now() - t; perfListasGuardar_(); perfAbaOkGuardar_();
+    Logger.log('VELDIAG3 entrar #' + i + ': ' + ms + 'ms · ' + Math.round(JSON.stringify(d).length / 1024) + 'KB · lotes ' + _perfStat.lotes.join(', ') + ' · diretas ' + _perfStat.diretas + ' (' + _perfStat.msDiretas + 'ms: ' + _perfStat.abasDiretas.join(' ') + ') · erros ' + _perfStat.erros.join(' '));
+  }
+  for (var j = 1; j <= 3; j++) {
+    var t2 = Date.now(), r = rodar_({ a: 'boot', _perf: 1 });
+    Logger.log('VELDIAG3 boot #' + j + ': ' + (Date.now() - t2) + 'ms · ' + JSON.stringify(r._perf));
+  }
+  perfNovaExecucao_();
+}
