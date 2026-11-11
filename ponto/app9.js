@@ -161,4 +161,6 @@ document.write('<script src="app52.js?v=52"><\/script>');
 document.write('<script src="app53.js?v=53b"><\/script>');
 /* v54: estoque sem depósito (só prateleira Bosque e Centro), editar produto em Estoque › Produtos, "Metas e campanha" num balão só e Administração › Equipe e ponto › Histórico de andamentos (app54.js; servidor ESTOQUE.gs + ANDAMENTOS.gs) */
 document.write('<script src="app54.js?v=54"><\/script>');
+/* velocidade (etapa 1): a Arena da vendedora atualiza pela ação leve "arena" do servidor (LEVE.gs), sem baixar o pacote inteiro a cada 30 s (rapido.js) */
+document.write('<script src="rapido.js?v=rap1"><\/script>');
 document.write('<script src="app12.js?v=35"><\/script>');
