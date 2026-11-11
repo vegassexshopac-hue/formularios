@@ -338,6 +338,23 @@ function missPromptNum_(cfg) {
     '"confianca":"alta|media|baixa","obs":"uma frase curta"}. views = visualizações / "Visto por". curtidas = curtidas ou reações.';
 }
 
+/* rodar pelo editor do Apps Script: mostra se a IA está ligada e testa a leitura com o último print enviado (não grava nada) */
+function missDiagnosticoIA() {
+  var o = { ligada: missIaLigada_() }, cfg = missCfg_();
+  try { var ec = estCfg_(); o.provedor = ec.ia_provedor; o.modelo = ec.ia_modelo || EST_MODELOS[ec.ia_provedor]; } catch (e) { o.cfg_erro = String(e); }
+  var st = ler_('MissaoStories'); o.stories = st.slice(-4).map(function (s) { return s.id + ' · ' + s.status + ' · ' + s.obs + ' · ia: ' + String(s.ia_post).slice(0, 200); });
+  var ult = st.filter(function (s) { return s.url_post; }).pop();
+  if (ult && o.ligada) {
+    try {
+      var id = (String(ult.url_post).match(/[?&]id=([\w-]+)/) || [])[1], b64 = Utilities.base64Encode(DriveApp.getFileById(id).getBlob().getBytes());
+      o.tamanho_b64 = b64.length;
+      o.teste = estIA_([{ mime: 'image/jpeg', b64: b64 }], missPromptPost_(cfg, ult.produto));
+    } catch (e2) { o.teste_erro = String(e2 && e2.message || e2); }
+  }
+  Logger.log('DIAGIA ' + JSON.stringify(o));
+  return o;
+}
+
 /* ───────── vendedora: postar e mandar os números ───────── */
 function missHorario_(cfg, part, eid, data) {
   var i = -1; part.forEach(function (p, k) { if (p.id === eid) i = k; });
@@ -433,7 +450,7 @@ function missRanking_(ctx) {
     var conta = function (t) { return evMes.filter(function (e) { return e.tipo === t; }).length; };
     var st = ctx.stories.filter(function (s) { return s.colaboradora_id === c.id && s.data === hoje; })[0];
     return { id: c.id, nome: campPrimeiro_(c.nome), cor: c.cor || '', mes: missSoma_(E.ev, mes + '-01', mes + '-31'), semana: missSoma_(E.ev, sem, fimSem), stories: conta('postou'), vendas: conta('venda'),
-             sequencia: E.sequencia, hoje: st ? st.status : '' };
+             sequencia: E.sequencia, hoje: st ? st.status : '', ev: evMes.slice(0, 20) };
   });
   l.sort(function (a, b) { return b.mes - a.mes || b.semana - a.semana || a.nome.localeCompare(b.nome); });
   return l;
