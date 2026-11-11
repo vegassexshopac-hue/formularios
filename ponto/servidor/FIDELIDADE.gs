@@ -169,14 +169,55 @@ function fidCadastrar_(dados, por, admin) {
   });
 }
 
-/* ───────── busca (equipe vê telefone mascarado) ───────── */
+/* ───────── busca (equipe vê telefone mascarado) ─────────
+   v56: acha pelo nome em qualquer ordem ou pela metade ("maria brito" → Maria Eduarda Pereira de Brito),
+   aceita grafia parecida (Thays/Thais, Souza/Sousa) e telefone com +55, 0 na frente, com ou sem o 9.
+   Mostra até 40, as mais parecidas primeiro. */
+var FID_BUSCA_MAX = 40;
+function fidPalavras_(s) { return norm_(s).replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(function (p) { return p; }); }
+function fidSom_(p) {   // grafias que soam igual
+  return String(p).replace(/ph/g, 'f').replace(/th/g, 't').replace(/h/g, '').replace(/y/g, 'i').replace(/w/g, 'v').replace(/k/g, 'c').replace(/z/g, 's').replace(/(.)\1+/g, '$1');
+}
+function fidPontosNome_(nome, pal) {
+  var w = fidPalavras_(nome); if (!w.length || !pal.length) return 0;
+  var junto = ' ' + w.join(' '), exato = true, inicio = true, i, j, ok;
+  for (i = 0; i < pal.length; i++) {
+    if (junto.indexOf(' ' + pal[i]) < 0) { inicio = false; if (pal[i].length < 3 || junto.indexOf(pal[i]) < 0) { exato = false; break; } }
+  }
+  if (exato) {
+    if (junto.indexOf(' ' + pal.join(' ')) === 0) return 40;
+    if (w[0].indexOf(pal[0]) === 0) return inicio ? 30 : 25;
+    return inicio ? 20 : 10;
+  }
+  var ws = w.map(fidSom_);
+  for (i = 0; i < pal.length; i++) {
+    var ps = fidSom_(pal[i]); ok = false;
+    if (ps.length < 2) return 0;
+    for (j = 0; j < ws.length; j++) if (ws[j].indexOf(ps) === 0) { ok = true; break; }
+    if (!ok) return 0;
+  }
+  return 5;
+}
+function fidBateTel_(tel, dig) {
+  tel = fidTel_(tel); if (!tel || dig.length < 4) return false;
+  var d = fidTel_(dig);
+  if (tel.indexOf(dig) >= 0 || (d.length >= 4 && tel.indexOf(d) >= 0)) return true;
+  return d.length >= 8 && tel.slice(-8) === d.slice(-8);   // mesmo número com ou sem o 9 / DDD
+}
 function fidBuscar_(q) {
   q = String(q || '').trim(); if (q.length < 2) return [];
-  var dig = q.replace(/\D/g, ''), nq = norm_(q);
+  var dig = q.replace(/\D/g, ''), temLetra = /[a-z]/.test(norm_(q));
+  var pal = temLetra ? fidPalavras_(q).filter(function (p) { return /[a-z]/.test(p); }) : [];
+  var semLig = pal.filter(function (p) { return ['de', 'da', 'do', 'das', 'dos', 'e'].indexOf(p) < 0; });
+  if (semLig.length) pal = semLig;
   var cl = ler_('Clientes').filter(function (c) { return c.ativo !== 'NÃO'; });
-  var achou = cl.filter(function (c) { return (dig.length >= 4 && String(c.tel).indexOf(dig) >= 0) || (!/^\d+$/.test(q.replace(/\s/g, '')) && norm_(c.nome).indexOf(nq) >= 0); });
-  achou.sort(function (a, b) { var ia = norm_(a.nome).indexOf(nq) === 0 ? 0 : 1, ib = norm_(b.nome).indexOf(nq) === 0 ? 0 : 1; return ia - ib || norm_(a.nome).localeCompare(norm_(b.nome)); });
-  achou = achou.slice(0, 12);
+  var achou = [];
+  cl.forEach(function (c) {
+    var pts = temLetra ? fidPontosNome_(c.nome, pal) : (fidBateTel_(c.tel, dig) ? 50 : 0);
+    if (pts) achou.push({ c: c, pts: pts, n: norm_(c.nome) });
+  });
+  achou.sort(function (a, b) { return b.pts - a.pts || a.n.localeCompare(b.n); });
+  achou = achou.slice(0, FID_BUSCA_MAX).map(function (x) { return x.c; });
   if (!achou.length) return [];
   var idx = fidIndice_(null, cl), cfg = fidCfg_();
   return achou.map(function (c) { var k = fidCartao_(c, idx, cfg, false); return { id: c.id, nome: c.nome, tel_mask: k.tel_mask, selos: k.selos, no_cartao: k.no_cartao, cashback: k.cashback.saldo, pendentes: k.pendentes.length, ultima: k.ultima }; });

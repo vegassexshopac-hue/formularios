@@ -97,7 +97,7 @@ document.write('<script src="app20.js?v=21"><\/script>');
 /* v21b: placar do mutirão + tirar produto do catálogo (app21.js) — antes do app12 */
 document.write('<script src="app21.js?v=21b"><\/script>');
 /* v22: clientes e fidelidade — cartão de selos, presentes, cashback e indicação na comanda + Administração › Clientes (app22.js) */
-document.write('<script src="app22.js?v=52"><\/script>');
+document.write('<script src="app22.js?v=56"><\/script>');
 /* v23: cupom da roleta da loja na comanda (código LV…, baixa ligada à cliente) + Administração › Roletas (app23.js) */
 document.write('<script src="app23.js?v=23"><\/script>');
 /* v24: WhatsApp · Kommo — esperando resposta, tarefas, funil/ficha e vendas pelo motor no Railway (app24.js) */

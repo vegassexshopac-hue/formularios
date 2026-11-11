@@ -223,8 +223,8 @@ function fidResultados(){
   if(B.carregando) return `<p class="suave" style="margin:6px 2px"><i class="ti ti-loader-2"></i> Procurando…</p>`;
   if(!B.res) return `<p class="suave" style="margin:6px 2px;font-size:13.5px">Digite pelo menos 2 letras do nome ou 4 números do WhatsApp.</p>`;
   if(!B.res.length) return `<p class="suave" style="margin:6px 2px">Ninguém com “${esc(B.q)}”. Cadastre a cliente 👇</p>`;
-  const ci = fidCfg().ciclo;
-  return B.res.map((c,i)=>`<button style="animation-delay:${i*40}ms" onclick="fidEscolherCli('${c.id}')"><span class="av">${fidIni(c.nome)}</span><span class="t"><b>${esc(c.nome)}</b><small>${esc(c.tel_mask)} · <span class="fid-mini">${Array.from({length:ci},(_,j)=>`<i class="${j<c.no_cartao?'on':''}"></i>`).join('')}</span> ${c.selos} selos${c.cashback?` · 💸 ${brl2(c.cashback)}`:''}${c.pendentes?' · 🎁 prêmio':''}</small></span><i class="ti ti-chevron-right"></i></button>`).join('');
+  const ci = fidCfg().ciclo, cheio = B.res.length>=40 ? `<p class="apagado" style="margin:8px 2px 0;font-size:12.5px">Mostrando as 40 mais parecidas. Digite mais um nome ou o final do WhatsApp para afinar.</p>` : '';
+  return B.res.map((c,i)=>`<button style="animation-delay:${Math.min(i,12)*40}ms" onclick="fidEscolherCli('${c.id}')"><span class="av">${fidIni(c.nome)}</span><span class="t"><b>${esc(c.nome)}</b><small>${esc(c.tel_mask)} · <span class="fid-mini">${Array.from({length:ci},(_,j)=>`<i class="${j<c.no_cartao?'on':''}"></i>`).join('')}</span> ${c.selos} selos${c.cashback?` · 💸 ${brl2(c.cashback)}`:''}${c.pendentes?' · 🎁 prêmio':''}</small></span><i class="ti ti-chevron-right"></i></button>`).join('') + cheio;
 }
 function fidDigitou(v){
   const B = FID.busca; B.q = v; clearTimeout(B.t);
@@ -371,9 +371,27 @@ function admClientes(){
       <button style="margin-left:auto" onclick="fidAdmCarregar(true)"><i class="ti ti-refresh"></i>Atualizar</button></div>
     ${FA.sub==='chamar' && typeof relTela==='function'?`<div class="cartao pad" id="rel-corpo">${relTela()}</div>`:FA.sub==='presentes'?fidAdmPresentes():FA.sub==='importar'?fidAdmImportar():FA.sub==='regras'?fidAdmRegras():fidAdmLista()}`;
 }
+/* v56: busca que acha o nome em qualquer ordem ou pela metade, grafia parecida e telefone com +55 / 0 / com ou sem o 9 */
+const fidPal = s => semAcento(s).replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(Boolean);
+const fidSom = p => p.replace(/ph/g,'f').replace(/th/g,'t').replace(/h/g,'').replace(/y/g,'i').replace(/w/g,'v').replace(/k/g,'c').replace(/z/g,'s').replace(/(.)\1+/g,'$1');
+const fidTelLimpo = t => { t = String(t||'').replace(/\D/g,''); if(/^55\d{10,11}$/.test(t)) t = t.slice(2); if(/^0\d{10,11}$/.test(t)) t = t.slice(1); return t; };
+function fidBate(c, busca){
+  const dig = String(busca).replace(/\D/g,''), temLetra = /[a-z]/.test(semAcento(busca));
+  if(!temLetra){
+    const tel = fidTelLimpo(c.tel), d = fidTelLimpo(dig);
+    if(!tel || dig.length < 3) return false;
+    return tel.includes(dig) || (d.length>=3 && tel.includes(d)) || (d.length>=8 && tel.slice(-8)===d.slice(-8));
+  }
+  let pal = fidPal(busca).filter(p=>/[a-z]/.test(p));
+  const semLig = pal.filter(p=>!['de','da','do','das','dos','e'].includes(p)); if(semLig.length) pal = semLig;
+  const w = fidPal(c.nome), junto = ' '+w.join(' ');
+  if(pal.every(p=>junto.includes(' '+p) || (p.length>=3 && junto.includes(p)))) return true;
+  const ws = w.map(fidSom);
+  return pal.every(p=>{ const ps = fidSom(p); return ps.length>=2 && ws.some(x=>x.startsWith(ps)); });
+}
 function fidAdmLista(){
-  const q = semAcento(FA.q), dig = FA.q.replace(/\D/g,''), ci = fidCfg().ciclo;
-  let vis = FA.L.filter(c=>!q || semAcento(c.nome).includes(q) || (dig.length>=3 && String(c.tel).includes(dig)));
+  const q = semAcento(FA.q).trim(), ci = fidCfg().ciclo;
+  let vis = FA.L.filter(c=>!q || fidBate(c, FA.q));
   const ords = {ultima:(a,b)=>String(b.ultima).localeCompare(String(a.ultima)), selos:(a,b)=>b.selos-a.selos, gasto:(a,b)=>b.gasto-a.gasto, cash:(a,b)=>(b.cashback?.saldo||0)-(a.cashback?.saldo||0), nome:(a,b)=>a.nome.localeCompare(b.nome), novas:(a,b)=>String(b.criado_em).localeCompare(String(a.criado_em))};
   vis = vis.sort(ords[FA.ord]||ords.ultima);
   return `<div class="linha quebra" style="gap:8px;margin-bottom:10px">
