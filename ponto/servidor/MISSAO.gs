@@ -120,6 +120,7 @@ function missDiagnostico() {
   try { o.aba = ler_('MissaoOfertas').map(function (r) { return r.data + ' ' + r.origem; }); } catch (e3) { o.aba = String(e3); }
   try { o.espera = CacheService.getScriptCache().get('miss_falha'); } catch (e4) {}
   Logger.log('DIAG ' + JSON.stringify(o));
+  try { missDiagIA_(); } catch (e5) { Logger.log('DIAGIA erro ' + e5); }
   return o;
 }
 function missProdutoSite_(cfg, handle) {
@@ -338,8 +339,8 @@ function missPromptNum_(cfg) {
     '"confianca":"alta|media|baixa","obs":"uma frase curta"}. views = visualizações / "Visto por". curtidas = curtidas ou reações.';
 }
 
-/* rodar pelo editor do Apps Script: mostra se a IA está ligada e testa a leitura com o último print enviado (não grava nada) */
-function missDiagnosticoIA() {
+/* chamado pelo missDiagnostico: mostra se a IA está ligada e testa a leitura com o último print enviado (não grava nada) */
+function missDiagIA_() {
   var o = { ligada: missIaLigada_() }, cfg = missCfg_();
   try { var ec = estCfg_(); o.provedor = ec.ia_provedor; o.modelo = ec.ia_modelo || EST_MODELOS[ec.ia_provedor]; } catch (e) { o.cfg_erro = String(e); }
   var st = ler_('MissaoStories'); o.stories = st.slice(-4).map(function (s) { return s.id + ' · ' + s.status + ' · ' + s.obs + ' · ia: ' + String(s.ia_post).slice(0, 200); });
