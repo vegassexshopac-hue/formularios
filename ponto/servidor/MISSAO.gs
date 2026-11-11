@@ -32,6 +32,7 @@ var MISS_PADRAO = {
   fora: [],
   conta: 'lasvegas_ac',
   site: 'https://www.lasvegassexshop.com.br',
+  gtm: 'GTM-TCBTS2V',
   horarios: ['10:30', '14:00', '17:30'],
   prazo_numeros_dias: 2,
   por_raspadinha: 50,
@@ -79,12 +80,27 @@ function missHash_(img) {
 function missDec_(s) { return String(s || '').replace(/&quot;/g, '"').replace(/&#0?39;/g, "'").replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim(); }
 
 /* ───────── ofertas do dia (vêm do site) ───────── */
+/* o calendário das ofertas é um script que o Google Tag Manager injeta na página (não vem no HTML da loja):
+   procura no HTML e, se não achar, no gtm.js de cada contêiner GTM citado na página */
+function missCalendarioTexto_(t) {
+  var re = /\\?"(\d{4}-\d{2}-\d{2})\\?"\s*:\s*\\?"([^"\\]+)\\?"\.split\(/g, m, cal = {};
+  while ((m = re.exec(t))) cal[m[1]] = m[2].split(' ').filter(String);
+  return cal;
+}
 function missCalendarioSite_(cfg) {
   var r = UrlFetchApp.fetch(cfg.site + '/', { muteHttpExceptions: true, followRedirects: true });
   if (r.getResponseCode() >= 300) throw new Error('O site respondeu ' + r.getResponseCode());
-  var t = r.getContentText(), re = /"(\d{4}-\d{2}-\d{2})"\s*:\s*"([^"]+)"\.split\(/g, m, cal = {};
-  while ((m = re.exec(t))) cal[m[1]] = m[2].split(' ').filter(String);
-  return cal;
+  var t = r.getContentText(), cal = missCalendarioTexto_(t), k;
+  for (k in cal) return cal;
+  var ids = {}, lista = (t.match(/GTM-[A-Z0-9]{4,12}/g) || []).concat(cfg.gtm ? [cfg.gtm] : []);
+  lista.forEach(function (id) { ids[id] = 1; });
+  for (var id in ids) {
+    try {
+      var g = UrlFetchApp.fetch('https://www.googletagmanager.com/gtm.js?id=' + id, { muteHttpExceptions: true });
+      if (g.getResponseCode() < 300) { cal = missCalendarioTexto_(g.getContentText()); for (k in cal) return cal; }
+    } catch (e) {}
+  }
+  throw new Error('Não achei o calendário das ofertas na página do site');
 }
 function missProdutoSite_(cfg, handle) {
   var o = { handle: handle, nome: '', foto: '', preco: 0, url: cfg.site + '/produtos/' + handle + '/', ns_id: '' };
