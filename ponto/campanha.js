@@ -337,6 +337,7 @@ function cpTela(){
   if(typeof msSubs==='function') msSubs(c, subs);      /* v54: Missão do Dia (missao.js) */
   if(c.jogos){ for(let i=subs.length-1;i>=0;i--) if(c.jogos[subs[i][0]]===false) subs.splice(i,1); }      /* v54b: jogos desligados pela administração somem */
   if(!subs.length) return `<h2 class="secao">🎯 Campanha do mês</h2>`+cpVazio('⏸️','Nenhum jogo ligado agora','Quando a administração ligar, aparece aqui.');
+  if(typeof chTela==='function') return chTela(c, subs);      /* v55: tela inicial da campanha com os jogos explicados (camphub.js) */
   const sub = subs.some(s=>s[0]===CP.sub) ? CP.sub : subs[0][0];
   const corpo = ({missao:()=>msTela(c), raspadinha:()=>cpRaspadinha(c), bingo:()=>cpBingo(c), ouro:()=>cpOuro(c), ranking:()=>cpRanking(c), sonhos:cpSonhos})[sub]();
   return `<div class="linha entre quebra" style="gap:8px;margin-bottom:10px"><h2 class="secao" style="margin:0">🎯 Campanha do mês</h2><button class="icone" title="Atualizar" onclick="cpRecarregar()"><i class="ti ti-refresh"></i></button></div>
