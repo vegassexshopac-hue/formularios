@@ -335,6 +335,8 @@ function cpTela(){
   const subs = c.participa ? [['raspadinha','ti-ticket','Raspadinha',(c.raspadinhas||[]).length],['bingo','ti-grid-dots','Bingo'],['ouro','ti-clock-hour-3','Hora de Ouro'],['ranking','ti-trophy','Ranking'],['sonhos','ti-sparkles','Mural dos sonhos']]
                            : [['ouro','ti-clock-hour-3','Hora de Ouro'],['ranking','ti-trophy','Ranking'],['sonhos','ti-sparkles','Mural dos sonhos']];
   if(typeof msSubs==='function') msSubs(c, subs);      /* v54: Missão do Dia (missao.js) */
+  if(c.jogos){ for(let i=subs.length-1;i>=0;i--) if(c.jogos[subs[i][0]]===false) subs.splice(i,1); }      /* v54b: jogos desligados pela administração somem */
+  if(!subs.length) return `<h2 class="secao">🎯 Campanha do mês</h2>`+cpVazio('⏸️','Nenhum jogo ligado agora','Quando a administração ligar, aparece aqui.');
   const sub = subs.some(s=>s[0]===CP.sub) ? CP.sub : subs[0][0];
   const corpo = ({missao:()=>msTela(c), raspadinha:()=>cpRaspadinha(c), bingo:()=>cpBingo(c), ouro:()=>cpOuro(c), ranking:()=>cpRanking(c), sonhos:cpSonhos})[sub]();
   return `<div class="linha entre quebra" style="gap:8px;margin-bottom:10px"><h2 class="secao" style="margin:0">🎯 Campanha do mês</h2><button class="icone" title="Atualizar" onclick="cpRecarregar()"><i class="ti ti-refresh"></i></button></div>
@@ -352,12 +354,12 @@ async function cpRecarregar(){
 function cpCartaoInicio(){
   const c = cpD(); if(!c || c.erro || !c.ativa) return '';
   const r = (c.raspadinhas||[]).length, st = cpOuroAgora(c.janela), falta = Math.max(0, c.valor_dia - (c.hoje||0));
-  const ouro = st==='agora' ? `<button class="ouro" onclick="S.portalTab='campanha';CP.sub='ouro';CP.ouro=null;render()"><span class="ic">⏰</span><span><b>É Hora de Ouro!</b><small>${c.chamadas_hoje||0} de ${c.qtd_ouro} clientes chamadas</small></span></button>` : '';
-  const ms = typeof msInicio==='function' ? msInicio(c) : '';
+  const ouro = st==='agora' && (c.jogos||{}).ouro!==false ? `<button class="ouro" onclick="S.portalTab='campanha';CP.sub='ouro';CP.ouro=null;render()"><span class="ic">⏰</span><span><b>É Hora de Ouro!</b><small>${c.chamadas_hoje||0} de ${c.qtd_ouro} clientes chamadas</small></span></button>` : '';
+  const ms = typeof msInicio==='function' ? msInicio(c) : '', J = c.jogos||{};
   if(!c.participa) return (ouro||ms) ? `<div class="cp-ini">${ms}${ouro}</div>` : '';
   return `<div class="cp-ini">
     ${ms}
-    ${r?`<button class="rasp" onclick="S.portalTab='campanha';CP.sub='raspadinha';render()"><span class="ic">🎟️</span><span><b>${r===1?'1 raspadinha':r+' raspadinhas'} para raspar!</b><small>toque para raspar</small></span></button>`
+    ${J.raspadinha===false && !r ? '' : r?`<button class="rasp" onclick="S.portalTab='campanha';CP.sub='raspadinha';render()"><span class="ic">🎟️</span><span><b>${r===1?'1 raspadinha':r+' raspadinhas'} para raspar!</b><small>toque para raspar</small></span></button>`
        :`<button onclick="S.portalTab='campanha';CP.sub='raspadinha';render()"><span class="ic">🎯</span><span><b>${falta?'Faltam '+brl(falta):'Valor do dia batido!'}</b><small>${falta?'para liberar a raspadinha de hoje':'boa! 🎉'}</small></span></button>`}
     ${ouro}
     ${c.bingo?`<button style="animation-delay:60ms" onclick="S.portalTab='campanha';CP.sub='bingo';render()"><span class="ic">🎱</span><span><b>Bingo ${c.bingo.feitos}/9</b><small>${c.bingo.cheia?'cartela cheia! 🏆':c.bingo.linhas.length?'linha fechada ✅':'cartela da semana'}</small></span></button>`:''}
@@ -479,6 +481,7 @@ function cpAdmResumo(){
       <div class="cpa-b grande"><i style="width:${pctEq}%"></i><s style="left:${ritmo}%" title="onde deveria estar hoje"></s></div></section>
     <section class="c34-caixa ${precisa.length?'':'ok'}" style="margin-top:14px"><div class="c34-cab"><h3>${precisa.length?'O que precisa de você':'Tudo em dia ✨'}</h3>${precisa.length?`<span class="c34-n">${precisa.length}</span>`:''}</div>
       ${precisa.length?`<div class="c34-lista">${precisa.join('')}</div>`:`<p class="c34-vazio">Nenhum print para aprovar e nenhum prêmio para entregar. Quando alguém ganhar ou mandar print, aparece aqui.</p>`}</section>
+    ${typeof msAdmJogos==='function'?msAdmJogos():''}
     <h2 class="secao" style="margin-top:18px">Como está cada uma</h2>
     <div class="cpa-ps">${R.pessoas.map(pessoa).join('') || '<p class="suave">Ninguém participando — veja em Configurar.</p>'}</div>
     <h2 class="secao" style="margin-top:18px">Mais</h2>

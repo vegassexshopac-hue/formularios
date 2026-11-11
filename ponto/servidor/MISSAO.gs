@@ -41,6 +41,15 @@ var MISS_PADRAO = {
 CONFIG_PADRAO.push(['missao', JSON.stringify(MISS_PADRAO), 'Missão do Dia (JSON): stories das ofertas do dia — pontos, horários do rodízio, conta do Instagram, quem participa, pontos por raspadinha']);
 
 var _missMemo = null;
+
+/* ───────── liga/desliga de cada jogo da campanha (Administração › Campanha) ───────── */
+var JOGOS_NOMES = ['raspadinha', 'bingo', 'ouro', 'ranking', 'sonhos'];
+CONFIG_PADRAO.push(['camp_jogos', '{}', 'Jogos da campanha ligados/desligados (JSON): raspadinha, bingo, ouro, ranking, sonhos — false = desligado. A Missão do Dia fica em missao.ativa']);
+function campJogos_() {
+  var j = cfgJson_('camp_jogos', {}) || {}, o = {};
+  JOGOS_NOMES.forEach(function (k) { o[k] = j[k] !== false; });
+  return o;
+}
 function missInt_(v) { var n = Math.round(Number(String(v == null ? '' : v).replace(/[^\d.-]/g, ''))); return isNaN(n) || n < 0 ? 0 : n; }
 function missCfg_() {
   var c = cfgJson_('missao', {}) || {}, o = JSON.parse(JSON.stringify(MISS_PADRAO)), k;
@@ -242,7 +251,7 @@ function missTickets_(eid, premios) {
 }
 var _missRaspDisp = campRaspDisponiveis_;
 campRaspDisponiveis_ = function (eid, cfg, vendas, premios) {
-  var base = _missRaspDisp(eid, cfg, vendas, premios);
+  var base = campJogos_().raspadinha ? _missRaspDisp(eid, cfg, vendas, premios) : [];      // raspadinha de venda desligada: ficam só as da missão
   try { base = base.concat(missTickets_(eid, premios)); } catch (e) {}
   return base;
 };
@@ -266,6 +275,8 @@ function missRaspar_(c, ref) {
     return { ok: true, premio: campPremioPub_(p) };
   });
 }
+var _missBingoPremios = campBingoPremios_;
+campBingoPremios_ = function (c, cart, cfg, premios) { return campJogos_().bingo ? _missBingoPremios(c, cart, cfg, premios) : []; };      // bingo desligado não gera prêmio
 var _missCampRaspar = campRaspar_;
 campRaspar_ = function (c, data) { return /-M\d+$/.test(String(data || '')) ? missRaspar_(c, String(data)) : _missCampRaspar(c, data); };
 
@@ -416,7 +427,8 @@ function missResumo_(c) {
 var _missCampResumo = campResumo_;
 campResumo_ = function (c) {
   var o = _missCampResumo(c);
-  try { o.missao = missResumo_(c); if (o.ativa && !o.participa && o.missao.raspadinhas) o.raspadinhas = o.missao.raspadinhas; }
+  try { o.jogos = campJogos_(); if (!o.jogos.bingo) { delete o.bingo; o.bingo_novos = []; } } catch (e0) {}
+  try { o.missao = missResumo_(c); if (o.jogos) o.jogos.missao = !!o.missao.ativa; if (o.ativa && !o.participa && o.missao.raspadinhas) o.raspadinhas = o.missao.raspadinhas; }
   catch (e) { o.missao = { erro: String(e && e.message || e) }; }
   return o;
 };
@@ -434,6 +446,11 @@ rodar_ = function (req) {
       return r;
     } catch (e) { return { ok: false, erro: String(e && e.message || e) }; }
   }
+  if (req && req.a === 'campanha') {
+    var J = campJogos_(), qual = { print: 'bingo', ouro: 'ouro', chamei: 'ouro', ranking: 'ranking', sonho: 'sonhos' }[req.op];
+    if (qual === 'ranking' && J.sonhos) qual = '';                         // o mural usa a mesma chamada do ranking
+    if (qual && !J[qual]) return { ok: false, erro: 'Esse jogo está desligado no momento' };
+  }
   return _missRodar(req);
 };
 
@@ -445,11 +462,22 @@ ADMIN.admMissao = function (req) {
     if (cfg.ativa) { try { missGarantirOfertas_(cfg, false); } catch (e) {} }
     var ctx = missCtx_(), hoje = ctx.hoje, desde = campDia_(hoje, -35);
     if (cfg.ativa && !missDomingo_(hoje) && hoje >= cfg.inicio && !(ctx.ofertas[hoje] || []).length) aviso = 'Não consegui ler as ofertas de hoje no site. Toque em "Buscar no site de novo" ou cole os links dos produtos.';
-    return { ok: true, cfg: cfg, ia: missIaLigada_(), hoje: hoje, aviso: aviso, ofertas: ctx.ofertas[hoje] || [], origem: (ler_('MissaoOfertas').filter(function (r) { return r.data === hoje; })[0] || {}).origem || '',
+    var jg = campJogos_(); jg.missao = !!cfg.ativa;
+    return { ok: true, cfg: cfg, jogos: jg, ia: missIaLigada_(), hoje: hoje, aviso: aviso, ofertas: ctx.ofertas[hoje] || [], origem: (ler_('MissaoOfertas').filter(function (r) { return r.data === hoje; })[0] || {}).origem || '',
              ranking: missRanking_(ctx), campeas: missCampeas_(ctx),
              stories: ctx.stories.filter(function (s) { return s.data >= desde; }).sort(function (a, b) { return String(b.post_em).localeCompare(String(a.post_em)); }).map(function (s) { return missStoryPub_(cfg, s); }),
              escala: ctx.part.map(function (c) { return { id: c.id, nome: campPrimeiro_(c.nome), horario: missHorario_(cfg, ctx.part, c.id, hoje), sugerida: missSugerida_(ctx.part, c.id, hoje, ctx.ofertas[hoje] || []) }; }),
              colaboradoras: colabs_().filter(function (c) { return c.ativa === 'SIM' && !/teste/i.test(c.nome); }).map(function (c) { return { id: c.id, nome: c.nome }; }) };
+  }
+  if (op === 'jogos') {
+    var vj = req.valor || {}, aj = cfgJson_('camp_jogos', {}) || {};
+    JOGOS_NOMES.forEach(function (k) { if (vj[k] != null) aj[k] = !!vj[k]; });
+    setCfg_('camp_jogos', JSON.stringify(aj));
+    if (vj.missao != null) { var am = cfgJson_('missao', {}) || {}; am.ativa = !!vj.missao; setCfg_('missao', JSON.stringify(am)); }
+    _missMemo = null;
+    log_('Administração', 'jogos da campanha', JSON.stringify(vj));
+    var jj = campJogos_(); jj.missao = !!missCfg_().ativa;
+    return { ok: true, jogos: jj };
   }
   if (op === 'decidir') {
     var s = ler_('MissaoStories').filter(function (x) { return x.id === req.id; })[0];

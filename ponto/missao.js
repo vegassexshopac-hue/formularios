@@ -44,6 +44,13 @@ const MS = { adm:null, escolha:null, alvo:null, cfgAberta:false, _c:{} };
 .ms-nums label{font-size:11px;font-weight:700;color:var(--creme2);display:block}.ms-nums input{width:100%;padding:7px 6px}
 .ms-conf{display:grid;grid-template-columns:84px 1fr;gap:12px;background:#fff;border:2px solid #F5B524;border-radius:16px;padding:10px;animation:cpSobe .3s both}
 .ms-conf img{width:84px;height:140px;object-fit:cover;border-radius:10px;background:var(--veludo2);cursor:zoom-in}
+.ms-jg{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.ms-jg button{display:flex;align-items:center;gap:10px;text-align:left;font:inherit;background:#fff;border:1px solid var(--linha2);border-radius:16px;padding:10px 12px;cursor:pointer;opacity:.6;transition:transform .15s var(--mola),opacity .2s}
+.ms-jg button.on{opacity:1;border-color:var(--ok)}.ms-jg button:hover{transform:translateY(-2px)}.ms-jg button:active{transform:scale(.97)}
+.ms-jg .em{font-size:24px}.ms-jg b{display:block;font-size:14.5px}.ms-jg small{color:var(--creme2);font-size:12px}
+.ms-jg .chave{flex:none;width:42px;height:24px;border-radius:99px;background:var(--veludo2);position:relative;transition:background .2s}
+.ms-jg .chave::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s var(--mola)}
+.ms-jg button.on .chave{background:var(--ok)}.ms-jg button.on .chave::after{transform:translateX(18px)}
 .ms-esc{display:flex;gap:8px;flex-wrap:wrap}.ms-esc span{background:#fff;border:1px solid var(--linha2);border-radius:12px;padding:6px 10px;font-size:13px}
 @media(max-width:560px){.ms-nums{grid-template-columns:repeat(3,minmax(0,1fr))}.ms-of{grid-template-columns:repeat(2,1fr)}}`;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
@@ -180,6 +187,19 @@ async function msAdmCarregar(){
 }
 /* recarrega junto com a campanha (botão Atualizar zera CP.adm) */
 if(typeof cpAdmCarregar === 'function'){ const _cpAdmCarregarMs = cpAdmCarregar; cpAdmCarregar = function cpAdmCarregar(){ if(!MS._c.adm){ MS.adm = null; msAdmCarregar(); } return _cpAdmCarregarMs.apply(this, arguments); }; }
+/* v54b: liga/desliga de cada jogo da campanha */
+const MS_JOGOS = [['missao','📲','Missão do Dia','stories das ofertas do dia'],['raspadinha','🎟️','Raspadinha do Dia','bateu o valor do dia, raspa'],['bingo','🎱','Bingo de Vendas','cartela da semana'],['ouro','⏰','Hora de Ouro','chamar clientes sumidas'],['ranking','🏆','Ranking da semana','quem vendeu mais'],['sonhos','💭','Mural dos Sonhos','o motivo de cada uma']];
+function msAdmJogos(){
+  if(!MS.adm){ msAdmCarregar(); return ''; }
+  const J = MS.adm.jogos; if(!J) return '';
+  return `<h2 class="secao" style="margin-top:18px">Jogos ligados</h2><div class="ms-jg">${MS_JOGOS.map(([k,em,n,d])=>`<button class="${J[k]?'on':''}" id="ms-jg-${k}" onclick="msAdmJogo('${k}',${!J[k]})" title="${J[k]?'Toque para desligar':'Toque para ligar'}"><span class="em">${em}</span><span class="cresce"><b>${n}</b><small>${J[k]?d:'desligado — a equipe não vê'}</small></span><i class="chave"></i></button>`).join('')}</div>
+    <p class="apagado" style="font-size:12.5px;margin:6px 2px 0">Jogo desligado some do portal da equipe na hora e para de gerar prêmio. O que já foi ganho continua guardado.</p>`;
+}
+async function msAdmJogo(k, ligar){
+  try{ const r = await msAdmApi('jogos', {valor:{[k]:ligar}}); MS.adm.jogos = r.jogos; if(MS.adm.cfg) MS.adm.cfg.ativa = r.jogos.missao;
+    toast((MS_JOGOS.find(x=>x[0]===k)||[])[2]+(ligar?' ligado ✔':' desligado')); render(); }
+  catch(e){ toast(e.message, true); }
+}
 function msAdmFila(){
   const A = MS.adm; if(!A || A.erro) return [];
   const f = [];

@@ -113,9 +113,9 @@ document.write('<script src="app29.js?v=29"><\/script>');
 /* v30: ponto pelo celular — QR Code no computador da loja + selfie no celular (app30.js) */
 document.write('<script src="app30.js?v=30"><\/script>');
 /* v31: campanha do mês — raspadinha do dia, bingo de vendas, hora de ouro, ranking da semana e mural dos sonhos (campanha.js) */
-document.write('<script src="campanha.js?v=54"><\/script>');
+document.write('<script src="campanha.js?v=54c"><\/script>');
 /* v54: Missão do Dia — stories das Ofertas do Dia do site valendo pontos, print conferido por IA, pontos viram raspadinha (missao.js; servidor MISSAO.gs) */
-document.write('<script src="missao.js?v=54"><\/script>');
+document.write('<script src="missao.js?v=54c"><\/script>');
 /* v32: portal mais rápido — abre na hora com os dados guardados no aparelho e atualiza sozinho; arquivos guardados (sw.js) (app32.js) */
 document.write('<script src="app32.js?v=32"><\/script>');
 /* v33: vendas da Kommo na Arena — "Acabou de vender", flash, nº de vendas e ticket (app33.js) */
