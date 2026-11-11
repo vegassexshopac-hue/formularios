@@ -35,6 +35,7 @@ const MS = { adm:null, escolha:null, alvo:null, cfgAberta:false, _c:{} };
 .ms-rk .sub{grid-column:2/4;font-size:12px;color:var(--creme2);display:flex;gap:9px;flex-wrap:wrap}
 .ms-rk .tr{grid-column:1/4;height:8px;border-radius:99px;background:var(--veludo2);overflow:hidden;margin-top:5px}
 .ms-rk .tr i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--vermelho),#F5B524);transform-origin:left;animation:cpCresce 1s var(--mola) both}
+.ms-rk-ev{grid-column:1/4;margin-top:8px;border-top:1px solid var(--linha);padding-top:4px;animation:cpSobe .25s both}
 .ms-ex{display:flex;gap:10px;align-items:center;padding:7px 2px;border-bottom:1px solid var(--linha);font-size:13.5px}
 .ms-ex b{flex:none;min-width:44px;color:var(--ok)}.ms-ex small{color:var(--creme3);flex:none}
 .ms-regras{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:10px}
@@ -152,11 +153,13 @@ function msMeusNumeros(m){
 function msRanking(m, eu){
   const R = m.ranking||[]; if(!R.length) return '';
   eu = eu === undefined ? S.sess?.eid : eu;
-  const top = Math.max(1, ...R.map(p=>p.mes)), med = ['🥇','🥈','🥉'];
-  return `<h3 class="secao" style="margin-top:16px">🏆 Ranking da Missão no mês</h3><div class="cp-rank">${R.map((p,i)=>`<div class="ms-rk" style="animation-delay:${i*70}ms;${p.id===eu?'outline:3px solid var(--vermelho)':''}">
-      <span class="pos">${p.mes?(med[i]||'#'+(i+1)):'·'}</span><span class="nm">${esc(p.nome)} ${p.hoje==='ok'?'<span class="cp-ok">postou hoje</span>':p.hoje==='conferir'?'<span class="cp-pend">em conferência</span>':''}</span><span class="vl">${p.mes} pts</span>
+  const top = Math.max(1, ...R.map(p=>p.mes)), med = ['🥇','🥈','🥉'], ic = {postou:'📲', engajamento:'👁', sequencia:'🔥', venda:'🛍️', campea:'🏆'};
+  return `<h3 class="secao" style="margin-top:16px">🏆 Ranking da Missão no mês <small class="apagado" style="font-weight:600;font-size:12.5px">toque no nome para ver de onde vieram os pontos</small></h3><div class="cp-rank">${R.map((p,i)=>{ const ab = MS.rkAberto===p.id, ev = p.ev||[];
+    return `<div class="ms-rk" role="button" tabindex="0" aria-expanded="${ab}" onclick="MS.rkAberto=${ab?'null':`'${p.id}'`};render()" style="cursor:pointer;animation-delay:${i*70}ms;${p.id===eu?'outline:3px solid var(--vermelho)':''}">
+      <span class="pos">${p.mes?(med[i]||'#'+(i+1)):'·'}</span><span class="nm">${esc(p.nome)} ${p.hoje==='ok'?'<span class="cp-ok">postou hoje</span>':p.hoje==='conferir'?'<span class="cp-pend">em conferência</span>':''}</span><span class="vl">${p.mes} pts <i class="ti ti-chevron-${ab?'up':'down'}" style="font-size:15px;opacity:.5"></i></span>
       <span class="sub"><span>📲 ${p.stories} stor${p.stories===1?'y':'ies'}</span><span>🛍️ ${p.vendas} venda${p.vendas===1?'':'s'} da oferta</span><span>🔥 ${p.sequencia} seguido${p.sequencia===1?'':'s'}</span><span>📅 ${p.semana} na semana</span></span>
-      <div class="tr"><i style="width:${p.mes/top*100}%;animation-delay:${i*70}ms"></i></div></div>`).join('')}</div>`;
+      <div class="tr"><i style="width:${p.mes/top*100}%;animation-delay:${i*70}ms"></i></div>
+      ${ab?`<div class="ms-rk-ev">${ev.length?ev.map(e=>`<div class="ms-ex"><b>+${e.pts}</b><span class="cresce">${ic[e.tipo]||'⭐'} ${esc(e.txt)}</span><small>${cpDia(e.data)}</small></div>`).join(''):`<p class="apagado" style="margin:6px 0 0;font-size:13px">${p.mes?'Atualize a tela para ver o detalhe.':'Ainda sem pontos este mês.'}</p>`}</div>`:''}</div>`; }).join('')}</div>`;
 }
 async function msCopiar(t){ try{ await navigator.clipboard.writeText(t); }catch(e){ const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); } toast('Link copiado ✔ Cole na figurinha de link do story.'); }
 function msPegar(op, data){ MS.alvo = {op, data}; const i = $('#ms-arq'); if(i){ i.value = ''; i.click(); } }
