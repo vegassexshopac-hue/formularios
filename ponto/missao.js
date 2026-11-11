@@ -63,9 +63,12 @@ const msPts = n => (n===1 ? '1 ponto' : (n||0)+' pontos');
 const msFotoG = u => String(u||'').replace('sz=w800', 'sz=w1600');
 function msPendentes(m){
   if(!m || !m.participa || !m.comecou) return 0;
-  const postar = (m.ofertas||[]).length && (!m.story || m.story.status==='recusado') ? 1 : 0;
+  const postar = msSemStory(m) ? 1 : 0;
   return postar + (m.numeros||[]).filter(s=>s.status==='ok' && (!s.num_status || s.num_status==='recusado')).length;
 }
+const msMeus = m => (m.stories||[]).filter(s=>s.status==='ok'||s.status==='conferir');
+const msSemStory = m => !!(m.ofertas||[]).length && !m.domingo && !msMeus(m).length;
+const msLivres = m => (m.ofertas||[]).filter(o=>o.minha!=='ok' && o.minha!=='conferir');
 function msNums(s){ return `<span>👁 ${s.views}</span><span>💬 ${s.respostas}</span><span>🔗 ${s.cliques}</span><span>❤️ ${s.reacoes}</span><span>↗️ ${s.compart}</span>`; }
 
 /* ganchos chamados pelo campanha.js */
@@ -76,9 +79,10 @@ function msSubs(c, subs){
 function msInicio(c){
   const m = msD(); if(!m || !m.ativa || !m.comecou || !m.participa) return '';
   const ir = `onclick="S.portalTab='campanha';CP.sub='missao';render()"`;
-  const semStory = (m.ofertas||[]).length && (!m.story || m.story.status==='recusado');
+  const semStory = msSemStory(m), mais = !semStory && !m.domingo && msLivres(m).length;
   const nums = (m.numeros||[]).filter(s=>s.status==='ok' && (!s.num_status || s.num_status==='recusado')).length;
   if(semStory) return `<button class="rasp" ${ir}><span class="ic">📲</span><span><b>Missão do Dia: poste o seu story</b><small>seu horário hoje: ${esc(m.horario||'livre')} · vale ${msPts(m.regras.postou)}</small></span></button>`;
+  if(mais && m.ofertas.length) return `<button class="rasp" ${ir}><span class="ic">📲</span><span><b>Quer mais pontos? Poste outro produto</b><small>${msMeus(m).length} de ${m.ofertas.length} postados hoje · cada story a mais vale +${m.regras.extra}</small></span></button>`;
   if(nums) return `<button class="ouro" ${ir}><span class="ic">📊</span><span><b>Mande os números do seu story</b><small>${nums===1?'1 story esperando':nums+' stories esperando'} o print</small></span></button>`;
   return `<button ${ir}><span class="ic">⭐</span><span><b>${msPts(m.pontos_mes)} na Missão</b><small>faltam ${m.faltam} para a próxima raspadinha</small></span></button>`;
 }
@@ -97,43 +101,45 @@ function msTela(c){
     const rs = m.raspadinhas||[];
     if(rs.length) h += `<div class="cp-grade" style="margin-bottom:12px">${rs.map((r,i)=>`<button class="cp-tick" style="animation-delay:${i*70}ms" onclick="cpAbrirRaspa('${r.data}')"><span class="em">🎟️</span><b>${cpRaspNome(r.data)}</b><small>toque para raspar</small></button>`).join('')}</div>`;
     h += msHoje(m);
-    h += msMeusNumeros(m);
+    if(m.numeros_ligado) h += msMeusNumeros(m);
   } else h += `<div class="nota info" style="margin-bottom:12px"><i class="ti ti-info-circle"></i><div>Você não está na Missão do Dia este mês, mas pode acompanhar o ranking.</div></div>`;
   h += msRanking(m);
   if(m.participa && (m.extrato||[]).length) h += `<h3 class="secao" style="margin-top:16px">De onde vieram os seus pontos</h3><div class="cartao pad">${m.extrato.map(e=>`<div class="ms-ex"><b>+${e.pts}</b><span class="cresce">${esc(e.txt)}</span><small>${cpDia(e.data)}</small></div>`).join('')}</div>`;
-  const fx = (P.views||[]).map(f=>`<div><b>+${f.pts}</b>story com ${f.min} visualizações ou mais</div>`).join('');
+  const fx = m.numeros_ligado ? (P.views||[]).map(f=>`<div><b>+${f.pts}</b>story com ${f.min} visualizações ou mais</div>`).join('') + `<div><b>+${P.resposta}</b>cada resposta/direct que o story gerou</div><div><b>+${P.clique}</b>cada clique no link</div>` : '';
   h += `<details class="cpa-como" ${m.participa && !m.pontos_mes?'open':''}><summary>❓ Como ganhar pontos</summary><div class="ms-regras">
-      <div><b>+${P.postou}</b>postou o story da oferta do dia</div>
-      <div><b>+${P.sequencia}</b>a cada ${P.sequencia_dias} dias seguidos postando</div>
-      <div><b>+${P.resposta}</b>cada resposta/direct que o story gerou</div>
-      <div><b>+${P.clique}</b>cada clique no link</div>
-      <div><b>+${P.reacao}</b>cada curtida ou reação</div>
-      <div><b>+${P.compart}</b>cada compartilhamento</div>${fx}
+      <div><b>+${P.postou}</b>1º story do dia de um produto da oferta</div>
+      <div><b>+${P.extra}</b>cada story a mais no mesmo dia (um por produto, até os ${(m.ofertas||[]).length||6} da oferta)</div>
+      <div><b>+${P.sequencia}</b>a cada ${P.sequencia_dias} dias seguidos postando</div>${fx}
       <div><b>+${P.venda}</b>vendeu um produto da oferta do dia (conta sozinho pelo PDV)</div>
-      <div><b>+${P.campea}</b>story campeão da semana</div></div>
-    <p class="apagado" style="font-size:12.5px;margin:10px 0 0">Cada story soma no máximo ${P.teto_story} pontos de engajamento. O mesmo print não vale duas vezes. O horário roda todo dia, então todas passam pelo horário bom. Os números podem ser mandados até ${m.prazo_dias} dias depois do story.</p></details>
+      <div><b>+${P.campea}</b>quem mais somou pontos de story na semana</div></div>
+    <p class="apagado" style="font-size:12.5px;margin:10px 0 0">Todos os produtos da oferta são livres para todas. Cada produto vale uma vez por dia para cada uma. O mesmo print não vale duas vezes.</p></details>
     <input type="file" accept="image/*" id="ms-arq" hidden onchange="msEnviar(this)">`;
   return h;
 }
 function msHoje(m){
-  const s = m.story, of = m.ofertas||[], P = m.regras;
-  if(s && s.status==='ok') return `<div class="ms-passo" style="border-color:var(--ok)"><h4>✅ Story de hoje valendo <span class="ms-pts">+${P.postou}</span></h4><div class="ms-st" style="border:0;padding:0"><img src="${esc(s.url_post)}" alt="" onclick="window.open('${esc(msFotoG(s.url_post))}','_blank')"><div><b>${esc(s.produto)}</b><br><small class="apagado">Agora é vender esse produto (+${P.venda} por venda) e mandar o print dos números mais tarde ou amanhã.</small></div></div></div>`;
-  if(s && s.status==='conferir') return `<div class="ms-passo" style="border-color:#F5B524"><h4>⏳ Story enviado — esperando a conferência</h4><div class="ms-st" style="border:0;padding:0"><img src="${esc(s.url_post)}" alt="" onclick="window.open('${esc(msFotoG(s.url_post))}','_blank')"><div><b>${esc(s.produto)}</b><br><small class="apagado">${esc(s.obs||'A administração confere e os pontos entram.')}</small><br><small class="apagado">Mandou a foto errada? Dá para trocar.</small><div class="bts" style="margin-top:6px"><button class="btn pri" onclick="MS.escolha='${s.handle}';msPegar('postar')"><i class="ti ti-camera"></i> Mandar outro print</button></div></div></div></div>`;
-  if(m.domingo) return cpVazio('😴', 'Hoje não tem missão', 'A Missão do Dia roda de segunda a sábado.');
-  if(!of.length) return cpVazio('🕐', 'As ofertas de hoje ainda não chegaram', 'Toque em atualizar daqui a pouco. Se continuar assim, avise a administração.');
-  const livre = o => !o.tomada || o.tomada==='você';
-  if(!MS.escolha || !of.some(o=>o.handle===MS.escolha && livre(o))) MS.escolha = (of.find(o=>o.handle===m.sugerida && livre(o)) || of.find(livre) || {}).handle || null;
-  const esc1 = of.find(o=>o.handle===MS.escolha);
-  const rec = s && s.status==='recusado' ? `<div class="nota" style="border-color:var(--vermelho);margin-bottom:10px"><i class="ti ti-alert-triangle"></i><div><b>O print de antes não valeu:</b> ${esc(s.obs||'mande de novo')}</div></div>` : '';
-  return `${rec}<div class="ms-passo"><h4><i class="n">1</i> Escolha o produto do seu story</h4>
+  const of = m.ofertas||[], P = m.regras, L = m.stories||[];
+  const img = s => `<img src="${esc(s.url_post)}" alt="" onclick="window.open('${esc(msFotoG(s.url_post))}','_blank')">`;
+  const feitos = L.filter(s=>s.status==='ok' || s.status==='conferir').map(s => s.status==='ok'
+    ? `<div class="ms-st">${img(s)}<div><div class="linha entre" style="gap:8px"><b>✅ ${esc(s.produto)}</b><span class="ms-pts">+${s.pontos}</span></div><small class="apagado">story valendo · agora é vender (+${P.venda} por venda)</small></div></div>`
+    : `<div class="ms-st" style="border-color:#F5B524">${img(s)}<div><b>⏳ ${esc(s.produto)}</b><br><small class="apagado">${esc(s.obs||'A administração confere e os pontos entram.')}</small><br><small class="apagado">Mandou a foto errada? Dá para trocar.</small><div class="bts" style="margin-top:6px"><button class="btn pri" onclick="MS.escolha='${s.handle}';msPegar('postar')"><i class="ti ti-camera"></i> Mandar outro print</button></div></div></div>`).join('');
+  const nOk = L.filter(s=>s.status==='ok').length;
+  let h = feitos ? `<div class="ms-passo" style="border-color:var(--ok)"><h4>📲 Seus stories de hoje <span class="ms-pts">${nOk} valendo</span></h4><div class="cp-lista">${feitos}</div></div>` : '';
+  if(m.domingo) return h + cpVazio('😴', 'Hoje não tem missão', 'A Missão do Dia roda de segunda a sábado.');
+  if(!of.length) return h + cpVazio('🕐', 'As ofertas de hoje ainda não chegaram', 'Toque em atualizar daqui a pouco. Se continuar assim, avise a administração.');
+  const livres = msLivres(m), livre = o => o.minha!=='ok' && o.minha!=='conferir';
+  if(!livres.length) return h + cpVazio('🏆', `Você postou os ${of.length} produtos de hoje!`, 'Missão completa. Amanhã tem oferta nova.');
+  if(!MS.escolha || !livres.some(o=>o.handle===MS.escolha)) MS.escolha = (livres.find(o=>o.handle===m.sugerida) || livres[0]).handle;
+  const esc1 = of.find(o=>o.handle===MS.escolha), vale = m.proximo || P.postou, extra = feitos ? true : false;
+  const rec = L.filter(s=>s.status==='recusado' && livre(of.find(o=>o.handle===s.handle)||{})).slice(0,1).map(s=>`<div class="nota" style="border-color:var(--vermelho);margin-bottom:10px"><i class="ti ti-alert-triangle"></i><div><b>O print de ${esc(s.produto)} não valeu:</b> ${esc(s.obs||'mande de novo')}</div></div>`).join('');
+  return `${h}${rec}<div class="ms-passo"><h4><i class="n">1</i> ${extra?'Quer mais pontos? Escolha outro produto':'Escolha o produto do seu story'}</h4>
       <div class="ms-of">${of.map((o,i)=>`<button class="ms-o ${o.handle===MS.escolha?'on':''} ${livre(o)?'':'fora'}" style="animation-delay:${i*50}ms" ${livre(o)?`onclick="MS.escolha='${o.handle}';render()"`:'disabled'} title="${esc(o.nome)}">
-        <span class="ft" style="background-image:url('${esc(o.foto)}')"></span>${!livre(o)?`<span class="tag tm">${esc(o.tomada)} já postou</span>`:o.handle===m.sugerida?'<span class="tag">sugestão pra você</span>':''}
-        <span class="tx"><b>${esc(o.nome)}</b><small>${o.preco?brl(o.preco)+' · ':''}10% OFF hoje</small></span></button>`).join('')}</div>
-      <p class="apagado" style="font-size:12.5px;margin:8px 0 0">Cada produto fica com uma vendedora. Não tem na sua loja? Escolha outro que esteja livre.</p></div>
-    <div class="ms-passo"><h4><i class="n">2</i> Poste no Instagram da loja ${m.horario?`às ${esc(m.horario)}`:''}</h4>
+        <span class="ft" style="background-image:url('${esc(o.foto)}')"></span>${!livre(o)?`<span class="tag tm">${o.minha==='ok'?'você postou ✔':'em conferência'}</span>`:o.handle===m.sugerida&&!extra?'<span class="tag">sugestão pra você</span>':''}
+        <span class="tx"><b>${esc(o.nome)}</b><small>${o.preco?brl(o.preco)+' · ':''}10% OFF hoje${(o.outras||[]).length?' · '+o.outras.length+' já postou':''}</small></span></button>`).join('')}</div>
+      <p class="apagado" style="font-size:12.5px;margin:8px 0 0">Todos os produtos são livres. O 1º story do dia vale +${P.postou} e cada produto a mais vale +${P.extra}.</p></div>
+    <div class="ms-passo"><h4><i class="n">2</i> Poste no Instagram da loja ${m.horario&&!extra?`às ${esc(m.horario)}`:''}</h4>
       <p style="margin:0 0 8px;font-size:13.5px">Story em <b>@${esc(m.conta)}</b>, do seu jeito, mostrando <b>${esc(esc1?esc1.nome:'o produto')}</b> e avisando que hoje ele está com 10% OFF no site. Coloque a figurinha de link do produto.</p>
       <div class="ms-acao">${esc1?`<button class="btn" onclick="msCopiar('${esc(esc1.url)}')"><i class="ti ti-link"></i> Copiar o link do produto</button><a class="btn" href="${esc(esc1.url)}" target="_blank" rel="noopener"><i class="ti ti-external-link"></i> Ver no site</a>`:''}</div></div>
-    <div class="ms-passo"><h4><i class="n">3</i> Mande o print do story no ar <span class="ms-pts">+${P.postou}</span></h4>
+    <div class="ms-passo"><h4><i class="n">3</i> Mande o print do story no ar <span class="ms-pts">+${vale}</span></h4>
       <p style="margin:0 0 8px;font-size:13.5px">Abra o story já publicado e tire o print (tem que aparecer o nome da loja no topo). ${m.ia?'O portal confere na hora.':'A administração confere.'}</p>
       <button class="btn pri" ${esc1?'':'disabled'} onclick="msPegar('postar')"><i class="ti ti-camera"></i> Mandar o print do story</button></div>`;
 }
@@ -142,10 +148,10 @@ function msMeusNumeros(m){
   if(!L.length) return '';
   const it = (s,i) => {
     let corpo, bt = '';
-    if(s.num_status==='ok'){ corpo = `<div class="nums">${msNums(s)}</div>`; bt = `<button class="btn p" onclick="msPegar('numeros','${s.data}')"><i class="ti ti-refresh"></i> Atualizar com print novo</button>`; }
+    if(s.num_status==='ok'){ corpo = `<div class="nums">${msNums(s)}</div>`; bt = `<button class="btn p" onclick="msPegar('numeros','${s.data}','${esc(s.id)}')"><i class="ti ti-refresh"></i> Atualizar com print novo</button>`; }
     else if(s.num_status==='conferir'){ corpo = `<small class="apagado">⏳ print dos números esperando a conferência</small>`; }
     else { corpo = `${s.num_status==='recusado'?`<small style="color:var(--bad);font-weight:700">${esc(s.obs||'O print não valeu')}</small><br>`:''}<small class="apagado">Abra o story, deslize para cima e tire o print das visualizações. Até ${cpDia(s.prazo)}.</small>`;
-           bt = `<button class="btn pri" onclick="msPegar('numeros','${s.data}')"><i class="ti ti-chart-bar"></i> Mandar o print dos números</button>`; }
+           bt = `<button class="btn pri" onclick="msPegar('numeros','${s.data}','${esc(s.id)}')"><i class="ti ti-chart-bar"></i> Mandar o print dos números</button>`; }
     return `<div class="ms-st" style="animation-delay:${i*40}ms"><img src="${esc(s.url_post)}" alt="" onclick="window.open('${esc(msFotoG(s.url_post))}','_blank')">
       <div><div class="linha entre" style="gap:8px"><b>${esc(s.produto)}</b><span class="ms-pts">+${s.pontos}</span></div><small class="apagado">story de ${cpDia(s.data)}</small><br>${corpo}<div class="bts">${bt}</div></div></div>`; };
   return `<h3 class="secao" style="margin-top:14px">📊 Números dos seus stories</h3><div class="cp-lista">${L.map(it).join('')}</div>`;
@@ -156,24 +162,24 @@ function msRanking(m, eu){
   const top = Math.max(1, ...R.map(p=>p.mes)), med = ['🥇','🥈','🥉'], ic = {postou:'📲', engajamento:'👁', sequencia:'🔥', venda:'🛍️', campea:'🏆'};
   return `<h3 class="secao" style="margin-top:16px">🏆 Ranking da Missão no mês <small class="apagado" style="font-weight:600;font-size:12.5px">toque no nome para ver de onde vieram os pontos</small></h3><div class="cp-rank">${R.map((p,i)=>{ const ab = MS.rkAberto===p.id, ev = p.ev||[];
     return `<div class="ms-rk" role="button" tabindex="0" aria-expanded="${ab}" onclick="MS.rkAberto=${ab?'null':`'${p.id}'`};render()" style="cursor:pointer;animation-delay:${i*70}ms;${p.id===eu?'outline:3px solid var(--vermelho)':''}">
-      <span class="pos">${p.mes?(med[i]||'#'+(i+1)):'·'}</span><span class="nm">${esc(p.nome)} ${p.hoje==='ok'?'<span class="cp-ok">postou hoje</span>':p.hoje==='conferir'?'<span class="cp-pend">em conferência</span>':''}</span><span class="vl">${p.mes} pts <i class="ti ti-chevron-${ab?'up':'down'}" style="font-size:15px;opacity:.5"></i></span>
+      <span class="pos">${p.mes?(med[i]||'#'+(i+1)):'·'}</span><span class="nm">${esc(p.nome)} ${p.hoje==='ok'?`<span class="cp-ok">${p.hoje_n>1?p.hoje_n+' stories hoje':'postou hoje'}</span>`:p.hoje==='conferir'?'<span class="cp-pend">em conferência</span>':''}</span><span class="vl">${p.mes} pts <i class="ti ti-chevron-${ab?'up':'down'}" style="font-size:15px;opacity:.5"></i></span>
       <span class="sub"><span>📲 ${p.stories} stor${p.stories===1?'y':'ies'}</span><span>🛍️ ${p.vendas} venda${p.vendas===1?'':'s'} da oferta</span><span>🔥 ${p.sequencia} seguido${p.sequencia===1?'':'s'}</span><span>📅 ${p.semana} na semana</span></span>
       <div class="tr"><i style="width:${p.mes/top*100}%;animation-delay:${i*70}ms"></i></div>
       ${ab?`<div class="ms-rk-ev">${ev.length?ev.map(e=>`<div class="ms-ex"><b>+${e.pts}</b><span class="cresce">${ic[e.tipo]||'⭐'} ${esc(e.txt)}</span><small>${cpDia(e.data)}</small></div>`).join(''):`<p class="apagado" style="margin:6px 0 0;font-size:13px">${p.mes?'Atualize a tela para ver o detalhe.':'Ainda sem pontos este mês.'}</p>`}</div>`:''}</div>`; }).join('')}</div>`;
 }
 async function msCopiar(t){ try{ await navigator.clipboard.writeText(t); }catch(e){ const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); } toast('Link copiado ✔ Cole na figurinha de link do story.'); }
-function msPegar(op, data){ MS.alvo = {op, data}; const i = $('#ms-arq'); if(i){ i.value = ''; i.click(); } }
+function msPegar(op, data, id){ MS.alvo = {op, data, id}; const i = $('#ms-arq'); if(i){ i.value = ''; i.click(); } }
 async function msEnviar(inp){
   const f = inp.files && inp.files[0], a = MS.alvo; if(!f || !a) return;
   const m = msD(), antes = m ? m.pontos_mes : 0, rasp = m ? (m.raspadinhas||[]).length : 0;
   cpModal(a.op==='postar'?'📲 Conferindo o seu story':'📊 Lendo os números', `<div class="cp-vazio"><span class="em">🔎</span><b>${m && m.ia?'O portal está olhando o seu print…':'Enviando o seu print…'}</b><p style="margin:4px 0 0;font-size:13.5px">Leva uns segundos. Não feche esta tela.</p></div>`);
   try{
     const img = await cpFoto(f, 1600);
-    const r = await api('missao', {eid:S.sess.eid, ...S.sess.cred, op:a.op, handle:MS.escolha, data:a.data, img});
+    const r = await api('missao', {eid:S.sess.eid, ...S.sess.cred, op:a.op, handle:MS.escolha, data:a.data, id:a.id, img});
     cpAtualizar(r.campanha); fecharModal();
     const d = msD(), ganhou = d ? d.pontos_mes - antes : 0, novas = d ? (d.raspadinhas||[]).length - rasp : 0;
     if(r.status==='ok'){
-      toast(a.op==='postar' ? `Story conferido ✔ +${ganhou||d.regras.postou} pontos!` : `Números lidos ✔ ${r.numeros.views} visualizações${ganhou>0?' · +'+ganhou+' pontos':''}`);
+      toast(a.op==='postar' ? `Story conferido ✔ +${ganhou>0?ganhou:d.regras.postou} pontos!${msLivres(d).length?' Quer mais? Escolha outro produto.':''}` : `Números lidos ✔ ${r.numeros.views} visualizações${ganhou>0?' · +'+ganhou+' pontos':''}`);
       cpConfete(a.op==='postar'?60:40);
       if(novas > 0) setTimeout(()=>{ toast('🎟️ Você juntou pontos e liberou uma RASPADINHA!'); cpConfete(80); }, 2600);
     } else toast('Print recebido ✔ A administração vai conferir e os pontos entram depois.');
@@ -206,7 +212,7 @@ async function msAdmJogo(k, ligar){
 function msAdmFila(){
   const A = MS.adm; if(!A || A.erro) return [];
   const f = [];
-  A.stories.forEach(s=>{ if(s.status==='conferir') f.push({s, parte:'post'}); if(s.status==='ok' && s.num_status==='conferir') f.push({s, parte:'num'}); });
+  A.stories.forEach(s=>{ if(s.status==='conferir') f.push({s, parte:'post'}); if(A.cfg.numeros && s.status==='ok' && s.num_status==='conferir') f.push({s, parte:'num'}); });
   return f;
 }
 function msAdmPend(){ return msAdmFila().length; }
@@ -227,26 +233,26 @@ function msAdmTela(){
   if(A.erro) return `<div class="nota" style="border-color:var(--vermelho)"><i class="ti ti-plug-x"></i><div>${/desconhecida/i.test(A.erro)?'<b>Falta instalar o servidor da Missão do Dia.</b> Cole o arquivo MISSAO.gs no Apps Script e publique uma Nova versão.':esc(A.erro)}<br><button class="btn p" style="margin-top:8px" onclick="MS.adm=null;render()">Tentar de novo</button></div></div>`;
   const cfg = A.cfg, P = cfg.pontos, fila = msAdmFila();
   const nome = {}; A.escala.forEach(e=>nome[e.id]=e);
-  const hojeSt = {}; A.stories.forEach(s=>{ if(s.data===A.hoje) hojeSt[s.colaboradora_id] = s; });
+  const hojeN = {}; A.stories.forEach(s=>{ if(s.data===A.hoje){ const o = hojeN[s.colaboradora_id] = hojeN[s.colaboradora_id] || {ok:0, conf:0}; if(s.status==='ok') o.ok++; else if(s.status==='conferir') o.conf++; } });
   const conf = ({s, parte}) => parte==='post'
     ? `<div class="ms-conf"><img src="${esc(s.url_post)}" alt="" onclick="window.open('${esc(msFotoG(s.url_post))}','_blank')"><div><b>${esc(s.colaboradora)}</b> · story de ${cpDia(s.data)}<br><small>${esc(s.produto)}</small><br><small class="apagado">${esc(s.obs||'')}</small>
         <div class="linha quebra" style="gap:6px;margin-top:8px"><button class="btn pri" onclick="msAdmDecidir('${esc(s.id)}','post',true)"><i class="ti ti-check"></i> É o story, aprovar</button><button class="btn" onclick="msAdmRecusar('${esc(s.id)}','post')"><i class="ti ti-x"></i> Recusar</button></div></div></div>`
     : `<div class="ms-conf"><img src="${esc(s.url_num)}" alt="" onclick="window.open('${esc(msFotoG(s.url_num))}','_blank')"><div><b>${esc(s.colaboradora)}</b> · números do story de ${cpDia(s.data)}<br><small>${esc(s.produto)}</small><br><small class="apagado">${esc(s.obs||'')} — confira os números com o print e corrija se precisar.</small>
         ${msAdmCampos(s)}<div class="linha quebra" style="gap:6px"><button class="btn pri" onclick="msAdmDecidir('${esc(s.id)}','num',true)"><i class="ti ti-check"></i> Salvar e aprovar</button><button class="btn" onclick="msAdmRecusar('${esc(s.id)}','num')"><i class="ti ti-x"></i> Recusar</button></div></div></div>`;
-  const hoje = A.ofertas.length ? `<div class="ms-of" style="grid-template-columns:repeat(auto-fill,minmax(110px,1fr))">${A.ofertas.map(o=>{ const q = A.stories.find(s=>s.data===A.hoje && s.handle===o.handle && s.status!=='recusado');
-      return `<a class="ms-o" href="${esc(o.url)}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><span class="ft" style="background-image:url('${esc(o.foto)}')"></span>${q?`<span class="tag tm">${esc(q.colaboradora)}${q.status==='ok'?' ✔':' ⏳'}</span>`:''}<span class="tx"><b>${esc(o.nome)}</b><small>${o.preco?brl(o.preco):''}</small></span></a>`; }).join('')}</div>`
+  const hoje = A.ofertas.length ? `<div class="ms-of" style="grid-template-columns:repeat(auto-fill,minmax(110px,1fr))">${A.ofertas.map(o=>{ const q = A.stories.filter(s=>s.data===A.hoje && s.handle===o.handle && (s.status==='ok'||s.status==='conferir'));
+      return `<a class="ms-o" href="${esc(o.url)}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><span class="ft" style="background-image:url('${esc(o.foto)}')"></span>${q.length?`<span class="tag tm">${q.length===1?esc(q[0].colaboradora)+(q[0].status==='ok'?' ✔':' ⏳'):q.length+' stories'}</span>`:''}<span class="tx"><b>${esc(o.nome)}</b><small>${o.preco?brl(o.preco):''}</small></span></a>`; }).join('')}</div>`
     : cpVazio('🕐', 'Sem ofertas carregadas para hoje', esc(A.aviso||'Aos domingos a missão não roda.'));
   const st = s => `<div class="ms-st"><img src="${esc(s.url_post)}" alt="" onclick="window.open('${esc(msFotoG(s.url_post))}','_blank')"><div><div class="linha entre" style="gap:8px"><b>${esc(s.colaboradora)} · ${esc(s.produto)}</b><span class="ms-pts">+${s.pontos}</span></div>
       <small class="apagado">${cpDia(s.data)} · ${s.status==='ok'?'story aprovado'+(s.por?' ('+esc(s.por)+')':''):s.status==='conferir'?'⏳ story em conferência':'❌ story recusado'}${s.num_status==='conferir'?' · ⏳ números em conferência':s.num_status==='recusado'?' · números recusados':''}</small>
-      ${s.num_status==='ok'?`<div class="nums">${msNums(s)}</div>`:''}
-      <div class="bts">${s.status==='ok'?`<button class="btn p" onclick="msAdmEditar('${esc(s.id)}')"><i class="ti ti-pencil"></i> ${s.num_status==='ok'?'Corrigir números':'Lançar números'}</button>`:''}${s.url_num?`<button class="btn p" onclick="window.open('${esc(msFotoG(s.url_num))}','_blank')"><i class="ti ti-photo"></i> Print dos números</button>`:''}${s.status!=='recusado'?`<button class="btn p" style="color:var(--bad)" onclick="msAdmRecusar('${esc(s.id)}','post')">Recusar story</button>`:''}</div></div></div>`;
+      ${A.cfg.numeros && s.num_status==='ok'?`<div class="nums">${msNums(s)}</div>`:''}
+      <div class="bts">${A.cfg.numeros && s.status==='ok'?`<button class="btn p" onclick="msAdmEditar('${esc(s.id)}')"><i class="ti ti-pencil"></i> ${s.num_status==='ok'?'Corrigir números':'Lançar números'}</button>`:''}${s.url_num?`<button class="btn p" onclick="window.open('${esc(msFotoG(s.url_num))}','_blank')"><i class="ti ti-photo"></i> Print dos números</button>`:''}${s.status!=='recusado'?`<button class="btn p" style="color:var(--bad)" onclick="msAdmRecusar('${esc(s.id)}','post')">Recusar story</button>`:''}</div></div></div>`;
   return `${A.ia?'':`<div class="nota warn" style="margin-bottom:12px"><i class="ti ti-robot-off"></i><div><b>A leitura automática dos prints está desligada.</b> Enquanto isso, todo print chega aqui para você conferir. Para ligar: Estoque › Configurar › cole a chave da IA (a mesma que lê as notas).</div></div>`}
     ${A.aviso?`<div class="nota warn" style="margin-bottom:12px"><i class="ti ti-alert-triangle"></i><div>${esc(A.aviso)}</div></div>`:''}
     <section class="c34-caixa ${fila.length?'':'ok'}"><div class="c34-cab"><h3>${fila.length?'Prints para você conferir':'Nenhum print esperando ✨'}</h3>${fila.length?`<span class="c34-n">${fila.length}</span>`:''}</div>
       ${fila.length?`<div class="cp-lista">${fila.map(conf).join('')}</div>`:`<p class="c34-vazio">${A.ia?'A IA confere os prints sozinha. Só chega aqui o que ela não conseguir ler.':'Quando alguém mandar print, aparece aqui.'}</p>`}</section>
     <h2 class="secao" style="margin-top:18px">Hoje · ${cpDia(A.hoje)} ${A.origem?`<small class="apagado" style="font-weight:600">(ofertas vindas ${A.origem==='site'?'do site':'da administração'})</small>`:''}</h2>
     ${hoje}
-    <div class="ms-esc" style="margin-top:10px">${A.escala.map(e=>{ const s = hojeSt[e.id], o = A.ofertas.find(x=>x.handle===e.sugerida); return `<span><b>${esc(e.nome)}</b> · ⏰ ${esc(e.horario)} ${s?(s.status==='ok'?'· ✅ postou':s.status==='conferir'?'· ⏳ em conferência':'· ❌ recusado'):o?'· sugestão: '+esc(o.nome):''}</span>`; }).join('')}</div>
+    <div class="ms-esc" style="margin-top:10px">${A.escala.map(e=>{ const s = hojeN[e.id], o = A.ofertas.find(x=>x.handle===e.sugerida); return `<span><b>${esc(e.nome)}</b> · ⏰ ${esc(e.horario)} ${s&&(s.ok||s.conf)?(s.ok?`· ✅ ${s.ok} stor${s.ok===1?'y':'ies'}`:'')+(s.conf?` · ⏳ ${s.conf} em conferência`:''):o?'· sugestão: '+esc(o.nome):''}</span>`; }).join('')}</div>
     <div class="linha quebra" style="gap:8px;margin-top:10px"><button class="btn" onclick="msAdmOfertas(true)"><i class="ti ti-refresh"></i> Buscar no site de novo</button><button class="btn" onclick="msAdmColar()"><i class="ti ti-link"></i> Colar os links de hoje</button></div>
     ${msRanking({ranking:A.ranking}, '')}
     <h2 class="secao" style="margin-top:18px">Últimos stories</h2>
@@ -288,28 +294,30 @@ function msAdmColar(){
     <button class="btn pri" style="width:100%;margin-top:8px" onclick="msAdmOfertas(false, $('#ms-links').value)">Salvar as ofertas de hoje</button>`);
 }
 function msMsgEquipe(cfg){
-  const P = cfg.pontos, fx = (P.views||[]).map(f=>`+${f.pts} se passar de ${f.min} visualizações`).join(' · ');
-  return `*📲 MISSÃO DO DIA — NOVIDADE NA CAMPANHA!*\n\nTodo dia o site tem *6 Ofertas do Dia* com 10% OFF. Agora cada uma de nós apresenta *1 produto* nos stories da loja (@${cfg.conta}) — do seu jeitinho! 💋\n\n*Como funciona:*\n1️⃣ Abra o portal › Campanha › *Missão do Dia*\n2️⃣ Escolha o seu produto (cada produto fica com uma)\n3️⃣ Poste o story no *seu horário do dia* (ele roda todo dia: ${cfg.horarios.join(', ')})\n4️⃣ Mande o *print do story no ar* pelo portal\n5️⃣ Depois mande o *print dos números* (visualizações, respostas, cliques)\n\n*⭐ Pontos:*\n• Postou: *+${P.postou}*\n• ${P.sequencia_dias} dias seguidos: *+${P.sequencia}*\n• Cada resposta: *+${P.resposta}* · cada clique no link: *+${P.clique}*${fx?'\n• '+fx:''}\n• Vendeu um produto da oferta do dia: *+${P.venda}* (conta sozinho no PDV)\n• Story campeão da semana: *+${P.campea}*\n\n*🎟️ A cada ${cfg.por_raspadinha} pontos = 1 raspadinha extra!*\n\n_Bora mostrar pra cidade o que a gente tem de melhor! 🔥_`;
+  const P = cfg.pontos;
+  return `*📲 MISSÃO DO DIA — NOVIDADE NA CAMPANHA!*\n\nTodo dia o site tem *6 Ofertas do Dia* com 10% OFF. Agora a gente apresenta esses produtos nos stories da loja (@${cfg.conta}) — do seu jeitinho! 💋\n\n*Como funciona:*\n1️⃣ Abra o portal › Campanha › *Missão do Dia*\n2️⃣ Escolha um produto da oferta (todos são livres pra todas)\n3️⃣ Poste o story no Instagram da loja\n4️⃣ Mande o *print do story no ar* pelo portal — ele confere na hora\n5️⃣ Quer mais pontos? Poste outro produto da oferta!\n\n*⭐ Pontos:*\n• 1º story do dia: *+${P.postou}*\n• Cada story a mais (outro produto): *+${P.extra}*\n• ${P.sequencia_dias} dias seguidos postando: *+${P.sequencia}*\n• Vendeu um produto da oferta do dia: *+${P.venda}* (conta sozinho no PDV)\n• Campeã de stories da semana: *+${P.campea}*\n\n*🎟️ A cada ${cfg.por_raspadinha} pontos = 1 raspadinha extra!*\n\n_Bora mostrar pra cidade o que a gente tem de melhor! 🔥_`;
 }
 function msAdmCfg(A){
   const c = A.cfg, P = c.pontos, v = P.views||[], n = (id, rot, val) => `<div class="campo"><label>${rot}</label><input class="inp" type="number" min="0" id="${id}" value="${val}"></div>`;
   return `<div style="margin-top:10px">
     <label class="linha" style="gap:8px;margin-bottom:10px;cursor:pointer"><input type="checkbox" id="ms-ativa" ${c.ativa?'checked':''}> Missão do Dia ligada</label>
     <div class="fid-g2"><div class="campo"><label>Vale a partir de</label><input class="inp" type="date" id="ms-ini" value="${esc(c.inicio)}"></div><div class="campo"><label>Instagram da loja</label><input class="inp" id="ms-conta" value="@${esc(c.conta)}"></div></div>
-    <div class="fid-g2"><div class="campo"><label>Horários do rodízio</label><input class="inp" id="ms-hor" value="${esc(c.horarios.join(', '))}"></div>${n('ms-prazo','Dias para mandar os números',c.prazo_numeros_dias)}</div>
-    <div class="fid-g2" style="grid-template-columns:repeat(3,1fr)">${n('ms-por','Pontos por raspadinha',c.por_raspadinha)}${n('ms-p-postou','Postou o story',P.postou)}${n('ms-p-venda','Vendeu a oferta do dia',P.venda)}</div>
+    <div class="fid-g2"><div class="campo"><label>Horários do rodízio</label><input class="inp" id="ms-hor" value="${esc(c.horarios.join(', '))}"></div>${n('ms-por','Pontos por raspadinha',c.por_raspadinha)}</div>
+    <div class="fid-g2" style="grid-template-columns:repeat(3,1fr)">${n('ms-p-postou','1º story do dia',P.postou)}${n('ms-p-extra','Cada story a mais no dia',P.extra)}${n('ms-p-venda','Vendeu a oferta do dia',P.venda)}</div>
     <div class="fid-g2" style="grid-template-columns:repeat(3,1fr)">${n('ms-p-sequencia','Bônus da sequência',P.sequencia)}${n('ms-p-sequencia_dias','A cada quantos dias',P.sequencia_dias)}${n('ms-p-campea','Story campeão da semana',P.campea)}</div>
+    <label class="linha" style="gap:8px;margin:4px 0 10px;cursor:pointer"><input type="checkbox" id="ms-numeros" ${c.numeros?'checked':''} onchange="document.getElementById('ms-numbox').hidden=!this.checked"> Pedir o print dos números do story (visualizações, respostas…)</label>
+    <div id="ms-numbox" ${c.numeros?'':'hidden'}>${n('ms-prazo','Dias para mandar os números',c.prazo_numeros_dias)}
     <div class="fid-g2" style="grid-template-columns:repeat(4,1fr)">${n('ms-p-resposta','Cada resposta',P.resposta)}${n('ms-p-clique','Cada clique',P.clique)}${n('ms-p-reacao','Cada reação',P.reacao)}${n('ms-p-compart','Cada compart.',P.compart)}</div>
     <div class="fid-g2" style="grid-template-columns:repeat(4,1fr)">${n('ms-v1m','Faixa 1: visualizações',(v[0]||{}).min||0)}${n('ms-v1p','Faixa 1: pontos',(v[0]||{}).pts||0)}${n('ms-v2m','Faixa 2: visualizações',(v[1]||{}).min||0)}${n('ms-v2p','Faixa 2: pontos',(v[1]||{}).pts||0)}</div>
-    <div class="fid-g2">${n('ms-p-teto_story','Máximo de pontos de engajamento por story',P.teto_story)}<div></div></div>
+    <div class="fid-g2">${n('ms-p-teto_story','Máximo de pontos de engajamento por story',P.teto_story)}<div></div></div></div>
     <div class="campo"><label>Quem participa</label><div class="linha quebra" style="gap:6px">${A.colaboradoras.map(x=>`<label class="selo" style="cursor:pointer"><input type="checkbox" class="ms-part" value="${esc(x.id)}" ${c.fora.includes(x.id)?'':'checked'}> ${esc(primeiroNome(x.nome))}</label>`).join('')}</div></div>
     <button class="btn pri" style="width:100%" onclick="msAdmSalvar()"><i class="ti ti-device-floppy"></i> Salvar as regras</button></div>`;
 }
 async function msAdmSalvar(){
   const g = id => $('#'+id).value, pts = {};
-  ['postou','venda','sequencia','sequencia_dias','campea','resposta','clique','reacao','compart','teto_story'].forEach(k=>pts[k] = g('ms-p-'+k));
+  ['postou','extra','venda','sequencia','sequencia_dias','campea','resposta','clique','reacao','compart','teto_story'].forEach(k=>pts[k] = g('ms-p-'+k));
   pts.views = [{min:g('ms-v1m'), pts:g('ms-v1p')}, {min:g('ms-v2m'), pts:g('ms-v2p')}];
-  const valor = { ativa:$('#ms-ativa').checked, inicio:g('ms-ini'), conta:g('ms-conta'), horarios:g('ms-hor'), prazo_numeros_dias:g('ms-prazo'), por_raspadinha:g('ms-por'), pontos:pts,
+  const valor = { ativa:$('#ms-ativa').checked, inicio:g('ms-ini'), conta:g('ms-conta'), horarios:g('ms-hor'), prazo_numeros_dias:g('ms-prazo'), numeros:$('#ms-numeros').checked, por_raspadinha:g('ms-por'), pontos:pts,
     fora:[...document.querySelectorAll('.ms-part')].filter(x=>!x.checked).map(x=>x.value) };
   try{ await msAdmApi('cfg', {valor}); toast('Regras da Missão salvas ✔'); MS.adm = null; msAdmCarregar(); render(); }catch(e){ toast(e.message, true); }
 }

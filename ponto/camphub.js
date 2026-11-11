@@ -81,8 +81,8 @@ function chNomeMes(){ return new Date().toLocaleDateString('pt-BR', {month:'long
 function chInfo(k, c){
   const m = c.missao && !c.missao.erro ? c.missao : null, vd = brl(c.valor_dia), bp = c.bingo_premios||{}, j = c.janela||{};
   return ({
-    missao: m && { em:'📲', nome:'Missão do Dia', frase:`Poste 1 story por dia de um produto das Ofertas do Dia e ganhe pontos. A cada ${m.por_raspadinha} pontos, uma raspadinha extra.`,
-      passos:[['Escolha o produto','Um dos 6 da oferta de hoje. Cada produto fica com uma vendedora.'],['Poste e mande o print',`Story no @${m.conta}, no seu horário. O portal confere o print na hora.`],['Mande os números','Visualizações, respostas e cliques viram mais pontos.']],
+    missao: m && { em:'📲', nome:'Missão do Dia', frase:`Poste stories dos produtos das Ofertas do Dia no Instagram da loja e ganhe pontos. Quanto mais produtos, mais pontos. A cada ${m.por_raspadinha} pontos, uma raspadinha extra.`,
+      passos:[['Escolha o produto','Qualquer um dos 6 da oferta de hoje. Todos são livres.'],['Poste e mande o print',`Story no @${m.conta}. O portal confere o print na hora: 1º story +${m.regras.postou}.`],['Poste mais produtos',`Cada produto a mais no dia vale +${m.regras.extra}.`]],
       ganha:`A cada ${m.por_raspadinha} pontos = 1 raspadinha. Vender o produto da oferta dá +${m.regras.venda} pontos.` },
     raspadinha: { em:'🎟️', nome:'Raspadinha do Dia', frase:`Vendeu ${vd} no dia? Ganha uma raspadinha com prêmio surpresa.`,
       passos:[['Bata o valor do dia',`Some ${vd} em vendas no mesmo dia (vale qualquer loja).`],['A raspadinha aparece','Ela fica aqui esperando por alguns dias.'],['Raspe com o dedo','O prêmio aparece na hora e a administração entrega.']],
@@ -121,9 +121,10 @@ function chAgora(c, tem){
   const r = (c.raspadinhas||[]).length;
   if(tem('raspadinha') || (m && r)){ if(r) L.push({k: tem('raspadinha')?'raspadinha':'missao', em:'🎟️', t:`Você tem ${r===1?'1 raspadinha':r+' raspadinhas'} para raspar!`, s:'Toque, raspe com o dedo e veja o prêmio.', b:'Raspar', pulsa:true, cor:cor('raspadinha')}); }
   if(tem('missao') && m && m.participa){
-    const semStory = (m.ofertas||[]).length && (!m.story || m.story.status==='recusado');
+    const semStory = typeof msSemStory==='function' ? msSemStory(m) : false, mais = !semStory && !m.domingo && typeof msLivres==='function' ? msLivres(m).length : 0;
     const nums = (m.numeros||[]).filter(s=>s.status==='ok' && (!s.num_status || s.num_status==='recusado')).length;
     if(semStory) L.push({k:'missao', em:'📲', t:'Poste o seu story de hoje', s:`Seu horário: ${m.horario||'livre'} · vale +${m.regras.postou} pontos`, b:'Ver produtos', cor:cor('missao')});
+    else if(mais) L.push({k:'missao', em:'📲', t:'Quer mais pontos? Poste outro produto', s:`${mais} produto${mais===1?'':'s'} da oferta ainda para você · +${m.regras.extra} cada`, b:'Ver produtos', cor:cor('missao')});
     if(nums) L.push({k:'missao', em:'📊', t:`Mande os números do seu story`, s:`${nums===1?'1 story esperando':nums+' stories esperando'} o print das visualizações`, b:'Mandar', cor:cor('missao')});
   }
   if(tem('ouro') && cpOuroAgora(c.janela)==='agora' && (c.chamadas_hoje||0) < (c.qtd_ouro||10))

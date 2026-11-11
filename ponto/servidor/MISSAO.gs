@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   LAS VEGAS SEX SHOP · MISSÃO DO DIA (Portal Equipe) — v54
+   LAS VEGAS SEX SHOP · MISSÃO DO DIA (Portal Equipe) — v57
    Stories das "Ofertas do Dia" do site valendo pontos; os pontos viram raspadinha extra.
    Arquivo SEPARADO — fica DEPOIS de todos (… → CAIXA → MISSAO). ES5 (runtime legado).
    ───────────────────────────────────────────────────────────────
@@ -12,12 +12,12 @@
    REGRAS:
    • Ofertas do dia: o portal lê o calendário que já está na página inicial do site (6 produtos por dia)
      e guarda na aba MissaoOfertas. Se não conseguir ler, a administração cola os links do dia.
-   • Cada vendedora posta 1 story por dia no Instagram da loja, de 1 produto da oferta (cada produto com
-     uma vendedora). Manda o print do story no ar → a IA confere (é story? é da conta da loja?) e libera os pontos.
-   • Depois manda o print dos números do story (visualizações, respostas, cliques…) → a IA lê os números.
+   • v57: conta só a QUANTIDADE de stories. Cada vendedora pode postar qualquer um dos produtos da oferta
+     do dia (os 6 são livres para todas), 1 story por produto. O 1º story do dia vale "postou" (10) e cada
+     story a mais vale "extra" (3). Manda o print do story no ar → a IA confere e libera os pontos.
      Print que a IA não consegue ler (ou IA desligada) vai para a administração conferir.
-   • Pontos: postou, sequência de dias, respostas, cliques, reações, compartilhamentos, faixa de visualizações,
-     venda de produto da oferta do dia (sozinho, pelo PDV) e story campeão da semana.
+   • O print dos números (visualizações, respostas…) fica DESLIGADO (cfg.numeros = false); o código continua aqui.
+   • Pontos: stories, sequência de dias, venda de produto da oferta do dia (sozinho, pelo PDV) e campeã da semana.
    • A cada X pontos no mês, 1 raspadinha extra (mesmos prêmios da raspadinha da campanha).
    • O mesmo print não vale duas vezes (o portal reconhece a imagem repetida).
    ═══════════════════════════════════════════════════════════════ */
@@ -36,7 +36,8 @@ var MISS_PADRAO = {
   horarios: ['10:30', '14:00', '17:30'],
   prazo_numeros_dias: 2,
   por_raspadinha: 50,
-  pontos: { postou: 10, sequencia: 20, sequencia_dias: 5, resposta: 3, clique: 1, reacao: 1, compart: 2, venda: 20, campea: 30, teto_story: 60,
+  numeros: false,
+  pontos: { postou: 10, extra: 3, sequencia: 20, sequencia_dias: 5, resposta: 3, clique: 1, reacao: 1, compart: 2, venda: 20, campea: 30, teto_story: 60,
             views: [{ min: 300, pts: 5 }, { min: 500, pts: 10 }] }
 };
 CONFIG_PADRAO.push(['missao', JSON.stringify(MISS_PADRAO), 'Missão do Dia (JSON): stories das ofertas do dia — pontos, horários do rodízio, conta do Instagram, quem participa, pontos por raspadinha']);
@@ -61,7 +62,8 @@ function missCfg_() {
   o.prazo_numeros_dias = Math.max(1, Math.min(7, missInt_(o.prazo_numeros_dias) || 2));
   o.por_raspadinha = Math.max(5, missInt_(o.por_raspadinha) || 50);
   o.conta = String(o.conta || 'lasvegas_ac').replace(/^@/, '').toLowerCase();
-  ['postou', 'sequencia', 'sequencia_dias', 'resposta', 'clique', 'reacao', 'compart', 'venda', 'campea', 'teto_story'].forEach(function (x) { o.pontos[x] = missInt_(o.pontos[x]); });
+  o.numeros = o.numeros === true;
+  ['postou', 'extra', 'sequencia', 'sequencia_dias', 'resposta', 'clique', 'reacao', 'compart', 'venda', 'campea', 'teto_story'].forEach(function (x) { o.pontos[x] = missInt_(o.pontos[x]); });
   o.pontos.sequencia_dias = Math.max(2, o.pontos.sequencia_dias || 5);
   o.pontos.views = (Array.isArray(o.pontos.views) ? o.pontos.views : []).map(function (f) { return { min: missInt_(f.min), pts: missInt_(f.pts) }; })
     .filter(function (f) { return f.min > 0 && f.pts > 0; }).sort(function (a, b) { return a.min - b.min; });
@@ -208,11 +210,23 @@ function missCtx_() {
 function missPostado_(s) { return s.status === 'ok' || s.status === 'conferir'; }
 function missViewsPts_(cfg, views) { var p = 0; cfg.pontos.views.forEach(function (f) { if (views >= f.min) p = f.pts; }); return p; }
 function missEngaj_(cfg, s) {
-  if (s.status !== 'ok' || s.num_status !== 'ok') return 0;
+  if (!cfg.numeros || s.status !== 'ok' || s.num_status !== 'ok') return 0;
   var P = cfg.pontos, t = missInt_(s.respostas) * P.resposta + missInt_(s.cliques) * P.clique + missInt_(s.reacoes) * P.reacao + missInt_(s.compart) * P.compart + missViewsPts_(cfg, missInt_(s.views));
   return P.teto_story > 0 ? Math.min(P.teto_story, t) : t;
 }
-function missStoryPts_(cfg, s) { return s.status === 'ok' ? cfg.pontos.postou + missEngaj_(cfg, s) : 0; }
+/* pontos de "postou" de cada story aprovado: o 1º do dia de cada vendedora vale P.postou, os outros P.extra */
+function missMapa_() {
+  var ctx = missCtx_();
+  if (ctx.mapa) return ctx.mapa;
+  var cfg = ctx.cfg, grupo = {}, mapa = {};
+  ctx.stories.forEach(function (s) { if (s.status === 'ok') { var k = s.colaboradora_id + '|' + s.data; (grupo[k] = grupo[k] || []).push(s); } });
+  for (var k in grupo) grupo[k].sort(function (a, b) { return String(a.post_em).localeCompare(String(b.post_em)) || String(a.id).localeCompare(String(b.id)); })
+    .forEach(function (s, i) { mapa[s.id] = i === 0 ? cfg.pontos.postou : cfg.pontos.extra; });
+  ctx.mapa = mapa;
+  return mapa;
+}
+function missBase_(s) { return s.status === 'ok' ? (missMapa_()[s.id] || 0) : 0; }
+function missStoryPts_(cfg, s) { return s.status === 'ok' ? missBase_(s) + missEngaj_(cfg, s) : 0; }
 function missVendeuOferta_(venda, itensOferta) {
   var its = campJson_(venda.itens, []), achou = '';
   its.forEach(function (i) {
@@ -243,12 +257,13 @@ function missCampeas_(ctx) {
 /* tudo o que deu ponto para a pessoa: [{data, tipo, pts, txt}] + a sequência atual */
 function missEventos_(eid, ctx) {
   if (ctx.ev[eid]) return ctx.ev[eid];
-  var cfg = ctx.cfg, P = cfg.pontos, ev = [], meus = {}, d;
-  ctx.stories.forEach(function (s) { if (s.colaboradora_id === eid && s.data >= cfg.inicio) meus[s.data] = s; });
-  for (d in meus) {
-    var s = meus[d];
+  var cfg = ctx.cfg, P = cfg.pontos, ev = [], meus = {}, postouDia = {}, d;
+  ctx.stories.forEach(function (s) { if (s.colaboradora_id === eid && s.data >= cfg.inicio) { meus[s.id] = s; if (missPostado_(s)) postouDia[s.data] = 1; } });
+  for (var sid in meus) {
+    var s = meus[sid]; d = s.data;
     if (s.status === 'ok') {
-      ev.push({ data: d, tipo: 'postou', pts: P.postou, txt: 'Story de ' + s.produto });
+      var b = missBase_(s);
+      ev.push({ data: d, tipo: 'postou', pts: b, txt: 'Story de ' + s.produto + (b === P.postou ? '' : ' (story extra)') });
       var e = missEngaj_(cfg, s);
       if (e > 0) ev.push({ data: d, tipo: 'engajamento', pts: e, txt: missInt_(s.views) + ' visualizações · ' + missInt_(s.respostas) + ' respostas · ' + missInt_(s.cliques) + ' cliques' });
     }
@@ -256,7 +271,7 @@ function missEventos_(eid, ctx) {
   var run = 0;
   for (d = cfg.inicio; d <= ctx.hoje; d = campDia_(d, 1)) {
     if (missDomingo_(d)) continue;
-    if (meus[d] && missPostado_(meus[d])) { run++; if (run % P.sequencia_dias === 0 && P.sequencia > 0) ev.push({ data: d, tipo: 'sequencia', pts: P.sequencia, txt: run + ' dias seguidos postando' }); }
+    if (postouDia[d]) { run++; if (run % P.sequencia_dias === 0 && P.sequencia > 0) ev.push({ data: d, tipo: 'sequencia', pts: P.sequencia, txt: run + ' dias seguidos postando' }); }
     else if (d < ctx.hoje && ctx.ofertas[d] && ctx.pontos[eid + '|' + d]) run = 0;      // trabalhou, tinha oferta e não postou: zera
   }
   if (P.venda > 0) ctx.pdv.forEach(function (v) {
@@ -376,16 +391,14 @@ function missPrintRepetido_(hash, menosId, parte) {
 }
 function missPostar_(c, req) {
   var cfg = missCfg_(); missChecarParticipa_(c, cfg);
-  var hoje = hoje_(), id = 'S|' + c.id + '|' + hoje, handle = missHandle_(req.handle);
+  var hoje = hoje_(), handle = missHandle_(req.handle);
   missGarantirOfertas_(cfg, false);
   var itens = campJson_((ler_('MissaoOfertas').filter(function (r) { return r.data === hoje; })[0] || {}).itens, []);
   var of = itens.filter(function (i) { return i.handle === handle; })[0];
   if (!of) throw new Error('Escolha um dos produtos da oferta de hoje');
-  var stories = ler_('MissaoStories'), meu = stories.filter(function (s) { return s.id === id; })[0];
-  if (meu && meu.status === 'ok') throw new Error('O seu story de hoje já está valendo ✔');      // em conferência ela pode trocar o print (mesmo produto ou outro livre)
-  var part = missParticipantes_(cfg);
-  if (itens.length >= part.length && stories.some(function (s) { return s.data === hoje && s.handle === handle && s.colaboradora_id !== c.id && missPostado_(s); }))
-    throw new Error('Esse produto já foi postado hoje por outra pessoa — escolha outro da lista');
+  var stories = ler_('MissaoStories'), meu = stories.filter(function (s) { return s.colaboradora_id === c.id && s.data === hoje && s.handle === handle; })[0];
+  if (meu && meu.status === 'ok') throw new Error('Você já postou esse produto hoje ✔ Escolha outro da lista para ganhar mais pontos.');   // em conferência ela pode trocar o print
+  var id = meu ? meu.id : 'S|' + c.id + '|' + hoje + '|' + handle, part = missParticipantes_(cfg);
   var hash = missHash_(req.img);
   if (missPrintRepetido_(hash, id, 'post')) throw new Error('Esse print já foi usado antes. Mande o print do story de hoje.');
   var ia = missIA_(req.img, missPromptPost_(cfg, of.nome)), status = 'conferir', obs = '';
@@ -410,7 +423,8 @@ function missPostar_(c, req) {
 function missPrazo_(cfg, data) { return campDia_(data, cfg.prazo_numeros_dias); }
 function missNumeros_(c, req) {
   var cfg = missCfg_(); missChecarParticipa_(c, cfg);
-  var hoje = hoje_(), id = 'S|' + c.id + '|' + String(req.data || '').slice(0, 10);
+  if (!cfg.numeros) throw new Error('O print dos números não está valendo no momento');
+  var hoje = hoje_(), id = req.id ? String(req.id) : 'S|' + c.id + '|' + String(req.data || '').slice(0, 10);
   var s0 = ler_('MissaoStories').filter(function (x) { return x.id === id; })[0];
   if (!s0 || !missPostado_(s0)) throw new Error('Não achei o seu story desse dia');
   if (hoje > missPrazo_(cfg, s0.data)) throw new Error('O prazo para mandar os números desse story já passou');
@@ -449,31 +463,37 @@ function missRanking_(ctx) {
   var l = ctx.part.map(function (c) {
     var E = missEventos_(c.id, ctx), evMes = E.ev.filter(function (e) { return mesDe_(e.data) === mes; });
     var conta = function (t) { return evMes.filter(function (e) { return e.tipo === t; }).length; };
-    var st = ctx.stories.filter(function (s) { return s.colaboradora_id === c.id && s.data === hoje; })[0];
+    var sts = ctx.stories.filter(function (s) { return s.colaboradora_id === c.id && s.data === hoje; });
+    var st = sts.filter(function (s) { return s.status === 'ok'; })[0] || sts.filter(function (s) { return s.status === 'conferir'; })[0] || sts[0];
     return { id: c.id, nome: campPrimeiro_(c.nome), cor: c.cor || '', mes: missSoma_(E.ev, mes + '-01', mes + '-31'), semana: missSoma_(E.ev, sem, fimSem), stories: conta('postou'), vendas: conta('venda'),
-             sequencia: E.sequencia, hoje: st ? st.status : '', ev: evMes.slice(0, 20) };
+             sequencia: E.sequencia, hoje: st ? st.status : '', hoje_n: sts.filter(function (s) { return s.status === 'ok'; }).length, ev: evMes.slice(0, 20) };
   });
   l.sort(function (a, b) { return b.mes - a.mes || b.semana - a.semana || a.nome.localeCompare(b.nome); });
   return l;
 }
 function missResumo_(c) {
-  var cfg = missCfg_(), o = { ativa: !!cfg.ativa, participa: cfg.fora.indexOf(c.id) < 0, conta: cfg.conta, regras: cfg.pontos, por_raspadinha: cfg.por_raspadinha, prazo_dias: cfg.prazo_numeros_dias, ia: missIaLigada_() };
+  var cfg = missCfg_(), o = { ativa: !!cfg.ativa, participa: cfg.fora.indexOf(c.id) < 0, conta: cfg.conta, regras: cfg.pontos, por_raspadinha: cfg.por_raspadinha, prazo_dias: cfg.prazo_numeros_dias, numeros_ligado: cfg.numeros, ia: missIaLigada_() };
   if (!cfg.ativa) return o;
   missGarantirOfertas_(cfg, false);
   var ctx = missCtx_(), hoje = ctx.hoje, mes = mesDe_(hoje), itens = ctx.ofertas[hoje] || [];
-  var deHoje = ctx.stories.filter(function (s) { return s.data === hoje && missPostado_(s); }), tomada = {};
-  deHoje.forEach(function (s) { tomada[s.handle] = s.colaboradora_id === c.id ? 'você' : campPrimeiro_(s.colaboradora); });
+  var deHoje = ctx.stories.filter(function (s) { return s.data === hoje; }), minha = {}, outras = {};
+  deHoje.forEach(function (s) {
+    if (s.colaboradora_id === c.id) { if (s.handle) minha[s.handle] = s.status; }
+    else if (missPostado_(s)) (outras[s.handle] = outras[s.handle] || []).push(campPrimeiro_(s.colaboradora));
+  });
   o.comecou = hoje >= cfg.inicio; o.inicio = cfg.inicio; o.domingo = missDomingo_(hoje);
-  o.ofertas = itens.map(function (i) { return { handle: i.handle, nome: i.nome, foto: i.foto, preco: i.preco, url: i.url, tomada: itens.length >= ctx.part.length ? (tomada[i.handle] || '') : '' }; });
+  o.ofertas = itens.map(function (i) { return { handle: i.handle, nome: i.nome, foto: i.foto, preco: i.preco, url: i.url, minha: minha[i.handle] || '', outras: outras[i.handle] || [] }; });
   o.ranking = missRanking_(ctx);
   if (!o.participa) return o;
   var E = missEventos_(c.id, ctx), pts = missSoma_(E.ev, mes + '-01', mes + '-31');
   o.pontos_mes = pts; o.sequencia = E.sequencia; o.faltam = cfg.por_raspadinha - (pts % cfg.por_raspadinha);
   o.extrato = E.ev.slice(0, 25);
   o.horario = missHorario_(cfg, ctx.part, c.id, hoje); o.sugerida = missSugerida_(ctx.part, c.id, hoje, itens);
-  var meu = ctx.stories.filter(function (s) { return s.id === 'S|' + c.id + '|' + hoje; })[0];
-  o.story = meu ? missStoryPub_(cfg, meu) : null;
-  o.numeros = ctx.stories.filter(function (s) { return s.colaboradora_id === c.id && missPostado_(s) && hoje <= missPrazo_(cfg, s.data); })
+  var meus = ctx.stories.filter(function (s) { return s.colaboradora_id === c.id && s.data === hoje; }).sort(function (a, b) { return String(b.post_em).localeCompare(String(a.post_em)); });
+  o.stories = meus.map(function (s) { return missStoryPub_(cfg, s); });
+  o.story = o.stories[0] || null;                                                     // compatibilidade (telas antigas)
+  o.proximo = meus.some(missPostado_) ? cfg.pontos.extra : cfg.pontos.postou;         // quanto vale o próximo story de hoje
+  o.numeros = !cfg.numeros ? [] : ctx.stories.filter(function (s) { return s.colaboradora_id === c.id && missPostado_(s) && hoje <= missPrazo_(cfg, s.data); })
     .sort(function (a, b) { return b.data.localeCompare(a.data); }).map(function (s) { return missStoryPub_(cfg, s); });
   o.raspadinhas = missTickets_(c.id, ler_('CampPremios'));
   return o;
@@ -568,11 +588,12 @@ ADMIN.admMissao = function (req) {
       if (!hh.length || hh.some(function (h) { return !/^([01]\d|2[0-3]):[0-5]\d$/.test(h); })) throw new Error('Horários inválidos — use 10:30, 14:00, 17:30');
       atual.horarios = hh.slice(0, 8);
     }
+    if (v.numeros != null) atual.numeros = v.numeros === true;
     if (v.prazo_numeros_dias != null) atual.prazo_numeros_dias = Math.max(1, Math.min(7, missInt_(v.prazo_numeros_dias)));
     if (v.por_raspadinha != null) { if (missInt_(v.por_raspadinha) < 5) throw new Error('Pontos por raspadinha: no mínimo 5'); atual.por_raspadinha = missInt_(v.por_raspadinha); }
     if (v.pontos) {
       var P = atual.pontos || {};
-      ['postou', 'sequencia', 'sequencia_dias', 'resposta', 'clique', 'reacao', 'compart', 'venda', 'campea', 'teto_story'].forEach(function (k) { if (v.pontos[k] != null && v.pontos[k] !== '') P[k] = missInt_(v.pontos[k]); });
+      ['postou', 'extra', 'sequencia', 'sequencia_dias', 'resposta', 'clique', 'reacao', 'compart', 'venda', 'campea', 'teto_story'].forEach(function (k) { if (v.pontos[k] != null && v.pontos[k] !== '') P[k] = missInt_(v.pontos[k]); });
       if (Array.isArray(v.pontos.views)) P.views = v.pontos.views.map(function (f) { return { min: missInt_(f.min), pts: missInt_(f.pts) }; }).filter(function (f) { return f.min > 0 && f.pts > 0; }).slice(0, 5);
       atual.pontos = P;
     }

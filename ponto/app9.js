@@ -114,10 +114,10 @@ document.write('<script src="app29.js?v=29"><\/script>');
 document.write('<script src="app30.js?v=30"><\/script>');
 /* v31: campanha do mês — raspadinha do dia, bingo de vendas, hora de ouro, ranking da semana e mural dos sonhos (campanha.js) */
 document.write('<script src="campanha.js?v=55"><\/script>');
-/* v54: Missão do Dia — stories das Ofertas do Dia do site valendo pontos, print conferido por IA, pontos viram raspadinha (missao.js; servidor MISSAO.gs) */
-document.write('<script src="missao.js?v=55d"><\/script>');
+/* v57: Missão conta só a quantidade de stories (1º do dia +10, cada produto a mais +3, sem print dos números). v54: Missão do Dia — stories das Ofertas do Dia do site valendo pontos, print conferido por IA, pontos viram raspadinha (missao.js; servidor MISSAO.gs) */
+document.write('<script src="missao.js?v=57"><\/script>');
 /* v55: Campanha do mês com tela inicial — o que fazer agora + um cartão explicando cada jogo; dentro de cada jogo, "Como funciona" em 3 passos (camphub.js) */
-document.write('<script src="camphub.js?v=55c"><\/script>');
+document.write('<script src="camphub.js?v=57"><\/script>');
 /* v32: portal mais rápido — abre na hora com os dados guardados no aparelho e atualiza sozinho; arquivos guardados (sw.js) (app32.js) */
 document.write('<script src="app32.js?v=32"><\/script>');
 /* v33: vendas da Kommo na Arena — "Acabou de vender", flash, nº de vendas e ticket (app33.js) */
