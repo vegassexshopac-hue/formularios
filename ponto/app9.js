@@ -77,19 +77,19 @@ itensBusca = function itensBusca(){
 
 /* v9: Estoque + entrada de mercadoria (Portal › Receber · Administração › Estoque) — carrega aqui, antes do app4 (que inicia o app) */
 /* v10: depósito + contagem + transferências + saída + reposição + PDV ligado ao estoque (app11.js) */
-document.write('<script src="app10.js?v=21"><\/script><script src="app11.js?v=15"><\/script>');
+document.write('<script src="app10.js?v=54"><\/script><script src="app11.js?v=54"><\/script>');
 /* v13: fotos dos produtos + tela Produtos (catálogo, tirar foto, produto novo, link #produtos) */
-document.write('<script src="app13.js?v=21"><\/script>');
+document.write('<script src="app13.js?v=54"><\/script>');
 /* v14: entrada nova (bater o ponto × entrar no portal) e portal no endereço principal, sem /ponto */
 document.write('<script src="app14.js?v=14"><\/script>');
 /* v15: link de fotos sem PIN (app15.js) — antes do app12, que fica por último */
 document.write('<script src="app15.js?v=21"><\/script>');
 /* v16: Nuvemshop — conectar o site (API), importar produtos, estoque e pedidos (Administração › Nuvemshop) */
-document.write('<script src="app16.js?v=16"><\/script>');
+document.write('<script src="app16.js?v=54"><\/script>');
 /* v15d: catálogo do site — categorias, nomes, descrição e preços pelo CSV da Nuvemshop (app17.js) */
 document.write('<script src="app17.js?v=17b"><\/script>');
 /* v18: Contagens com passo a passo, detalhes, corrigir produto, desfazer e apagar (app18.js) */
-document.write('<script src="app18.js?v=18a"><\/script>');
+document.write('<script src="app18.js?v=54"><\/script>');
 /* v19: link do mutirão mais intuitivo — boas-vindas, missões, anel de progresso, salvar e próximo, animações (app19.js) */
 document.write('<script src="app19.js?v=19c"><\/script>');
 /* v20: operação da loja — abertura/fechamento no ponto, fechamento de caixa, aviso de transferência, lista de compra (app20.js) */
@@ -138,7 +138,7 @@ document.write('<script src="app43.js?v=43"><\/script>');
 /* v41: relacionamento — venda da Kommo no PDV (estoque + fidelidade), clientes para chamar (aniversário, cashback vencendo, sumidas), backup automático (app41.js) */
 document.write('<script src="app41.js?v=41d"><\/script>');
 /* v44: pedidos do site para a equipe — Vendas › Pedidos do site: separar, enviar e entregar, bolinha e cartão no Início para o Bosque (app44.js; servidor SITE.gs) */
-document.write('<script src="app44.js?v=44"><\/script>');
+document.write('<script src="app44.js?v=54"><\/script>');
 /* v45: o que a equipe vê (liga/desliga telas das vendedoras, perfil Matheus › Ajustes) + zerar os testes para começar pra valer (app45.js; servidor VALER.gs) */
 document.write('<script src="app45.js?v=45"><\/script>');
 /* v46: cartão "Minha meta" animado no Início + botão "Tirar dúvida" monitorado (Comunicação › Dúvidas da equipe) (app46.js; servidor AJUDA.gs) */
@@ -157,4 +157,6 @@ document.write('<script src="videos51.js?v=51b"><\/script>');
 document.write('<script src="app52.js?v=52"><\/script>');
 /* v53: botão Comprovante envia pela conversa da Kommo (robô), com o WhatsApp de reserva; situação em Atendimento · Kommo › Configurar (app53.js; serviço próprio comprovante-kommo-las-vegas no Railway) */
 document.write('<script src="app53.js?v=53b"><\/script>');
+/* v54: estoque sem depósito (só prateleira Bosque e Centro), editar produto em Estoque › Produtos, "Metas e campanha" num balão só e Administração › Equipe e ponto › Histórico de andamentos (app54.js; servidor ESTOQUE.gs + ANDAMENTOS.gs) */
+document.write('<script src="app54.js?v=54"><\/script>');
 document.write('<script src="app12.js?v=35"><\/script>');

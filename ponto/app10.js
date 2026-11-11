@@ -58,9 +58,10 @@ function estD(){
   return {saldos:[], entradas:[], vinculos:[], movimentos:[], cfg:{}, iaPronta:false, semServidor:true, erro:d?.estoque?.erro};
 }
 const estAdmin = () => !!(S.adm && S.tela==='admin');
-/* locais de estoque: bosque (prateleira) · deposito (Bosque) · centro (prateleira) — vêm do servidor */
-const EST_LOCAIS_PADRAO = [{id:'bosque',nome:'Bosque · Prateleira',loja:'bosque',tipo:'prateleira'},{id:'deposito',nome:'Bosque · Depósito',loja:'bosque',tipo:'deposito'},{id:'centro',nome:'Centro · Prateleira',loja:'centro',tipo:'prateleira'}];
-const estLocais = () => (estD().locais && estD().locais.length) ? estD().locais : EST_LOCAIS_PADRAO;
+/* locais de estoque: bosque (prateleira) · centro (prateleira) — vêm do servidor.
+   v54 (11/11/2026): o depósito do Bosque deixou de existir; local do tipo "deposito" que o servidor ainda mandar é ignorado. */
+const EST_LOCAIS_PADRAO = [{id:'bosque',nome:'Bosque · Prateleira',loja:'bosque',tipo:'prateleira'},{id:'centro',nome:'Centro · Prateleira',loja:'centro',tipo:'prateleira'}];
+const estLocais = () => { const l = (estD().locais||[]).filter(x=>x && x.tipo!=='deposito'); return l.length ? l : EST_LOCAIS_PADRAO; };
 const estLocaisIds = () => estLocais().map(l=>l.id);
 function estLojaHoje(){
   if(S.aparelho?.loja) return S.aparelho.loja;
@@ -68,7 +69,7 @@ function estLojaHoje(){
   return (d.pontos||[]).find(p=>p.data===hojeISO())?.loja || (d.escala||[]).find(e=>e.data===hojeISO() && e.colaboradora_id===S.sess.eid)?.loja || d.colaboradora?.loja || estLocaisIds()[0];
 }
 const estPrateleira = loja => (estLocais().find(l=>l.loja===loja && l.tipo!=='deposito')||{}).id || loja;
-/* mercadoria que chega vai para o depósito da loja (se tiver); senão para a prateleira */
+/* mercadoria que chega vai para a prateleira da loja de quem está recebendo */
 function estLojaPadrao(){ const loja = estLojaHoje(); return (estLocais().find(l=>l.loja===loja && l.tipo==='deposito')||{}).id || estPrateleira(loja); }
 const estLojaNome = k => (estLocais().find(l=>l.id===k)||{}).nome || S.boot.lojas[k]?.nome || k;
 const estLocalIco = k => (estLocais().find(l=>l.id===k)||{}).tipo==='deposito' ? 'ti-building-warehouse' : 'ti-building-store';

@@ -215,9 +215,11 @@ itensBusca = function itensBusca(){
 
 /* ───────── aba "Produtos" no Estoque (equipe e administração) ───────── */
 portalEstoque = function portalEstoque(){
-  const k = estContadores(), aba = S.estAba || (k.cont ? 'contar' : 'receber');
-  const abas = [['receber','ti-truck-delivery','Receber'],['contar','ti-scan','Contar',k.cont],['produtos','ti-photo','Produtos'],['transferir','ti-arrows-exchange','Transferir',k.chegando],['repor','ti-basket','Repor',k.repor],['saida','ti-package-export','Saída'],['consulta','ti-search','Consultar']];
-  const corpo = ({receber:estTela, contar:estContar, produtos:estCatalogo, transferir:estTransferir, repor:estRepor, saida:estSaidaTela, consulta:()=>estConsulta().replace('<h2 class="secao">','<h2 class="secao" style="margin-top:0">')})[aba]();
+  const k = estContadores(); if(S.estAba==='repor') S.estAba = 'receber';
+  const aba = S.estAba || (k.cont ? 'contar' : 'receber');
+  const abas = [['receber','ti-truck-delivery','Receber'],['contar','ti-scan','Contar',k.cont],['produtos','ti-photo','Produtos'],['transferir','ti-arrows-exchange','Transferir',k.chegando],['saida','ti-package-export','Saída'],['consulta','ti-search','Consultar']];   // v54: sem depósito, a aba Repor saiu
+  const telas = {receber:estTela, contar:estContar, produtos:estCatalogo, transferir:estTransferir, saida:estSaidaTela, consulta:()=>estConsulta().replace('<h2 class="secao">','<h2 class="secao" style="margin-top:0">')};
+  const corpo = (telas[aba] || telas.receber)();
   return `<div class="est-hub">${abas.map(([id,i,n,b])=>`<button class="${aba===id?'on':''}" onclick="S.estAba='${id}';render()"><i class="ti ${i}"></i>${n}${b?`<span class="contador">${b}</span>`:''}</button>`).join('')}</div>${corpo}`;
 };
 const _admEstoqueV13 = admEstoque;

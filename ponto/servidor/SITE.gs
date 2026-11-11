@@ -9,7 +9,7 @@
    O que ele faz:
    • A baixa do estoque continua automática (NUVEMSHOP.gs). Aqui é a SEPARAÇÃO:
      cada pedido do site passa por  A separar → Separado → Enviado → Entregue,
-     com quem fez e quando. Sai sempre da Loja Bosque (depósito).
+     com quem fez e quando. Sai sempre da Loja Bosque.
    • Equipe (com PIN): a = 'pedidosSite' · op = lista | etapa (id, etapa, rastreio, obs)
    • Administração: admPedidosSite (mesmas ops + voltar etapa)
    • dados da colaboradora ganham site_pendentes (bolinha no menu).

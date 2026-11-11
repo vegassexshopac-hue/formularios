@@ -8,7 +8,8 @@
    3) Implantar › Gerenciar implantações › lápis › Nova versão › Implantar.
       (o Google vai pedir uma permissão nova: "conectar a serviço externo" — é a IA que lê a nota)
    As abas Estoque, MovEstoque, Entradas, VinculosEstoque, Contagens, ContagemLeituras e Transferencias são criadas sozinhas.
-   LOCAIS de estoque (Config › estoque_locais): bosque = Bosque prateleira · deposito = Bosque depósito · centro = Centro prateleira.
+   LOCAIS de estoque (Config › estoque_locais): bosque = Bosque prateleira · centro = Centro prateleira.
+   (v54, 11/11/2026: o depósito do Bosque deixou de existir — o que estava nele foi somado à prateleira do Bosque.)
    A venda do PDV dá baixa na prateleira da loja onde foi feita.
    A chave da IA fica guardada nas Propriedades do Script (nunca na planilha).
    ═══════════════════════════════════════════════════════════════ */
@@ -24,12 +25,21 @@ ABAS.Transferencias = ['id', 'criada_em', 'de', 'para', 'itens', 'qtd_total', 's
 
 var EST_LOCAIS_PADRAO = [
   { id: 'bosque', nome: 'Bosque · Prateleira', loja: 'bosque', tipo: 'prateleira' },
-  { id: 'deposito', nome: 'Bosque · Depósito', loja: 'bosque', tipo: 'deposito' },
   { id: 'centro', nome: 'Centro · Prateleira', loja: 'centro', tipo: 'prateleira' }
 ];
-CONFIG_PADRAO.push(['estoque_locais', JSON.stringify(EST_LOCAIS_PADRAO), 'Locais de estoque (JSON): id, nome, loja e tipo (prateleira | deposito)']);
+CONFIG_PADRAO.push(['estoque_locais', JSON.stringify(EST_LOCAIS_PADRAO), 'Locais de estoque (JSON): id, nome e loja (só prateleira; o depósito saiu na v54)']);
 var EST_MOTIVOS_SAIDA = ['Avaria / quebra', 'Brinde', 'Chá de lingerie / evento', 'Uso interno / mostruário', 'Devolução ao fornecedor', 'Perda / sumiu', 'Troca com cliente', 'Outro'];
-function estLocaisLista_() { var l = cfgJson_('estoque_locais', null); return Array.isArray(l) && l.length ? l : EST_LOCAIS_PADRAO; }
+/* v54: só prateleira. Local do tipo "deposito" que ainda estiver na Config não aparece mais em lugar nenhum. */
+function estLocaisBrutos_() { var l = cfgJson_('estoque_locais', null); return Array.isArray(l) && l.length ? l : EST_LOCAIS_PADRAO; }
+function estLocaisLista_() { var l = estLocaisBrutos_().filter(function (x) { return x && x.tipo !== 'deposito'; }); return l.length ? l : EST_LOCAIS_PADRAO; }
+/** Local que ainda existe: um depósito antigo (ou local apagado) cai na prateleira da mesma loja. */
+function estLocalVivo_(id) {
+  var vivos = estLocaisMapa_(); if (vivos[id]) return id;
+  var velho = estLocaisBrutos_().filter(function (x) { return x && x.id === id; })[0];
+  if (velho) return estPrateleiraDe_(velho.loja);
+  if (id === 'deposito') return estPrateleiraDe_('bosque');
+  return id;
+}
 function estLocaisMapa_() { var m = {}; estLocaisLista_().forEach(function (x) { m[x.id] = x; }); return m; }
 /** Prateleira da loja (onde a venda do PDV dá baixa). */
 function estPrateleiraDe_(loja) { var l = estLocaisLista_().filter(function (x) { return x.loja === loja && x.tipo !== 'deposito'; })[0]; return l ? l.id : loja; }
@@ -62,6 +72,7 @@ function estEntrada_(e) {
   return o;
 }
 function estPacote_(admin) {
+  try { estUnificarDeposito_(); } catch (e) { log_('Sistema', 'unificar depósito falhou', String(e && e.message || e)); }
   var desde = diaMais_(admin ? -120 : -45);
   var p = { cfg: estCfg_(), iaPronta: !!estChaveIA_(), saldos: estSaldos_(), tipos: EST_TIPOS, locais: estLocaisLista_(), motivos: EST_MOTIVOS_SAIDA,
             contagens: estContagensPacote_(admin), transferencias: estTransfPacote_(admin),
@@ -71,7 +82,52 @@ function estPacote_(admin) {
   return p;
 }
 
+/* ───────── v54: fim do depósito ─────────
+   Roda uma vez só (Config › estoque_sem_deposito). O saldo que estava no depósito soma na prateleira da mesma loja,
+   contagem aberta do depósito vira (ou se junta à) contagem da prateleira e transferência em trânsito passa a apontar
+   para a prateleira. Nada é apagado: cada peça movida fica no MovEstoque como "Ajuste · Depósito unificado". */
+function estUnificarDeposito_() {
+  if (String(cfg_('estoque_sem_deposito') || '')) return;
+  comTrava_(function () {
+    _cfg = null; if (String(cfg_('estoque_sem_deposito') || '')) return;
+    var brutos = estLocaisBrutos_(), para = {};
+    brutos.forEach(function (x) { if (x && x.tipo === 'deposito') para[x.id] = estPrateleiraDe_(x.loja); });
+    if (!para.deposito && !estLocaisMapa_().deposito) para.deposito = estPrateleiraDe_('bosque');
+    var nomes = {}; ler_('Produtos').forEach(function (p) { nomes[p.id] = p.nome; });
+    var lista = [], pecas = 0;
+    ler_('Estoque').forEach(function (r) {
+      var q = estNum_(r.qtd); if (!para[r.loja] || !q) return;
+      lista.push({ produto_id: r.produto_id, produto: nomes[r.produto_id] || '', loja: r.loja, definir: 0 });
+      lista.push({ produto_id: r.produto_id, produto: nomes[r.produto_id] || '', loja: para[r.loja], delta: q });
+      pecas += q;
+    });
+    if (lista.length) estMovimentar_(lista, 'ajuste', 'Depósito unificado', 'Sistema', 'O depósito deixou de existir: saldo somado à prateleira');
+    var contagens = ler_('Contagens'), nCont = 0;
+    contagens.forEach(function (c) {
+      if (c.status !== 'aberta' || !para[c.local]) return;
+      var destino = para[c.local], outra = contagens.filter(function (x) { return x.id !== c.id && x.status === 'aberta' && x.local === destino; })[0];
+      if (outra) {
+        ler_('ContagemLeituras').forEach(function (l) { if (l.contagem_id === c.id) { l.contagem_id = outra.id; gravar_('ContagemLeituras', l); } });
+        c.status = 'cancelada'; c.fechada_em = agora_(); c.fechada_por = 'Sistema'; c.obs = (c.obs ? c.obs + ' · ' : '') + 'Depósito unificado: leituras juntadas em "' + outra.nome + '"';
+      } else { c.local = destino; c.obs = (c.obs ? c.obs + ' · ' : '') + 'Era a contagem do depósito'; }
+      gravar_('Contagens', c); nCont++;
+    });
+    var nTransf = 0;
+    ler_('Transferencias').forEach(function (t) {
+      if (t.status !== 'em_transito' || (!para[t.de] && !para[t.para])) return;
+      if (para[t.de]) t.de = para[t.de];
+      if (para[t.para]) t.para = para[t.para];
+      gravar_('Transferencias', t); nTransf++;
+    });
+    var vivos = brutos.filter(function (x) { return x && x.tipo !== 'deposito'; });
+    if (vivos.length && vivos.length !== brutos.length) setCfg_('estoque_locais', JSON.stringify(vivos));
+    setCfg_('estoque_sem_deposito', agora_());
+    log_('Sistema', 'depósito unificado', (lista.length / 2) + ' produto(s), ' + pecas + ' peça(s) para a prateleira · ' + nCont + ' contagem(ns) · ' + nTransf + ' transferência(s)');
+  });
+}
+
 /* ───────── junta o estoque nos pacotes que o app já recebe ───────── */
+
 var _estDadosColab = dadosColab_;
 dadosColab_ = function (c) {
   var d = _estDadosColab(c);
@@ -288,7 +344,7 @@ function estCancelarEntradaDentro_(id, motivo, por) {
   if (!String(motivo || '').trim()) throw new Error('Conte o motivo');
   var itens = []; try { itens = JSON.parse(e.itens || '[]'); } catch (x) {}
   var soma = {};
-  itens.forEach(function (i) { if (i.qtd > 0) { soma[i.produto_id] = soma[i.produto_id] || { produto_id: i.produto_id, produto: i.produto, loja: e.loja, delta: 0 }; soma[i.produto_id].delta -= i.qtd; } });
+  itens.forEach(function (i) { if (i.qtd > 0) { soma[i.produto_id] = soma[i.produto_id] || { produto_id: i.produto_id, produto: i.produto, loja: estLocalVivo_(e.loja), delta: 0 }; soma[i.produto_id].delta -= i.qtd; } });
   e.status = 'cancelada'; e.cancelada_em = agora_(); e.cancelada_por = por; e.obs = (e.obs ? e.obs + ' · ' : '') + 'Cancelada: ' + String(motivo).slice(0, 200);
   gravar_('Entradas', e);
   estMovimentar_(Object.keys(soma).map(function (k) { return soma[k]; }), 'entrada_cancelada', 'NF ' + (e.numero || 's/n'), por, String(motivo).slice(0, 200));
@@ -338,6 +394,8 @@ function estOp_(req, por, admin) {
   if (op === 'vincular') { estVincular_(req, por); return { ok: true, vinculos: estPacote_(false).vinculos }; }
   if (op === 'foto') return { ok: true, foto: estFotoSalvar_(req, por) };
   if (op === 'produtoNovo') return { ok: true, produto: estProdutoNovo_(req, por) };
+  if (op === 'produtoEditar') { var ed = estProdutoCorrigir_(req.produto_id, req.campos, por, por, admin); ed.semPacote = true; return ed; }   // v54
+  if (op === 'produtoTirar') { var tr = estProdutoTirar_(req.produto_id, req.motivo, por, por); tr.semPacote = true; return tr; }             // v54
   if (!admin) throw new Error('Só a administração pode fazer isso');
   if (op === 'fotosSite') return { fotos: estFotosSite_(req, por) };
   if (op === 'fotoRemover') { estFotoRemover_(req, por); return {}; }
@@ -413,6 +471,66 @@ function estArrRanking_() {
   });
   return Object.keys(r).map(function (k) { return r[k]; }).sort(function (x, y) { return y.pontos - x.pontos; });
 }
+/* ───────── corrigir um produto (v54: a mesma regra no link do mutirão e no portal) ─────────
+   Nome, código e categoria entram na hora. PREÇO mexido pela equipe vira pedido para a administração aprovar;
+   mexido pela administração entra na hora. Tudo fica na aba Arrumacao (quem, o quê, antes → depois). */
+function estProdutoCorrigir_(produtoId, campos, por, quemLog, admin) {
+  return comTrava_(function () {
+    var p = ler_('Produtos').filter(function (x) { return x.id === String(produtoId || ''); })[0];
+    if (!p) throw new Error('Produto não encontrado');
+    var c = campos || {}, feitos = [], pendentes = [];
+    var trocar = function (campo, valor, max) {
+      var v = String(valor == null ? '' : valor).replace(/\s+/g, ' ').trim().slice(0, max);
+      if (v === String(p[campo] || '')) return;
+      estArrRegistrar_({ por: por, produto_id: p.id, produto: p.nome, tipo: 'correcao', campo: campo, antes: String(p[campo] || ''), depois: v });
+      p[campo] = v; feitos.push(campo);
+    };
+    if ('nome' in c) { if (String(c.nome || '').trim().length < 3) throw new Error('Nome muito curto'); trocar('nome', c.nome, 120); }
+    if ('categoria' in c) trocar('categoria', c.categoria, 60);
+    if ('codigo' in c) {
+      var cod = String(c.codigo || '').replace(/\s/g, '').slice(0, 40);
+      if (cod && cod !== String(p.codigo || '')) {
+        var dono = ler_('Produtos').filter(function (x) { return x.id !== p.id && (x.codigo === cod || x.sku === cod); })[0];
+        if (dono) throw new Error('O código ' + cod + ' já é do produto "' + dono.nome + '"');
+      }
+      trocar('codigo', cod, 40);
+    }
+    if (feitos.length) { p.atualizado_em = agora_(); gravar_('Produtos', p); }
+    if ('preco' in c && String(c.preco).trim() !== '') {
+      var novo = valor_(c.preco), atual = Number(p.preco) || 0;
+      if (Math.abs(novo - atual) > 0.004) {
+        var ja = ler_('Arrumacao').filter(function (a) { return a.produto_id === p.id && a.campo === 'preco' && a.status === 'pendente'; })[0];
+        if (admin) {
+          if (!(novo > 0)) throw new Error('Preço inválido');
+          if (ja) { ja.status = 'recusado'; ja.revisado_por = 'Administração'; ja.revisado_em = agora_(); gravar_('Arrumacao', ja); }
+          estArrRegistrar_({ por: por, produto_id: p.id, produto: p.nome, tipo: 'correcao', campo: 'preco', antes: String(atual), depois: String(novo), status: 'aprovado' });
+          p.preco = String(novo); p.atualizado_em = agora_(); gravar_('Produtos', p); feitos.push('preco');
+        } else {
+          if (ja) { ja.depois = String(novo); ja.por = por; ja.quando = agora_(); gravar_('Arrumacao', ja); }
+          else estArrRegistrar_({ por: por, produto_id: p.id, produto: p.nome, tipo: 'correcao', campo: 'preco', antes: String(atual), depois: String(novo), status: 'pendente' });
+          pendentes.push('preco');
+        }
+      }
+    }
+    if (!feitos.length && !pendentes.length) throw new Error('Nada mudou');
+    log_(quemLog || por, 'arrumou produto', p.nome + ' · ' + feitos.concat(pendentes).join(', '));
+    return { ok: true, feitos: feitos, pendentes: pendentes,
+             produto: { id: p.id, nome: p.nome, codigo: p.codigo || '', categoria: p.categoria || '', preco: Number(p.preco) || 0 } };
+  });
+}
+/* A loja não trabalha mais com o produto → sai do catálogo e do PDV (fica desativado; a administração pode desfazer). */
+function estProdutoTirar_(produtoId, motivo, por, quemLog) {
+  return comTrava_(function () {
+    var p = ler_('Produtos').filter(function (x) { return x.id === String(produtoId || ''); })[0];
+    if (!p) throw new Error('Produto não encontrado');
+    var mot = String(motivo || '').replace(/\s+/g, ' ').trim().slice(0, 120);
+    if (p.ativo === 'NÃO') return { ok: true, ja: true };
+    estArrRegistrar_({ por: por, produto_id: p.id, produto: p.nome, tipo: 'correcao', campo: 'ativo', antes: 'SIM', depois: 'NÃO' + (mot ? ' · ' + mot : '') });
+    p.ativo = 'NÃO'; p.atualizado_em = agora_(); gravar_('Produtos', p);
+    log_(quemLog || por, 'tirou produto do catálogo', p.nome + (mot ? ' · ' + mot : ''));
+    return { ok: true };
+  });
+}
 function estFotosPublico_(req) {
   var ch = estFotosChave_();
   if (!ch || String(req.chave || '') !== ch) throw new Error('Esse link de fotos não está mais ativo. Peça o link novo para a administração.');
@@ -426,72 +544,11 @@ function estFotosPublico_(req) {
     comTrava_(function () { estArrRegistrar_({ por: por, produto_id: p0.id, produto: p0.nome, tipo: 'foto', campo: 'foto', antes: fotoAntes, depois: url }); });
     return { ok: true, foto: url };
   }
-  if (op === 'corrigir') {
-    return comTrava_(function () {
-      var p = achar(), c = req.campos || {}, feitos = [], pendentes = [];
-      var trocar = function (campo, valor, max) {
-        var v = String(valor == null ? '' : valor).replace(/\s+/g, ' ').trim().slice(0, max);
-        if (v === String(p[campo] || '')) return;
-        estArrRegistrar_({ por: por, produto_id: p.id, produto: p.nome, tipo: 'correcao', campo: campo, antes: String(p[campo] || ''), depois: v });
-        p[campo] = v; feitos.push(campo);
-      };
-      if ('nome' in c) { if (String(c.nome || '').trim().length < 3) throw new Error('Nome muito curto'); trocar('nome', c.nome, 120); }
-      if ('categoria' in c) trocar('categoria', c.categoria, 60);
-      if ('codigo' in c) {
-        var cod = String(c.codigo || '').replace(/\s/g, '').slice(0, 40);
-        if (cod && cod !== String(p.codigo || '')) {
-          var dono = ler_('Produtos').filter(function (x) { return x.id !== p.id && (x.codigo === cod || x.sku === cod); })[0];
-          if (dono) throw new Error('O código ' + cod + ' já é do produto "' + dono.nome + '"');
-        }
-        trocar('codigo', cod, 40);
-      }
-      if (feitos.length) { p.atualizado_em = agora_(); gravar_('Produtos', p); }
-      if ('preco' in c && String(c.preco).trim() !== '') {
-        var novo = valor_(c.preco), atual = Number(p.preco) || 0;
-        if (Math.abs(novo - atual) > 0.004) {
-          var ja = ler_('Arrumacao').filter(function (a) { return a.produto_id === p.id && a.campo === 'preco' && a.status === 'pendente'; })[0];
-          if (ja) { ja.depois = String(novo); ja.por = por; ja.quando = agora_(); gravar_('Arrumacao', ja); }
-          else estArrRegistrar_({ por: por, produto_id: p.id, produto: p.nome, tipo: 'correcao', campo: 'preco', antes: String(atual), depois: String(novo), status: 'pendente' });
-          pendentes.push('preco');
-        }
-      }
-      if (!feitos.length && !pendentes.length) throw new Error('Nada mudou');
-      log_(por + ' (link)', 'arrumou produto', p.nome + ' · ' + feitos.concat(pendentes).join(', '));
-      return { ok: true, feitos: feitos, pendentes: pendentes };
-    });
-  }
-  if ((op === 'contagem' || op === 'contar') && !estFotosContagemOn_()) throw new Error('A contagem de estoque pelo link está desligada por enquanto. Primeiro vamos arrumar fotos, nomes e categorias.');
-  if (op === 'contagem') {   // quanto já foi contado em cada produto (e por quem) na contagem escolhida
-    var cid = String(req.contagem_id || ''), ct = estContagemTotais_(cid), quem = {};
-    ler_('ContagemLeituras').forEach(function (l) { if (l.contagem_id === cid) quem[l.produto_id] = { por: String(l.por || '').replace(/ \(link\)$/, ''), quando: l.quando }; });
-    return { ok: true, contagem: { id: ct.id, nome: ct.nome, local: ct.local, status: ct.status }, totais: ct.totais, quem: quem };
-  }
-  if (op === 'contar') {     // grava a quantidade TOTAL do produto naquele local (vira uma leitura de diferença)
-    var q = Number(req.qtd);
-    if (!(q >= 0) || q > 100000 || Math.round(q) !== q) throw new Error('Quantidade inválida');
-    return comTrava_(function () {
-      var p = achar(), cid2 = String(req.contagem_id || '');
-      var c = estContagemAchar_(cid2, true), antes = estContagemTotais_(cid2).totais[p.id] || 0, delta = q - antes;
-      var jaTem = estContagemTotais_(cid2).totais[p.id] != null;
-      if (delta !== 0 || !jaTem) estContar_({ contagem_id: cid2, leituras: [{ uid: 'L' + new Date().getTime() + Math.floor(Math.random() * 1e4), produto_id: p.id, delta: delta, zero: delta === 0 }] }, por + ' (link)');
-      var locais = estLocaisMapa_();
-      estArrRegistrar_({ por: por, produto_id: p.id, produto: p.nome, tipo: 'contagem', campo: 'estoque', antes: String(antes), depois: String(q) + ' · ' + ((locais[c.local] || {}).nome || c.local) + ' · ' + cid2 });
-      return { ok: true, total: q };
-    });
-  }
+  if (op === 'corrigir') return estProdutoCorrigir_(achar().id, req.campos, por, por + ' (link)', false);
   if (op === 'editados') {   // o que já foi mexido no mutirão (para conferir e corrigir) — sem contagem por pessoa
     return { ok: true, historico: ler_('Arrumacao').map(function (a) { return { id: a.id, quando: a.quando, por: a.por, produto_id: a.produto_id, produto: a.produto, tipo: a.tipo, campo: a.campo, antes: a.antes, depois: a.depois, status: a.status }; }).reverse().slice(0, 2000) };
   }
-  if (op === 'tirar') {     // v21b: a loja não trabalha mais com o produto → sai do catálogo/PDV (fica desativado; a administração pode desfazer)
-    return comTrava_(function () {
-      var p = achar(), mot = String(req.motivo || '').replace(/\s+/g, ' ').trim().slice(0, 120);
-      if (p.ativo === 'NÃO') return { ok: true, ja: true };
-      estArrRegistrar_({ por: por, produto_id: p.id, produto: p.nome, tipo: 'correcao', campo: 'ativo', antes: 'SIM', depois: 'NÃO' + (mot ? ' · ' + mot : '') });
-      p.ativo = 'NÃO'; p.atualizado_em = agora_(); gravar_('Produtos', p);
-      log_(por + ' (link)', 'tirou produto do catálogo', p.nome + (mot ? ' · ' + mot : ''));
-      return { ok: true };
-    });
-  }
+  if (op === 'tirar') return estProdutoTirar_(achar().id, req.motivo, por, por + ' (link)');   // v21b
   if (op === 'ok') {
     return comTrava_(function () {
       var p = achar(), av = String(req.aviso || '').replace(/[^\w-]/g, '').slice(0, 30);
@@ -612,6 +669,7 @@ rodar_ = function (req) {
       var r = estOp_(req, c.nome, false);
       if (['confirmar', 'transferir', 'receberTransf', 'saida', 'produtoNovo'].indexOf(req.op) >= 0) { var d = dadosColab_(c); d.entradaFeita = r.entrada; d.transfFeita = r.transferencia; d.produtoFeito = r.produto; return d; }
       if (req.op === 'contar' || req.op === 'contagem') { r.ok = true; return r; }
+      if (r && r.semPacote) { delete r.semPacote; r.ok = true; }
       return r;
     } catch (e) { return { ok: false, erro: String(e && e.message || e) }; }
   }
@@ -837,7 +895,7 @@ function estContagemCancelar_(req, por) {
 }
 
 /* ═════════════ TRANSFERÊNCIAS ═════════════
-   Depósito → prateleira da MESMA loja: entra na hora. Entre lojas (ex.: depósito do Bosque → Centro): sai da origem e fica
+   Entre lojas (Bosque ↔ Centro): sai da origem e fica
    "em trânsito" até quem recebe conferir no destino (o que faltar vira divergência). */
 function estTransfPacote_(admin) {
   var desde = diaMais_(admin ? -60 : -20);
@@ -916,7 +974,7 @@ function estCancelarTransfDentro_(req, por) {
   if (!t) throw new Error('Transferência não encontrada');
   if (t.status !== 'em_transito') throw new Error('Só dá para cancelar a que ainda está em trânsito');
   var itens = JSON.parse(t.itens || '[]');
-  estMovimentar_(itens.map(function (i) { return { produto_id: i.produto_id, produto: i.produto, loja: t.de, delta: i.qtd }; }), 'transf_cancelada', 'Volta para a origem', por, String(req.motivo || '').slice(0, 200));
+  estMovimentar_(itens.map(function (i) { return { produto_id: i.produto_id, produto: i.produto, loja: estLocalVivo_(t.de), delta: i.qtd }; }), 'transf_cancelada', 'Volta para a origem', por, String(req.motivo || '').slice(0, 200));
   t.status = 'cancelada'; t.recebida_em = agora_(); t.recebida_por = por; t.obs = (t.obs ? t.obs + ' · ' : '') + 'Cancelada: ' + String(req.motivo || '').slice(0, 150);
   gravar_('Transferencias', t);
   log_(por, 'transferência cancelada', t.id);
@@ -943,7 +1001,7 @@ function estSalvarLocais_(req) {
     var id = String(x.id || '').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
     if (!id || ids[id]) throw new Error('Código de local inválido ou repetido');
     if (!lojas[x.loja]) throw new Error('Loja inválida no local ' + id);
-    ids[id] = 1; return { id: id, nome: String(x.nome || id).slice(0, 40), loja: x.loja, tipo: x.tipo === 'deposito' ? 'deposito' : 'prateleira' };
+    ids[id] = 1; return { id: id, nome: String(x.nome || id).slice(0, 40), loja: x.loja, tipo: 'prateleira' };
   });
   if (!l.length) throw new Error('Cadastre ao menos um local');
   setCfg_('estoque_locais', JSON.stringify(l));

@@ -1,5 +1,5 @@
 /* ═════════════════════ ESTOQUE v10: 3 LOCAIS + CONTAGEM + TRANSFERÊNCIA + SAÍDA + REPOSIÇÃO + PDV LIGADO ═════════════════════
-   Locais: Bosque · Prateleira (bosque) · Bosque · Depósito (deposito) · Centro · Prateleira (centro).
+   Locais: Bosque · Prateleira (bosque) · Centro · Prateleira (centro). (v54: o depósito saiu; a aba Repor saiu junto.)
    Portal › Estoque: Receber · Contar · Transferir · Saída · Repor · Consultar.
    Administração › Estoque: Saldo por local · Repor · Contagens · Transferências · Receber · Saída · Entradas · Movimentos · Importar · Configurar.
    Servidor: ponto/servidor/ESTOQUE.gs (mesmo arquivo do v9, ampliado). */
@@ -212,13 +212,15 @@ async function cntSync(forcar){
 setInterval(()=>{ if(CNT && document.getElementById('cnt-q') && !CNT.enviando) cntSync(true); }, 20000);   // vê a contagem das colegas
 
 /* ═════════ TRANSFERIR ═════════ */
-var TRF = {de:'deposito', para:'bosque', itens:[], q:'', obs:''};
+var TRF = {de:'bosque', para:'centro', itens:[], q:'', obs:''};
 function estTransferir(){
   const em = (estD().transferencias||[]).filter(t=>t.status==='em_transito');
   const minhaLoja = estMinhaLoja(), locais = estLocais();
   const paraMim = em.filter(t=>!minhaLoja || (locais.find(l=>l.id===t.para)||{}).loja===minhaLoja);
   const atalhos = [];
-  locais.filter(l=>l.tipo==='deposito').forEach(d=>locais.filter(l=>l.id!==d.id && l.tipo!=='deposito').forEach(p=>atalhos.push([d.id,p.id])));
+  if(!locais.some(l=>l.id===TRF.de)) TRF.de = (locais[0]||{}).id;
+  if(!locais.some(l=>l.id===TRF.para) || TRF.para===TRF.de) TRF.para = (locais.find(l=>l.id!==TRF.de)||locais[0]||{}).id;
+  locais.forEach(a=>locais.filter(b=>b.id!==a.id).forEach(b=>atalhos.push([a.id,b.id])));
   const tot = TRF.itens.reduce((s,i)=>s+i.qtd,0), mesmaLoja = (locais.find(l=>l.id===TRF.de)||{}).loja === (locais.find(l=>l.id===TRF.para)||{}).loja;
   return `${paraMim.length?`<div class="cartao pad" style="margin-bottom:14px;border-color:rgba(245,181,36,.6)"><h2 style="margin:0 0 8px;font-size:18px">📦 Chegando para conferir (${paraMim.length})</h2>${paraMim.map(estLinhaTransf).join('')}</div>`:''}
   <div class="cartao pad"><h2 style="margin:0 0 8px;font-size:19px">🔁 Transferir mercadoria</h2>
@@ -270,7 +272,7 @@ async function estCancelarTransfUI(id){
 /* ═════════ SAÍDA (sem venda) ═════════ */
 var SAI = {local:null, motivo:'', itens:[], q:'', obs:''};
 function estSaidaTela(){
-  if(!SAI.local) SAI.local = estAdmin() ? 'deposito' : estPrateleira(estLojaHoje());
+  if(!SAI.local || !estLocais().some(l=>l.id===SAI.local)) SAI.local = estAdmin() ? estLocaisIds()[0] : estPrateleira(estLojaHoje());
   const motivos = estD().motivos || ['Avaria / quebra','Brinde','Chá de lingerie / evento','Uso interno / mostruário','Devolução ao fornecedor','Perda / sumiu','Troca com cliente','Outro'];
   const tot = SAI.itens.reduce((s,i)=>s+i.qtd,0);
   return `<div class="cartao pad"><h2 style="margin:0 0 4px;font-size:19px">📤 Saída sem venda</h2><p class="suave" style="margin:0 0 12px;font-size:14px">Produto que saiu do estoque sem ser vendido: quebrou, foi brinde, foi para um chá de lingerie, voltou para o fornecedor…</p>
@@ -331,7 +333,7 @@ function estReporCopiar(gi){ const g = estReposicao()[gi];
   (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(()=>toast('Lista copiada ✔')).catch(()=>window.open('https://wa.me/?text='+encodeURIComponent(t))); }
 
 /* ═════════ ADMINISTRAÇÃO › CONTAGENS ═════════ */
-var CNA = {local:'deposito', nome:''};
+var CNA = {local:'bosque', nome:''};
 let CNREV = null;
 function admContagens(){
   const L = estD().contagens||[], ab = L.filter(c=>c.status==='aberta'), fe = L.filter(c=>c.status!=='aberta');
@@ -396,13 +398,14 @@ function estContadores(){
 }
 function portalEstoque(){
   const k = estContadores(), aba = S.estAba || (k.cont ? 'contar' : 'receber');
-  const abas = [['receber','ti-truck-delivery','Receber'],['contar','ti-scan','Contar',k.cont],['transferir','ti-arrows-exchange','Transferir',k.chegando],['repor','ti-basket','Repor',k.repor],['saida','ti-package-export','Saída'],['consulta','ti-search','Consultar']];
-  const corpo = ({receber:estTela, contar:estContar, transferir:estTransferir, repor:estRepor, saida:estSaidaTela, consulta:()=>estConsulta().replace('<h2 class="secao">','<h2 class="secao" style="margin-top:0">')})[aba]();
+  const abas = [['receber','ti-truck-delivery','Receber'],['contar','ti-scan','Contar',k.cont],['transferir','ti-arrows-exchange','Transferir',k.chegando],['saida','ti-package-export','Saída'],['consulta','ti-search','Consultar']];
+  const telas = {receber:estTela, contar:estContar, transferir:estTransferir, saida:estSaidaTela, consulta:()=>estConsulta().replace('<h2 class="secao">','<h2 class="secao" style="margin-top:0">')};
+  const corpo = (telas[aba] || telas.receber)();
   return `<div class="est-hub">${abas.map(([id,i,n,b])=>`<button class="${aba===id?'on':''}" onclick="S.estAba='${id}';render()"><i class="ti ${i}"></i>${n}${b?`<span class="contador">${b}</span>`:''}</button>`).join('')}</div>${corpo}`;
 }
 function admEstoque(){
   const sub = S.adm.estSub || 'saldo', E = estD(), k = estContadores();
-  const subs = [['saldo','ti-stack-2','Saldo por local'],['repor','ti-basket','Repor',k.repor],['contagens','ti-scan','Contagens',k.cont],['transferir','ti-arrows-exchange','Transferências',k.chegando],['receber','ti-truck-delivery','Receber'],['saida','ti-package-export','Saída'],['entradas','ti-file-invoice','Entradas'],['movimentos','ti-history','Movimentos'],['importar','ti-file-import','Importar saldo'],['config','ti-settings','Configurar']];
+  const subs = [['saldo','ti-stack-2','Saldo por local'],['contagens','ti-scan','Contagens',k.cont],['transferir','ti-arrows-exchange','Transferências',k.chegando],['receber','ti-truck-delivery','Receber'],['saida','ti-package-export','Saída'],['entradas','ti-file-invoice','Entradas'],['movimentos','ti-history','Movimentos'],['importar','ti-file-import','Importar saldo'],['config','ti-settings','Configurar']];
   const corpo = ({saldo:admEstSaldo, repor:estRepor, contagens:admContagens, contar:estContar, transferir:estTransferir, receber:estTela, saida:estSaidaTela, entradas:admEstEntradas, movimentos:admEstMov, importar:admEstImportar, config:admEstConfig})[sub]();
   return `${E.semServidor?`<div class="nota warn" style="margin-bottom:12px"><i class="ti ti-plug-connected-x"></i><div><b>O servidor ainda não tem o estoque.</b> Abra o Apps Script, crie/atualize o arquivo <b>ESTOQUE</b>, cole o código e publique uma nova versão. ${E.erro?'<br>Erro: '+esc(E.erro):''}</div></div>`:''}
     ${!E.semServidor && E.locais===undefined?`<div class="nota warn" style="margin-bottom:12px"><i class="ti ti-refresh-alert"></i><div><b>Atualize o ESTOQUE.gs no Apps Script</b> (versão com depósito, contagem e transferências) e publique uma nova versão.</div></div>`:''}
@@ -419,14 +422,14 @@ telaPortal = function telaPortal(){
 };
 const _portalMaisV10 = portalMais;
 portalMais = function portalMais(){
-  return _portalMaisV10().replace('<b>Receber mercadoria</b><p>Nota do fornecedor → estoque da loja · consultar estoque</p>', '<b>Estoque</b><p>Receber nota · contar · transferir · repor · saída · consultar</p>');
+  return _portalMaisV10().replace('<b>Receber mercadoria</b><p>Nota do fornecedor → estoque da loja · consultar estoque</p>', '<b>Estoque</b><p>Receber nota · contar · transferir · saída · consultar</p>');
 };
 const _itensBuscaV10 = itensBusca;
 itensBusca = function itensBusca(){
   const r = _itensBuscaV10();
   const ir = (a, adm) => ()=>{ if(adm){ S.adm.tab='estoque'; S.adm.estSub=a; } else { S.tela='portal'; S.portalTab='estoque'; S.estAba=a; } render(); };
   const adm = !!(S.adm && S.tela==='admin');
-  if(adm || S.sess) [['Contar estoque','Levantamento com leitor ou câmera','ti-scan', adm?'contagens':'contar'],['Transferir mercadoria','Depósito → prateleira, Bosque → Centro','ti-arrows-exchange','transferir'],['Repor prateleira','Lista automática do que levar do depósito','ti-basket','repor'],['Saída sem venda','Avaria, brinde, chá de lingerie…','ti-package-export','saida']]
+  if(adm || S.sess) [['Contar estoque','Levantamento com leitor ou câmera','ti-scan', adm?'contagens':'contar'],['Transferir mercadoria','Bosque → Centro, Centro → Bosque','ti-arrows-exchange','transferir'],['Saída sem venda','Avaria, brinde, chá de lingerie…','ti-package-export','saida']]
     .forEach(([t,s,i,a])=>r.unshift({t, s, i, go:ir(a, adm)}));
   return r;
 };

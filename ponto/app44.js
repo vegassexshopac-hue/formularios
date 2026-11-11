@@ -127,7 +127,7 @@ function site44Tela(){
 /* cartão no Início de quem está no Bosque */
 function site44CartaoInicio(){
   const n = site44Pend(); if(!n || !site44Meu()) return '';
-  return `<button class="s44-ini" onclick="S.portalTab='site';SITE44.filtro='separar';render()"><span class="ic">🛍️</span><span class="t"><b>${n} ${n===1?'pedido do site':'pedidos do site'} para separar</b><small>Sai do depósito do Bosque · toque para ver</small></span><i class="ti ti-chevron-right"></i></button>`;
+  return `<button class="s44-ini" onclick="S.portalTab='site';SITE44.filtro='separar';render()"><span class="ic">🛍️</span><span class="t"><b>${n} ${n===1?'pedido do site':'pedidos do site'} para separar</b><small>Sai da Loja Bosque · toque para ver</small></span><i class="ti ti-chevron-right"></i></button>`;
 }
 
 /* ───────── encaixe no portal da equipe (Vendas › Pedidos do site) ───────── */

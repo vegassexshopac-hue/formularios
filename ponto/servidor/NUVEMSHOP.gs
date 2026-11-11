@@ -16,7 +16,7 @@
    • Manda o estoque do portal para o site (soma dos locais escolhidos) — na hora que
      o estoque muda (venda, entrada, transferência…) e em lote quando a administração pedir.
    • Recebe os pedidos do site por webhook (sem ficar consultando): grava na aba VendasSite
-     e dá baixa no local escolhido (padrão: Bosque · Depósito). Pedido cancelado devolve.
+     e dá baixa no local escolhido (padrão: Bosque · Prateleira). Pedido cancelado devolve.
    Endereço do webhook e do retorno do OAuth: o próprio /exec deste script.
    ═══════════════════════════════════════════════════════════════ */
 
@@ -24,7 +24,7 @@ ABAS.VendasSite = ['id', 'numero', 'criada_em', 'data', 'hora', 'status', 'pagam
                    'subtotal', 'desconto', 'frete', 'total', 'pagamento', 'itens', 'qtd_itens', 'baixa_local', 'baixa_em', 'devolvido_em', 'obs', 'atualizado_em'];
 ABAS.VinculosNuvemshop = ['produto_id', 'ns_produto_id', 'ns_variante_id', 'sku', 'ean', 'nome', 'estoque_enviado', 'enviado_em', 'atualizado_em'];
 
-var NS_PADRAO = { local_baixa: 'deposito', locais_site: ['bosque', 'deposito', 'centro'], baixa_site: true, enviar_estoque: true, importar_fotos: true,
+var NS_PADRAO = { local_baixa: 'bosque', locais_site: ['bosque', 'centro'], baixa_site: true, enviar_estoque: true, importar_fotos: true,
                   ultima_importacao: '', ultimo_envio: '', webhooks: [] };
 CONFIG_PADRAO.push(['nuvemshop', JSON.stringify(NS_PADRAO), 'Nuvemshop (JSON): local_baixa = local de onde sai o pedido do site · locais_site = locais somados no estoque do site · baixa_site · enviar_estoque']);
 EST_TIPOS.venda_site = 'Venda no site';
@@ -43,7 +43,8 @@ function nsCfg_() {
   var locais = estLocaisMapa_();
   o.locais_site = (Array.isArray(o.locais_site) ? o.locais_site : NS_PADRAO.locais_site).filter(function (l) { return locais[l]; });
   if (!o.locais_site.length) o.locais_site = Object.keys(locais);
-  if (!locais[o.local_baixa]) o.local_baixa = locais.deposito ? 'deposito' : Object.keys(locais)[0];
+  if (!locais[o.local_baixa]) o.local_baixa = estLocalVivo_(o.local_baixa);   // v54: o depósito saiu → prateleira do Bosque
+  if (!locais[o.local_baixa]) o.local_baixa = Object.keys(locais)[0];
   o.baixa_site = o.baixa_site !== false && o.baixa_site !== 'false';
   o.enviar_estoque = o.enviar_estoque !== false && o.enviar_estoque !== 'false';
   o.importar_fotos = o.importar_fotos !== false && o.importar_fotos !== 'false';
@@ -330,7 +331,7 @@ function nsProcessarPedido_(o, origem) {
     }
     if (cancelado && v.baixa_em && !v.devolvido_em) {
       var mov2 = nsItensParaEstoque_(itens);
-      if (mov2.lista.length) estMovimentar_(mov2.lista.map(function (m) { return { produto_id: m.produto_id, produto: m.produto, loja: v.baixa_local || cfg.local_baixa, delta: m.qtd }; }), 'venda_site_cancelada', 'Site #' + v.numero, 'Site');
+      if (mov2.lista.length) estMovimentar_(mov2.lista.map(function (m) { return { produto_id: m.produto_id, produto: m.produto, loja: estLocalVivo_(v.baixa_local || cfg.local_baixa), delta: m.qtd }; }), 'venda_site_cancelada', 'Site #' + v.numero, 'Site');
       v.devolvido_em = agora_();
     }
     gravar_('VendasSite', v);

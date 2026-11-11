@@ -41,7 +41,7 @@ function admNuvemshop(){
   if(!N) return `<div class="nota warn"><i class="ti ti-plug-connected-x"></i><div><b>O servidor ainda não tem a Nuvemshop.</b> Abra o Apps Script, crie o arquivo <b>NUVEMSHOP</b>, cole o código de <code>ponto/servidor/NUVEMSHOP.gs</code> e publique uma nova versão.</div></div>`;
   if(N.erro) return `<div class="nota bad"><i class="ti ti-alert-triangle"></i><div>Erro ao ler a Nuvemshop: ${esc(N.erro)}</div></div>`;
   const c = N.cfg || {};
-  NSF = NSF || {app_id:N.app_id||'', secret:'', locais:[...(c.locais_site||[])], baixa:c.local_baixa||'deposito', baixa_site:!!c.baixa_site, enviar:!!c.enviar_estoque, fotos:c.importar_fotos!==false};
+  NSF = NSF || {app_id:N.app_id||'', secret:'', locais:[...(c.locais_site||[])], baixa:c.local_baixa||'bosque', baixa_site:!!c.baixa_site, enviar:!!c.enviar_estoque, fotos:c.importar_fotos!==false};
   const estado = N.conectado ? 'on' : N.configurado ? 'meio' : 'off';
   const hero = N.conectado
     ? `<b>Conectado à ${esc(N.loja_nome||'loja do site')}</b><small>Loja nº ${esc(N.store_id)} · desde ${nsQuando(N.conectado_em)}${N.loja_url?` · <a href="${esc(N.loja_url)}" target="_blank" rel="noopener">${esc(N.loja_url.replace(/^https?:\/\//,''))}</a>`:''}</small>`
