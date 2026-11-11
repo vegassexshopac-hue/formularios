@@ -87,20 +87,40 @@ function missCalendarioTexto_(t) {
   while ((m = re.exec(t))) cal[m[1]] = m[2].split(' ').filter(String);
   return cal;
 }
+function missBaixar_(url) {
+  try { var r = UrlFetchApp.fetch(url, { muteHttpExceptions: true, followRedirects: true }); return { cod: r.getResponseCode(), txt: r.getResponseCode() < 300 ? r.getContentText() : '' }; }
+  catch (e) { return { cod: 0, txt: '', erro: String(e && e.message || e) }; }
+}
+function missTem_(o) { for (var k in o) return true; return false; }
 function missCalendarioSite_(cfg) {
-  var r = UrlFetchApp.fetch(cfg.site + '/', { muteHttpExceptions: true, followRedirects: true });
-  if (r.getResponseCode() >= 300) throw new Error('O site respondeu ' + r.getResponseCode());
-  var t = r.getContentText(), cal = missCalendarioTexto_(t), k;
-  for (k in cal) return cal;
-  var ids = {}, lista = (t.match(/GTM-[A-Z0-9]{4,12}/g) || []).concat(cfg.gtm ? [cfg.gtm] : []);
-  lista.forEach(function (id) { ids[id] = 1; });
-  for (var id in ids) {
-    try {
-      var g = UrlFetchApp.fetch('https://www.googletagmanager.com/gtm.js?id=' + id, { muteHttpExceptions: true });
-      if (g.getResponseCode() < 300) { cal = missCalendarioTexto_(g.getContentText()); for (k in cal) return cal; }
-    } catch (e) {}
+  var passos = [], cal, g, ids = {};
+  if (cfg.gtm) ids[cfg.gtm] = 1;
+  for (var id in ids) {                                   // 1º: o contêiner GTM conhecido (não depende da loja responder)
+    g = missBaixar_('https://www.googletagmanager.com/gtm.js?id=' + id); passos.push('GTM ' + id + ': ' + (g.cod || g.erro));
+    cal = missCalendarioTexto_(g.txt); if (missTem_(cal)) return cal;
   }
-  throw new Error('Não achei o calendário das ofertas na página do site');
+  var h = missBaixar_(cfg.site + '/'); passos.push('site: ' + (h.cod || h.erro));
+  cal = missCalendarioTexto_(h.txt); if (missTem_(cal)) return cal;
+  (h.txt.match(/GTM-[A-Z0-9]{4,12}/g) || []).forEach(function (x) { if (!ids[x]) ids[x] = 2; });
+  for (var id2 in ids) if (ids[id2] === 2) {
+    g = missBaixar_('https://www.googletagmanager.com/gtm.js?id=' + id2); passos.push('GTM ' + id2 + ': ' + (g.cod || g.erro));
+    cal = missCalendarioTexto_(g.txt); if (missTem_(cal)) return cal;
+  }
+  throw new Error('Não achei o calendário das ofertas (' + passos.join(' · ') + ')');
+}
+/* rodar pelo editor do Apps Script para ver por que as ofertas não vieram (só lê, não grava nada) */
+function missDiagnostico() {
+  var cfg = missCfg_(), hoje = hoje_(), o = { hoje: hoje, ativa: cfg.ativa, inicio: cfg.inicio, domingo: missDomingo_(hoje) };
+  var g = missBaixar_('https://www.googletagmanager.com/gtm.js?id=' + cfg.gtm), cg = missCalendarioTexto_(g.txt);
+  o.gtm = { cod: g.cod, erro: g.erro, tamanho: g.txt.length, dias: Object.keys(cg).length, hoje: cg[hoje] || null };
+  var h = missBaixar_(cfg.site + '/'); o.site = { cod: h.cod, erro: h.erro, tamanho: h.txt.length, dias: Object.keys(missCalendarioTexto_(h.txt)).length };
+  var hs = cg[hoje] || [];
+  if (hs.length) { var p = missBaixar_(cfg.site + '/produtos/' + hs[0] + '/'); o.pagina_produto = { cod: p.cod, erro: p.erro, tamanho: p.txt.length }; try { o.produto = missProdutoSite_(cfg, hs[0]); } catch (e) { o.produto = String(e); } }
+  try { o.api_conectada = typeof nsConectado_ === 'function' && nsConectado_(); } catch (e2) { o.api_conectada = String(e2); }
+  try { o.aba = ler_('MissaoOfertas').map(function (r) { return r.data + ' ' + r.origem; }); } catch (e3) { o.aba = String(e3); }
+  try { o.espera = CacheService.getScriptCache().get('miss_falha'); } catch (e4) {}
+  Logger.log('DIAG ' + JSON.stringify(o));
+  return o;
 }
 function missProdutoSite_(cfg, handle) {
   var o = { handle: handle, nome: '', foto: '', preco: 0, url: cfg.site + '/produtos/' + handle + '/', ns_id: '' };
@@ -168,7 +188,7 @@ function missGarantirOfertas_(cfg, forcar) {
     if (!hs.length) throw new Error('O site não tem ofertas marcadas para hoje');
     missGravarOfertas_(hoje, hs, 'site', cfg);
   } catch (e) {
-    try { CacheService.getScriptCache().put('miss_falha', '1', 600); } catch (e2) {}
+    try { CacheService.getScriptCache().put('miss_falha', String(e && e.message || e).slice(0, 300) || '1', 180); } catch (e2) {}
     log_('Missão do Dia', 'ofertas do site', String(e && e.message || e));
     if (forcar) throw e;
   }
@@ -477,7 +497,7 @@ ADMIN.admMissao = function (req) {
     var aviso = '';
     if (cfg.ativa) { try { missGarantirOfertas_(cfg, false); } catch (e) {} }
     var ctx = missCtx_(), hoje = ctx.hoje, desde = campDia_(hoje, -35);
-    if (cfg.ativa && !missDomingo_(hoje) && hoje >= cfg.inicio && !(ctx.ofertas[hoje] || []).length) aviso = 'Não consegui ler as ofertas de hoje no site. Toque em "Buscar no site de novo" ou cole os links dos produtos.';
+    if (cfg.ativa && !missDomingo_(hoje) && hoje >= cfg.inicio && !(ctx.ofertas[hoje] || []).length) { aviso = 'Não consegui ler as ofertas de hoje no site. Toque em "Buscar no site de novo" ou cole os links dos produtos.'; try { var mf = CacheService.getScriptCache().get('miss_falha'); if (mf && mf !== '1') aviso += ' Motivo: ' + mf; } catch (e9) {} }
     var jg = campJogos_(); jg.missao = !!cfg.ativa;
     return { ok: true, cfg: cfg, jogos: jg, ia: missIaLigada_(), hoje: hoje, aviso: aviso, ofertas: ctx.ofertas[hoje] || [], origem: (ler_('MissaoOfertas').filter(function (r) { return r.data === hoje; })[0] || {}).origem || '',
              ranking: missRanking_(ctx), campeas: missCampeas_(ctx),
