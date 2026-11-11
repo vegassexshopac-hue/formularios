@@ -201,6 +201,8 @@ function fidPontosNome_(nome, pal) {
 function fidBateTel_(tel, dig) {
   tel = fidTel_(tel); if (!tel || dig.length < 4) return false;
   var d = fidTel_(dig);
+  if (/^55\d{4,}$/.test(d)) d = d.slice(2);    // +55 com o número ainda pela metade
+  if (/^0\d{4,}$/.test(d)) d = d.slice(1);
   if (tel.indexOf(dig) >= 0 || (d.length >= 4 && tel.indexOf(d) >= 0)) return true;
   return d.length >= 8 && tel.slice(-8) === d.slice(-8);   // mesmo número com ou sem o 9 / DDD
 }

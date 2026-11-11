@@ -378,7 +378,7 @@ const fidTelLimpo = t => { t = String(t||'').replace(/\D/g,''); if(/^55\d{10,11}
 function fidBate(c, busca){
   const dig = String(busca).replace(/\D/g,''), temLetra = /[a-z]/.test(semAcento(busca));
   if(!temLetra){
-    const tel = fidTelLimpo(c.tel), d = fidTelLimpo(dig);
+    const tel = fidTelLimpo(c.tel); let d = fidTelLimpo(dig); if(/^55\d{4,}$/.test(d)) d = d.slice(2); if(/^0\d{4,}$/.test(d)) d = d.slice(1);
     if(!tel || dig.length < 3) return false;
     return tel.includes(dig) || (d.length>=3 && tel.includes(d)) || (d.length>=8 && tel.slice(-8)===d.slice(-8));
   }
