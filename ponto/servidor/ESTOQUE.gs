@@ -233,7 +233,7 @@ function estIA_(arquivos, prompt) {
     resp = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
       method: 'post', contentType: 'application/json', muteHttpExceptions: true,
       headers: { 'x-api-key': chave, 'anthropic-version': '2023-06-01' },
-      payload: JSON.stringify({ model: modelo, max_tokens: 16000, temperature: 0, messages: [{ role: 'user', content: conteudo }] }) });
+      payload: JSON.stringify({ model: modelo, max_tokens: 16000, messages: [{ role: 'user', content: conteudo }] }) });
     var ja = estJson_(resp.getContentText());
     if (resp.getResponseCode() >= 300) throw new Error('A IA recusou (' + resp.getResponseCode() + '): ' + ((ja && ja.error && ja.error.message) || 'erro'));
     txt = (ja.content || []).map(function (p) { return p.text || ''; }).join('');
