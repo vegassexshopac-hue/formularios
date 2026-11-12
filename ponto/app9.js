@@ -154,7 +154,7 @@ document.write('<script src="app49.js?v=49"><\/script>');
 /* v50: entregas com moto — cadastrar, sair com a moto (GPS do celular), mapa ao vivo e link da cliente estilo iFood em /e/ (entregas.js; motor /api/entregas e /api/rastreio) */
 document.write('<script src="entregas.js?v=50"><\/script>');
 /* v51: vídeos do portal dentro do próprio portal — faixa no Tirar dúvida e "Ver o vídeo" toca aqui (videos51.js; arquivos em ponto/videos/) */
-document.write('<script src="videos51.js?v=51b"><\/script>');
+document.write('<script src="videos51.js?v=58"><\/script>');
 /* v52: comanda do PDV com mais espaço no computador (Total e Finalizar presos embaixo), acréscimo ao lado do desconto e parcelas com o valor — até 6× sem juros (app52.js; servidor PDV.gs) */
 document.write('<script src="app52.js?v=52"><\/script>');
 /* v53: botão Comprovante envia pela conversa da Kommo (robô), com o WhatsApp de reserva; situação em Atendimento · Kommo › Configurar (app53.js; serviço próprio comprovante-kommo-las-vegas no Railway) */
