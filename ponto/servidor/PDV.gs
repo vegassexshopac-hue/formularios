@@ -12,7 +12,7 @@
 ABAS.Produtos = ['id', 'codigo', 'sku', 'nome', 'categoria', 'preco', 'preco_promo', 'ativo', 'origem', 'atualizado_em'];
 ABAS.VendasPDV = ['id', 'numero', 'criada_em', 'data', 'hora', 'loja', 'colaboradora_id', 'colaboradora', 'itens', 'qtd_itens',
                   'subtotal', 'desconto', 'total', 'pagamento', 'parcelas', 'recebido', 'troco', 'cliente', 'cliente_tel', 'obs',
-                  'status', 'cancelada_em', 'cancelada_por', 'motivo_cancel', 'acrescimo'];   // v52: acrescimo (entra sozinha no fim do cabeçalho)
+                  'status', 'cancelada_em', 'cancelada_por', 'motivo_cancel', 'acrescimo', 'promo'];   // v52: acrescimo (entra sozinha no fim do cabeçalho)
 
 var PDV_FORMAS = ['pix', 'dinheiro', 'debito', 'credito', 'misto'];
 /* Trava única do sistema (reentrante): duas lojas vendendo/recebendo ao mesmo tempo não se atropelam.
@@ -27,7 +27,19 @@ function comTrava_(fn) {
 var PDV_PADRAO = { desconto_max: 15, cancelar_min: 15, acrescimo: 1 };   // acrescimo: 1 = este servidor já sabe somar acréscimo (o site só mostra o campo se vier 1)
 CONFIG_PADRAO.push(['pdv', JSON.stringify(PDV_PADRAO), 'Regras do PDV (JSON): desconto_max em % e minutos para a vendedora desfazer a própria venda']);
 
-function pdvCfg_() { var c = cfgJson_('pdv', {}); var o = {}; for (var k in PDV_PADRAO) o[k] = (c && c[k] != null) ? Number(c[k]) : PDV_PADRAO[k]; return o; }
+/* ───────── Black Friday (v59, 19/11/2026): botão temporário na comanda ─────────
+   De PDV_BF.de até PDV_BF.ate (inclusive), qualquer vendedora dá PDV_BF.pct % na venda inteira pelo botão da comanda.
+   Fora dessas datas o servidor não avisa o site (o botão some sozinho) e recusa a venda com a promoção.
+   Não soma com o cupom da roleta nem com os 20% do cartão fidelidade. Para repetir em outra data, mude as datas aqui. */
+var PDV_BF = { nome: 'Black Friday', pct: 30, de: '2026-11-19', ate: '2026-11-21' };
+var _pdvBfVenda = false;      // ligado só enquanto uma venda com o botão está sendo gravada
+function pdvBf_() { var h = hoje_(); return (h >= PDV_BF.de && h <= PDV_BF.ate) ? { nome: PDV_BF.nome, pct: PDV_BF.pct, ate: PDV_BF.ate } : null; }
+function pdvCfg_() {
+  var c = cfgJson_('pdv', {}); var o = {}; for (var k in PDV_PADRAO) o[k] = (c && c[k] != null) ? Number(c[k]) : PDV_PADRAO[k];
+  var bf = pdvBf_();
+  if (bf) { o.bf = bf; if (_pdvBfVenda && bf.pct > o.desconto_max) o.desconto_max = bf.pct; }
+  return o;
+}
 function r2_(n) { return Math.round((Number(n) || 0) * 100) / 100; }
 
 /* ───────── leitura ───────── */
@@ -78,6 +90,15 @@ ADMIN.admAoVivo = function (req) {
 var _pdvVendaManual = COLAB.venda;
 COLAB.venda = function (c, req) {
   if (req.pdv && req.cancelar) return pdvDesfazer_(c, req);
+  if (req.pdv && req.bf) {                       // v59: venda com o botão da Black Friday
+    if (!pdvBf_()) throw new Error('A promoção ' + PDV_BF.nome + ' valeu até ' + PDV_BF.ate.slice(8) + '/' + PDV_BF.ate.slice(5, 7) + '. Tire o desconto da promoção e finalize de novo.');
+    if (req.roleta_codigo) throw new Error('A ' + PDV_BF.nome + ' não soma com o cupom da roleta. Tire um dos dois.');
+    var dBf;
+    _pdvBfVenda = true;
+    try { dBf = pdvVender_(c, req); } finally { _pdvBfVenda = false; }
+    try { if (dBf.pdv && !dBf.pdv.erro) dBf.pdv.cfg = pdvCfg_(); } catch (e) {}
+    return dBf;
+  }
   if (req.pdv) return pdvVender_(c, req);
   // Lançamento manual do total do dia: não pode ficar menor do que o que já passou no PDV
   var data = /^\d{4}-\d{2}-\d{2}$/.test(req.data || '') ? req.data : hoje_();
@@ -145,10 +166,11 @@ function pdvVenderDentro_(c, req) {
             total: String(total), pagamento: forma, parcelas: String(forma === 'credito' ? Math.max(1, Math.min(12, Number(req.parcelas) || 1)) : 1),
             recebido: String(recebido), troco: String(recebido ? r2_(recebido - total) : 0),
             cliente: String(req.cliente || '').slice(0, 80), cliente_tel: String(req.cliente_tel || '').replace(/\D/g, '').slice(0, 13),
-            obs: String(req.obs || '').slice(0, 200), status: 'ok', cancelada_em: '', cancelada_por: '', motivo_cancel: '' };
+            obs: String(req.obs || '').slice(0, 200), status: 'ok', cancelada_em: '', cancelada_por: '', motivo_cancel: '',
+            promo: (_pdvBfVenda && desconto > 0.009) ? PDV_BF.nome + ' ' + PDV_BF.pct + '%' : '' };
   gravar_('VendasPDV', v);
   pdvAgregar_(data, loja, c, total, c.nome + ' (PDV)');
-  log_(c.nome, 'pdv venda', '#' + numero + ' ' + loja + ' R$ ' + total + ' · ' + forma);
+  log_(c.nome, 'pdv venda', '#' + numero + ' ' + loja + ' R$ ' + total + ' · ' + forma + (v.promo ? ' · ' + v.promo : ''));
   var d = dadosColab_(c);
   d.pdvVenda = pdvVenda_(v, false);
   return d;
