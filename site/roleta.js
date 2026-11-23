@@ -42,11 +42,11 @@
     repeatDays: 7,           // não reaparece por 7 dias pra quem fechou
     // k = chave do prêmio no servidor (ROLETA_SITE.gs). As chances ficam no servidor.
     prizes: [
-      { k: "p5",     label: "5% OFF",       text: "5% de desconto" },
-      { k: "p10",    label: "10% OFF",      text: "10% de desconto" },
-      { k: "frete",  label: "FRETE GRÁTIS", text: "frete grátis" },
-      { k: "brinde", label: "BRINDE",       text: "um brinde surpresa", noCart: true },
-      { k: "p15",    label: "15% OFF",      text: "15% de desconto" }
+      { k: "p5",     label: "5% OFF",        text: "5% de desconto" },
+      { k: "p7",     label: "7% OFF",        text: "7% de desconto" },
+      { k: "vale50", label: "VALE R$ 50",    text: "R$ 50 de desconto" },
+      { k: "denovo", label: "TENTE DE NOVO", text: "mais um giro" },
+      { k: "p10",    label: "10% OFF",       text: "10% de desconto" }
     ],
     // ordem das fatias na roda (índices de prizes)
     wheel: [0, 1, 2, 0, 3, 1, 4, 2]
@@ -136,7 +136,7 @@
       c.save(); c.translate(r, r); c.rotate(s + a / 2);
       c.textAlign = "right"; c.fillStyle = i % 2 ? "#f5c518" : "#ffffff";
       var lb = CFG.prizes[CFG.wheel[i]].label;
-      c.font = "800 " + (lb.length > 8 ? 21 : 30) + "px Manrope, system-ui, sans-serif";
+      c.font = "800 " + (lb.length > 11 ? 18 : lb.length > 8 ? 22 : 30) + "px Manrope, system-ui, sans-serif";
       c.fillText(lb, r - 30, 10);
       c.restore();
     }
@@ -160,7 +160,7 @@
   function girarNoServidor(nome, zap, aceita) {
     if (PREVIEW) {
       var i = Math.floor(Math.random() * CFG.prizes.length), p = CFG.prizes[i];
-      return Promise.resolve({ ok: true, k: p.k, premio: p.label, tipo: p.noCart ? "brinde" : "percentage", codigo: "NATALDEMO", vence: Date.now() + 864e5, agora: Date.now(), status: "aberto", minimo: p.k === "frete" ? 100 : 0, horas: 24, ja: false });
+      return Promise.resolve({ ok: true, k: p.k, premio: p.label, tipo: p.noCart ? "brinde" : "percentage", codigo: "NATALDEMO", vence: Date.now() + 864e5, agora: Date.now(), status: "aberto", minimo: p.k === "vale50" ? 250 : 0, horas: p.k === "vale50" ? 720 : 24, ja: false, denovo: p.k === "denovo" });
     }
     return fetch(API, { method: "POST", body: JSON.stringify({ a: "roletaSite", op: "girar", nome: nome, tel: zap, maior: 1, aceita: aceita ? 1 : 0, teste: TESTER ? 1 : 0 }) })
       .then(function (r) { return r.json(); });
@@ -193,7 +193,7 @@
     else {
       box.appendChild(el("div", "lvr-eye", "🎄 Natal Las Vegas"));
       box.appendChild(el("h2", "lvr-h", "Gire e ganhe <b>seu presente</b>"));
-      box.appendChild(el("p", "lvr-sub", "Todo giro ganha. Seu cupom vale por 24 horas."));
+      box.appendChild(el("p", "lvr-sub", "Gire e ganhe um presente para usar hoje no site."));
       var wrap = el("div", "lvr-wrap");
       var cv = el("canvas"); drawWheel(cv);
       wrap.appendChild(el("div", "lvr-pin")); wrap.appendChild(cv); wrap.appendChild(el("div", "lvr-hub", "Natal"));
@@ -224,8 +224,21 @@
           if (!ov) return;
           if (!j || !j.ok) return falhou(j && j.erro);
           var pIdx = premioDe(j.k);
+          if (j.denovo) {                        // "Tente de novo": a roda para na fatia e a cliente gira mais uma vez (no 2º giro sempre sai prêmio)
+            wrap.classList.remove("sorteando"); btn.textContent = "Girando…";
+            var sl = sliceDe(pIdx), nn = CFG.wheel.length, dg = 360 / nn;
+            rot += 360 * 6 + (360 - (rot % 360)) + (360 - (sl * dg + dg / 2)) + (Math.random() - 0.5) * dg * 0.6;
+            requestAnimationFrame(function () { cv.style.transform = "rotate(" + rot + "deg)"; });
+            setTimeout(function () {
+              if (!ov) return;
+              btn.disabled = false; btn.textContent = "Girar de novo 🎁";
+              err.style.color = "#f5c518"; err.textContent = "Quase! Você ganhou mais um giro. Toque em Girar de novo.";
+            }, matchMedia("(prefers-reduced-motion: reduce)").matches ? 250 : 5450);
+            return;
+          }
+          err.style.color = "";
           var won = { k: j.k, codigo: j.codigo, premio: j.premio, minimo: j.minimo || 0, name: nome, ja: !!j.ja, status: j.status, noCart: j.tipo === "brinde",
-                      vence: Date.now() + (Number(j.vence) - Number(j.agora)), at: Date.now() };
+                      horas: Number(j.horas) || 24, vence: Date.now() + (Number(j.vence) - Number(j.agora)), at: Date.now() };
           var mostra = function () {
             if (!DEMO) { var data = store(true) || {}; data.won = won; store(false, data); }
             if (window.dataLayer) window.dataLayer.push({ event: "roleta_giro", premio: won.k });
@@ -269,15 +282,16 @@
       r.innerHTML =
         '<div class="lvr-eye">' + (nome ? nome + ", " : "") + (usado ? "você já usou seu presente 🎁" : "seu presente venceu ⏳") + '</div>' +
         '<div class="lvr-prize">' + limpo(w.premio || p.label) + '</div>' +
-        '<p class="lvr-sub" style="margin:0">' + (usado ? "Cada WhatsApp ganha um giro. Obrigada por comprar com a gente!" : "O cupom valia por 24 horas. Fala com a gente no WhatsApp que a equipe te ajuda.") + '</p>' +
+        '<p class="lvr-sub" style="margin:0">' + (usado ? "Cada WhatsApp ganha um giro. Obrigada por comprar com a gente!" : "O prazo do cupom acabou. Fala com a gente no WhatsApp que a equipe te ajuda.") + '</p>' +
         zap("Oi! Aqui é " + w.name + " 🎄 Girei a Roleta de Natal no site e queria uma ajuda.", "Falar com a loja") +
         '<button class="lvr-btn ghost" type="button">Continuar comprando</button>';
       r.querySelector(".ghost").onclick = close;
       return r;
     }
+    var longo = (w.horas || 24) > 48;      // vale-compra de 30 dias: mostra a data em vez do relógio
     var msg = "Oi! Aqui é " + w.name + " 🎄 Girei a Roleta de Natal no site e ganhei *" + (w.premio || p.label) + "*. Meu código: *" + w.codigo + "* (vale até " + ateQuando(w.vence) + (!w.noCart && w.minimo > 0 ? ", em compras acima de R$ " + String(w.minimo).replace(".", ",") : "") + ")";
     var regra = w.noCart ? "Resgate pelo WhatsApp em até 24 horas."
-      : "Vale por 24 horas · 1 uso · vale também em produtos em promoção.";
+      : "Vale por " + (longo ? Math.round((w.horas || 24) / 24) + " dias" : "24 horas") + " · 1 uso · vale também em produtos em promoção.";
     var aviso = !w.noCart && w.minimo > 0 ? '<div class="lvr-min">⚠️ Vale em compras <b>acima de R$ ' + String(w.minimo).replace(".", ",") + '</b></div>' : "";
     r.innerHTML =
       '<div class="lvr-eye">🎁 ' + (nome ? nome + ", " : "") + (w.ja ? "você já girou. Seu presente:" : "você ganhou") + '</div>' +
@@ -285,7 +299,8 @@
       '<p class="lvr-sub" style="margin:0">' + (w.noCart ? "Seu código para resgatar " + p.text + ":" : "Seu cupom de " + p.text + ":") + '</p>' +
       '<div class="lvr-code">' + cod + '</div>' +
       aviso +
-      '<div class="lvr-clock">⏳ Acaba em <b class="lvr-t">' + falta(w.vence - Date.now()) + '</b></div>' +
+      (longo ? '<div class="lvr-clock">⏳ Vale até <b>' + ateQuando(w.vence).split(" às ")[0] + '</b></div>'
+             : '<div class="lvr-clock">⏳ Acaba em <b class="lvr-t">' + falta(w.vence - Date.now()) + '</b></div>') +
       (w.noCart ? "" : '<a class="lvr-btn" href="/discount/' + encodeURIComponent(w.codigo) + '">Usar agora no carrinho</a>') +
       zap(msg, w.noCart ? "Resgatar brinde no WhatsApp" : "Guardar no meu WhatsApp") +
       '<button class="lvr-btn ghost" type="button">Continuar comprando</button>' +
@@ -293,7 +308,8 @@
     r.querySelector(".ghost").onclick = close;
     clearInterval(relogio);
     relogio = setInterval(function () {
-      var t = r.querySelector(".lvr-t"); if (!t || !document.body.contains(r)) { clearInterval(relogio); return; }
+      var t = r.querySelector(".lvr-t"); if (!document.body.contains(r)) { clearInterval(relogio); return; }
+      if (!t) { if (w.vence <= Date.now()) { clearInterval(relogio); var nv = result(w); r.parentNode && r.parentNode.replaceChild(nv, r); } return; }
       var ms = w.vence - Date.now(); t.textContent = falta(ms);
       if (ms <= 0) { clearInterval(relogio); var novo = result(w); r.parentNode && r.parentNode.replaceChild(novo, r); }
     }, 1000);

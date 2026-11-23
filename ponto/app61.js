@@ -52,13 +52,14 @@ function rs61Lista(){
   </div>
   ${giros.length ? `<div class="tabela"><table><thead><tr><th>Quando</th><th>Nome</th><th>WhatsApp</th><th>Prêmio</th><th>Código</th><th>Situação</th></tr></thead><tbody>${linhas}</tbody></table></div>`
     : `<p class="apagado">Ninguém girou ainda${R.testes && !RS61_TESTES ? ' (só testes)' : ''}.</p>`}
-  <p class="apagado" style="font-size:13px;margin-top:10px">Cada cliente ganha <b>um cupom só dela</b>, que vale <b>${c.horas||24} horas</b>, serve para <b>1 compra</b> e <b>soma</b> com outras promoções (vale também em produto com preço promocional). Um giro por WhatsApp a cada ${c.bloqueio_dias||30} dias. Quando o prazo acaba, o portal apaga o cupom na Nuvemshop sozinho. Toque no WhatsApp para chamar a cliente antes de vencer.</p></div>`;
+  <p class="apagado" style="font-size:13px;margin-top:10px">Cada cliente ganha <b>um cupom só dela</b>, que vale <b>${c.horas||24} horas</b> (o vale-compra, 30 dias), serve para <b>1 compra</b> e <b>soma</b> com outras promoções (vale também em produto com preço promocional). Um giro por WhatsApp a cada ${c.bloqueio_dias||30} dias. Quando o prazo acaba, o portal apaga o cupom na Nuvemshop sozinho. Toque no WhatsApp para chamar a cliente antes de vencer.</p></div>`;
 }
 function rs61Premios(){
   const ps = (RS61 && RS61.cfg && RS61.cfg.premios) || [];
   if(!ps.length) return '';
   const tot = ps.reduce((s,p)=>s+(Number(p.chance)||0),0) || 1;
-  const oque = p => p.tipo==='percentage' ? `${p.valor}% de desconto` : p.tipo==='shipping' ? `Frete grátis${p.minimo>0 ? ` em compras acima de R$ ${String(p.minimo).replace('.',',')}` : ''}` : 'Brinde surpresa (resgata pelo WhatsApp)';
+  const min61 = p => p.minimo>0 ? ` em compras acima de R$ ${String(p.minimo).replace('.',',')}` : '';
+  const oque = p => p.tipo==='percentage' ? `${p.valor}% de desconto · vale ${p.horas>48 ? Math.round(p.horas/24)+' dias' : (p.horas||24)+' h'}` : p.tipo==='absolute' ? `R$ ${p.valor} de desconto${min61(p)} · vale ${Math.round((p.horas||24)/24)} dias` : p.tipo==='denovo' ? 'Não é prêmio: a cliente gira mais uma vez na hora' : p.tipo==='shipping' ? `Frete grátis${p.minimo>0 ? ` em compras acima de R$ ${String(p.minimo).replace('.',',')}` : ''}` : 'Brinde surpresa (resgata pelo WhatsApp)';
   return `<h2 class="secao">Prêmios <small>todo giro ganha · cupom único criado na hora</small></h2>
   <div class="tabela" style="max-width:760px"><table><thead><tr><th>Prêmio</th><th>O que é</th><th>Chance</th></tr></thead><tbody>
     ${ps.map(p=>`<tr><td>${esc(p.nome)}</td><td>${esc(oque(p))}</td><td class="num">${Math.round(p.chance/tot*100)}%</td></tr>`).join('')}</tbody></table></div>

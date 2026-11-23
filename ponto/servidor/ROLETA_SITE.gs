@@ -21,11 +21,17 @@ ABAS.GirosSite = ['id', 'criado_em', 'data', 'hora', 'nome', 'tel', 'chave_tel',
 var RS_PADRAO = {
   horas: 24, bloqueio_dias: 30, limite_minuto: 30, prefixo: 'NATAL', combina: true,
   premios: [
-    { k: 'p5',     nome: '5% OFF',       tipo: 'percentage', valor: 5,  minimo: 0,   chance: 30 },
-    { k: 'p10',    nome: '10% OFF',      tipo: 'percentage', valor: 10, minimo: 0,   chance: 25 },
-    { k: 'frete',  nome: 'FRETE GRÁTIS', tipo: 'shipping',   valor: 0,  minimo: 100, chance: 20 },
-    { k: 'brinde', nome: 'BRINDE',       tipo: 'brinde',     valor: 0,  minimo: 0,   chance: 10 },
-    { k: 'p15',    nome: '15% OFF',      tipo: 'percentage', valor: 15, minimo: 0,   chance: 5 }
+    /* 23/11 (Madu): prêmios menores porque agora somam; frete grátis virou VALE R$ 50 (30 dias, compra acima de R$ 250);
+       brinde virou TENTE DE NOVO (mais um giro na hora — no segundo giro sempre sai prêmio). horas = validade própria do prêmio. */
+    { k: 'p5',     nome: '5% OFF',        tipo: 'percentage', valor: 5,  minimo: 0,   chance: 35 },
+    { k: 'p7',     nome: '7% OFF',        tipo: 'percentage', valor: 7,  minimo: 0,   chance: 30 },
+    { k: 'vale50', nome: 'VALE R$ 50',    tipo: 'absolute',   valor: 50, minimo: 250, chance: 5, horas: 720 },
+    { k: 'denovo', nome: 'TENTE DE NOVO', tipo: 'denovo',     valor: 0,  minimo: 0,   chance: 10 },
+    { k: 'p10',    nome: '10% OFF',       tipo: 'percentage', valor: 10, minimo: 0,   chance: 20 },
+    /* antigos: continuam aceitos se alguém puser de volta em Config › roleta_site › premios */
+    { k: 'frete',  nome: 'FRETE GRÁTIS',  tipo: 'shipping',   valor: 0,  minimo: 100, chance: 0 },
+    { k: 'brinde', nome: 'BRINDE',        tipo: 'brinde',     valor: 0,  minimo: 0,   chance: 0 },
+    { k: 'p15',    nome: '15% OFF',       tipo: 'percentage', valor: 15, minimo: 0,   chance: 0 }
   ]
 };
 CONFIG_PADRAO.push(['roleta_site', JSON.stringify({ horas: 24, bloqueio_dias: 30 }), 'Roleta do site (JSON): horas = validade do cupom · bloqueio_dias = 1 giro por WhatsApp a cada X dias · premios (opcional): k, nome, tipo, valor, minimo, chance']);
@@ -43,9 +49,10 @@ function rsCfg_() {
   o.premios = lista.filter(function (p) { return p && base[p.k]; }).map(function (p) {
     var b = base[p.k];
     return { k: b.k, nome: String(p.nome || b.nome).slice(0, 24), tipo: b.tipo, valor: Math.max(0, rsNum_(p.valor, b.valor)),
-             minimo: Math.max(0, rsNum_(p.minimo, b.minimo)), chance: Math.max(0, rsNum_(p.chance, b.chance)) };
-  });
-  if (!o.premios.length) o.premios = RS_PADRAO.premios.slice();
+             minimo: Math.max(0, rsNum_(p.minimo, b.minimo)), chance: Math.max(0, rsNum_(p.chance, b.chance)),
+             horas: Math.min(2160, Math.max(1, rsNum_(p.horas, b.horas || o.horas))) };
+  }).filter(function (p) { return p.chance > 0; });
+  if (!o.premios.filter(function (p) { return p.tipo !== 'denovo'; }).length) o.premios = [{ k: 'p5', nome: '5% OFF', tipo: 'percentage', valor: 5, minimo: 0, chance: 1, horas: o.horas }];
   return o;
 }
 
@@ -74,18 +81,19 @@ function rsCodigo_(cfg, usados) {
   }
   return cfg.prefixo + String(new Date().getTime()).slice(-7);
 }
-function rsSortear_(cfg) {
-  var total = cfg.premios.reduce(function (s, p) { return s + p.chance; }, 0), r = Math.random() * total;
-  if (total <= 0) return cfg.premios[Math.floor(Math.random() * cfg.premios.length)];
-  for (var i = 0; i < cfg.premios.length; i++) { r -= cfg.premios[i].chance; if (r < 0) return cfg.premios[i]; }
-  return cfg.premios[0];
+function rsSortear_(cfg, semDeNovo) {
+  var lista = semDeNovo ? cfg.premios.filter(function (p) { return p.tipo !== 'denovo'; }) : cfg.premios;
+  var total = lista.reduce(function (s, p) { return s + p.chance; }, 0), r = Math.random() * total;
+  for (var i = 0; i < lista.length; i++) { r -= lista[i].chance; if (r < 0) return lista[i]; }
+  return lista[0];
 }
+function rsCriadoMs_(g) { var d = new Date(String(g.criado_em || '').replace(' ', 'T') + '-05:00').getTime(); return isNaN(d) ? 0 : d; }
 
 /* ───────── cupom na Nuvemshop ───────── */
 function rsCupomCriar_(cfg, p, codigo, agoraMs, venceMs) {
   var corpo = { code: codigo, type: p.tipo, valid: true, max_uses: 1, start_date: rsDataBr_(agoraMs), end_date: rsDataBr_(venceMs),
                 combines_with_other_discounts: !!cfg.combina };
-  if (p.tipo === 'percentage') corpo.value = String(p.valor);
+  if (p.tipo === 'percentage' || p.tipo === 'absolute') corpo.value = String(p.valor);
   if (p.minimo > 0) corpo.min_price = Number(p.minimo);
   var r = nsApi_('post', '/coupons', corpo);
   if (!r || !r.id) throw new Error('A Nuvemshop não devolveu o cupom');
@@ -97,11 +105,11 @@ function rsCupomApagar_(id) { if (!id) return; try { nsApi_('delete', '/coupons/
 function rsPublico_(g, cfg, extra) {
   var p = cfg.premios.filter(function (x) { return x.k === g.chave_premio; })[0] || {};
   var o = { ok: true, k: g.chave_premio, premio: g.premio, tipo: g.tipo, valor: Number(g.valor) || 0, minimo: Number(g.minimo) || 0,
-            codigo: g.id, vence: Number(g.vence_ms) || 0, agora: new Date().getTime(), status: g.status, horas: cfg.horas };
+            codigo: g.id, vence: Number(g.vence_ms) || 0, agora: new Date().getTime(), status: g.status, horas: p.horas || cfg.horas };
   if (extra) for (var k in extra) o[k] = extra[k];
   return o;
 }
-function rsPremiosPublico_(cfg) { return cfg.premios.map(function (p) { return { k: p.k, nome: p.nome, tipo: p.tipo, valor: p.valor, minimo: p.minimo }; }); }
+function rsPremiosPublico_(cfg) { return cfg.premios.map(function (p) { return { k: p.k, nome: p.nome, tipo: p.tipo, valor: p.valor, minimo: p.minimo, horas: p.horas }; }); }
 
 /* ───────── o giro ───────── */
 function rsGirar_(req) {
@@ -121,19 +129,29 @@ function rsGirar_(req) {
 
   var chave = rsChaveTel_(tel);
   var res = rsTrava_(function () {
-    var giros = ler_('GirosSite'), agoraMs = new Date().getTime(), usados = {}, ant = null;
-    giros.forEach(function (g) { usados[g.id] = 1; if (g.chave_tel === chave && g.status !== 'cancelado') ant = g; });
+    var giros = ler_('GirosSite'), agoraMs = new Date().getTime(), usados = {}, ant = null, jaTentou = false;
+    giros.forEach(function (g) {
+      usados[g.id] = 1;
+      if (g.chave_tel !== chave || g.status === 'cancelado') return;
+      if (g.status === 'denovo') { if (agoraMs - rsCriadoMs_(g) < 86400000) jaTentou = true; return; }   // "tente de novo": vale um giro a mais, só um
+      ant = g;
+    });
 
     if (ant && !teste) {
-      var feito = Number(ant.vence_ms) - cfg.horas * 3600000;
-      if (ant.modo !== 'teste' && agoraMs - feito < cfg.bloqueio_dias * 86400000) return rsPublico_(ant, cfg, { ja: true });
+      if (ant.modo !== 'teste' && agoraMs - rsCriadoMs_(ant) < cfg.bloqueio_dias * 86400000) return rsPublico_(ant, cfg, { ja: true });
     }
     if (ant && teste && ant.modo === 'teste' && ant.status === 'aberto') {
       try { rsCupomApagar_(ant.ns_cupom_id); } catch (e) {}
       ant.status = 'cancelado'; ant.obs = 'novo teste'; gravar_('GirosSite', ant);
     }
 
-    var p = rsSortear_(cfg), cod = rsCodigo_(cfg, usados), venceMs = agoraMs + cfg.horas * 3600000, cupomId = '';
+    var p = rsSortear_(cfg, jaTentou), cod = rsCodigo_(cfg, usados), venceMs = agoraMs + (p.horas || cfg.horas) * 3600000, cupomId = '';
+    if (p.tipo === 'denovo') {
+      gravar_('GirosSite', { id: cod, criado_em: agora_(), data: hoje_(), hora: hora_(), nome: nome, tel: tel, chave_tel: chave, premio: p.nome, chave_premio: p.k, tipo: p.tipo,
+                             valor: '0', minimo: '0', ns_cupom_id: '', vence_em: '', vence_ms: '0', status: 'denovo', usado_em: '', pedido: '',
+                             aceita: req.aceita === true || req.aceita === 1 || req.aceita === '1' ? 'sim' : 'não', modo: teste ? 'teste' : 'site', obs: 'ganhou mais um giro' });
+      return { ok: true, k: p.k, premio: p.nome, tipo: p.tipo, denovo: true, ja: false, agora: agoraMs };
+    }
     if (p.tipo !== 'brinde') {
       try { cupomId = rsCupomCriar_(cfg, p, cod, agoraMs, venceMs); }
       catch (e) { log_('Sistema', 'roleta site erro', String(e && e.message || e).slice(0, 200)); throw new Error('Não consegui gerar seu cupom agora. Tente de novo em instantes.'); }
@@ -202,7 +220,7 @@ function rsConferir_(req) {
   var cache = CacheService.getScriptCache(), chaveMin = 'rs_conf_' + Math.floor(new Date().getTime() / 60000), n = Number(cache.get(chaveMin) || 0);
   if (n >= 60) throw new Error('Muitas consultas. Tente de novo em 1 minuto.');
   cache.put(chaveMin, String(n + 1), 120);
-  var g = ler_('GirosSite').filter(function (x) { return String(x.id).toUpperCase() === cod && x.status !== 'cancelado'; })[0];
+  var g = ler_('GirosSite').filter(function (x) { return String(x.id).toUpperCase() === cod && x.status !== 'cancelado' && x.status !== 'denovo'; })[0];
   if (!g) return { ok: true, achou: false };
   if ((req.whats === 1 || req.whats === '1' || req.whats === true) && String(g.obs || '').indexOf('WhatsApp') < 0) {
     rsTrava_(function () { g.obs = (g.obs ? g.obs + ' · ' : '') + 'Chamou no WhatsApp'; gravar_('GirosSite', g); });
@@ -242,7 +260,7 @@ ADMIN.admRoletaSite = function (req) {
   }
   var cfg = rsCfg_(), agoraMs = new Date().getTime(), todos = ler_('GirosSite');
   var res = { total: 0, abertos: 0, usados: 0, vencidos: 0, testes: 0, aceitam: 0 };
-  var lista = todos.filter(function (g) { return g.status !== 'cancelado'; }).map(function (g) {
+  var lista = todos.filter(function (g) { return g.status !== 'cancelado' && g.status !== 'denovo'; }).map(function (g) {
     var st = g.status === 'aberto' && Number(g.vence_ms) <= agoraMs ? 'vencido' : g.status;
     if (g.modo === 'teste') res.testes++;
     else { res.total++; if (st === 'aberto') res.abertos++; if (st === 'usado') res.usados++; if (st === 'vencido') res.vencidos++; if (g.aceita === 'sim') res.aceitam++; }
