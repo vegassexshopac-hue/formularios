@@ -18,7 +18,7 @@
    ═══════════════════════════════════════════════════════════════ */
 
 var BV24 = {
-  nome: 'Black Vegas', titulo: '24 por R$ 24', preco: 24, data: '2026-11-24',
+  nome: 'Black Vegas', titulo: '24 por R$ 24', preco: 24, data: '2026-11-24', previa: '2026-11-23',   // previa: desde quando a faixa aparece (só para ver; o preço só muda no dia)
   categoria: 'Black Vegas 24 por R$ 24', handle: 'black-vegas-24',
   /* n = número na lista da Madu · ns = id(s) do produto no site · sku = SKU das variações · de = preço cheio da lista.
      Só entra a variação cujo preço normal é até o "de" (ex.: Plug Círculo só o tamanho P, de R$ 45). */
@@ -51,6 +51,7 @@ var BV24 = {
 };
 
 function bv24Ativa_() { return hoje_() === BV24.data; }
+function bv24Previa_() { var h = hoje_(); return !!BV24.previa && h >= BV24.previa && h < BV24.data; }
 function bv24R2_(n) { return Math.round((Number(n) || 0) * 100) / 100; }
 var _bv24Sku = null;
 function bv24PorSku_() {
@@ -72,14 +73,14 @@ function bv24ItemDe_(p) {
 var _bv24Produtos = pdvProdutos_;
 pdvProdutos_ = function (admin) {
   var l = _bv24Produtos(admin);
-  if (!bv24Ativa_()) return l;
-  l.forEach(function (p) { var it = bv24ItemDe_(p); if (it) { p.promo = BV24.preco; p.bv24 = it.n; } });
+  if (bv24Ativa_()) l.forEach(function (p) { var it = bv24ItemDe_(p); if (it) { p.promo = BV24.preco; p.bv24 = it.n; } });
+  else if (bv24Previa_()) l.forEach(function (p) { var it = bv24ItemDe_(p); if (it) p.bv24p = it.n; });      // prévia: só a marca, o preço continua o normal
   return l;
 };
 var _bv24Cfg = pdvCfg_;
 pdvCfg_ = function () {
   var o = _bv24Cfg();
-  if (bv24Ativa_()) o.bv24 = { nome: BV24.nome, titulo: BV24.titulo, preco: BV24.preco, data: BV24.data, qtd: BV24.itens.length };
+  if (bv24Ativa_() || bv24Previa_()) o.bv24 = { nome: BV24.nome, titulo: BV24.titulo, preco: BV24.preco, data: BV24.data, qtd: BV24.itens.length, previa: bv24Ativa_() ? 0 : 1 };
   return o;
 };
 
@@ -158,19 +159,42 @@ function bv24VarEntra_(v, it) {
   var cheio = Number(v.price) || 0, promo = Number(v.promotional_price) || 0, vale = promo > 0 && promo < cheio ? promo : cheio;
   return vale > BV24.preco && vale <= it.de + 0.011;
 }
-/** Liga no site: preço promocional R$ 24 nas variações da lista e a categoria da campanha. Pode rodar de novo sem estragar. */
-function bv24SiteLigar() {
+/** Prepara o site (pode rodar antes do dia): cria a categoria da campanha e coloca os produtos nela. Não mexe em preço. */
+function bv24SitePreparar() {
   var g = bv24Prop_(); g.vars = g.vars || {}; g.cats = g.cats || {};
   if (!g.categoria_id) {
     var cat = nsApi_('post', '/categories', { name: { pt: BV24.categoria }, handle: { pt: BV24.handle } });
     g.categoria_id = cat && cat.id ? String(cat.id) : ''; g.categoria_handle = cat && cat.handle ? nsTexto_(cat.handle) : '';
     bv24Prop_(g);
   }
+  var postos = 0, erros = [];
+  if (!g.categoria_id) erros.push('categoria não criada');
+  else BV24.itens.forEach(function (it) {
+    it.ns.forEach(function (pid) {
+      try {
+        var p = nsApi_('get', '/products/' + pid + '?fields=id,categories');
+        if (!p) { erros.push(it.n + ' ' + pid + ' não achado'); return; }
+        var atuais = (p.categories || []).map(function (c) { return String(c.id); });
+        if (atuais.indexOf(g.categoria_id) >= 0) return;
+        if (g.cats[pid] === undefined) { g.cats[pid] = atuais; bv24Prop_(g); }
+        nsApi_('put', '/products/' + pid, { categories: atuais.concat([g.categoria_id]).map(Number) });
+        postos++; Utilities.sleep(350);
+      } catch (e) { erros.push(it.n + ' ' + pid + ': ' + String(e && e.message || e).slice(0, 120)); }
+    });
+  });
+  log_('Sistema', 'bv24 site preparado', 'categoria ' + (g.categoria_id || '—') + ' /' + (g.categoria_handle || '') + '/ · ' + postos + ' produtos postos' + (erros.length ? ' · ERROS: ' + erros.join(' | ') : ''));
+  Logger.log(JSON.stringify({ categoria: g.categoria_id, handle: g.categoria_handle, postos: postos, erros: erros }));
+  return { categoria: g.categoria_id, handle: g.categoria_handle, postos: postos, erros: erros };
+}
+/** Liga no site: preço promocional R$ 24 nas variações da lista. Pode rodar de novo sem estragar. */
+function bv24SiteLigar() {
+  try { bv24SitePreparar(); } catch (e0) { log_('Sistema', 'erro bv24 preparar', String(e0 && e0.message || e0)); }
+  var g = bv24Prop_(); g.vars = g.vars || {}; g.cats = g.cats || {};
   var mudou = 0, erros = [];
   BV24.itens.forEach(function (it) {
     it.ns.forEach(function (pid) {
       try {
-        var p = nsApi_('get', '/products/' + pid + '?fields=id,variants,categories');
+        var p = nsApi_('get', '/products/' + pid + '?fields=id,variants');
         if (!p) { erros.push(it.n + ' ' + pid + ' não achado'); return; }
         (p.variants || []).forEach(function (v) {
           var chave = pid + '/' + v.id;
@@ -179,20 +203,24 @@ function bv24SiteLigar() {
           nsApi_('put', '/products/' + pid + '/variants/' + v.id, { promotional_price: BV24.preco.toFixed(2) });
           mudou++; Utilities.sleep(350);
         });
-        if (g.categoria_id) {
-          var atuais = (p.categories || []).map(function (c) { return String(c.id); });
-          if (atuais.indexOf(g.categoria_id) < 0) {
-            if (g.cats[pid] === undefined) { g.cats[pid] = atuais; bv24Prop_(g); }
-            nsApi_('put', '/products/' + pid, { categories: atuais.concat([g.categoria_id]).map(Number) });
-            Utilities.sleep(350);
-          }
-        }
       } catch (e) { erros.push(it.n + ' ' + pid + ': ' + String(e && e.message || e).slice(0, 120)); }
     });
   });
   g.ligado_em = agora_(); g.desligado_em = ''; bv24Prop_(g);
-  log_('Sistema', 'bv24 site ligado', mudou + ' variações a R$ ' + BV24.preco + ' · categoria ' + (g.categoria_id || '—') + (erros.length ? ' · ERROS: ' + erros.join(' | ') : ''));
-  return { mudou: mudou, erros: erros, categoria: g.categoria_id, handle: g.categoria_handle };
+  log_('Sistema', 'bv24 site ligado', mudou + ' variações a R$ ' + BV24.preco + (erros.length ? ' · ERROS: ' + erros.join(' | ') : ''));
+  Logger.log(JSON.stringify({ mudou: mudou, erros: erros }));
+  return { mudou: mudou, erros: erros };
+}
+/** Teste de ida e volta numa variação (põe R$ 24, confere, tira, confere). Rodar pelo editor; o resultado sai no registro de execução. */
+function bv24SiteTeste() {
+  var pid = '308736355', p = nsApi_('get', '/products/' + pid + '?fields=id,variants'), v = p.variants[0], out = { antes: v.promotional_price, preco: v.price };
+  nsApi_('put', '/products/' + pid + '/variants/' + v.id, { promotional_price: '24.00' });
+  out.com = nsApi_('get', '/products/' + pid + '/variants/' + v.id).promotional_price;
+  try { nsApi_('put', '/products/' + pid + '/variants/' + v.id, { promotional_price: v.promotional_price == null ? null : v.promotional_price }); out.modo = 'null'; }
+  catch (e) { out.erro_null = String(e && e.message || e).slice(0, 200); }
+  out.depois = nsApi_('get', '/products/' + pid + '/variants/' + v.id).promotional_price;
+  Logger.log(JSON.stringify(out));
+  return out;
 }
 /** Desliga no site: devolve o preço promocional que cada variação tinha e tira a categoria. Também limpa a planilha se o R$ 24 tiver sido importado. */
 function bv24SiteDesligar() {
