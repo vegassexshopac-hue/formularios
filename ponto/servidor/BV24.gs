@@ -19,7 +19,7 @@
 
 var BV24 = {
   nome: 'Black Vegas', titulo: '24 por R$ 24', preco: 24, data: '2026-11-24',
-  categoria: 'Black Vegas 24 por R$ 24',
+  categoria: 'Black Vegas 24 por R$ 24', handle: 'black-vegas-24',
   /* n = número na lista da Madu · ns = id(s) do produto no site · sku = SKU das variações · de = preço cheio da lista.
      Só entra a variação cujo preço normal é até o "de" (ex.: Plug Círculo só o tamanho P, de R$ 45). */
   itens: [
@@ -162,7 +162,7 @@ function bv24VarEntra_(v, it) {
 function bv24SiteLigar() {
   var g = bv24Prop_(); g.vars = g.vars || {}; g.cats = g.cats || {};
   if (!g.categoria_id) {
-    var cat = nsApi_('post', '/categories', { name: { pt: BV24.categoria } });
+    var cat = nsApi_('post', '/categories', { name: { pt: BV24.categoria }, handle: { pt: BV24.handle } });
     g.categoria_id = cat && cat.id ? String(cat.id) : ''; g.categoria_handle = cat && cat.handle ? nsTexto_(cat.handle) : '';
     bv24Prop_(g);
   }

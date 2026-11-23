@@ -5,6 +5,16 @@
    Modo teste: abra o site com ?roleta=teste (sair: ?roleta=sair).
    Cupons que precisam existir na Nuvemshop (Marketing › Cupons): GIRO5, GIRO10, GIRO15, ENTREGA0, BRINDEVEGAS
 */
+/* Black Vegas — 24 por R$ 24 (terça 24/11/2026): a faixa com contagem regressiva fica em site/blackvegas.js e só aparece no dia. */
+(function () {
+  try {
+    if (Date.now() < Date.UTC(2026, 10, 25, 5, 0, 0)) {
+      var s = document.createElement("script");
+      s.src = "https://equipe.lasvegassexshop.com.br/site/blackvegas.js?v=" + Math.floor(Date.now() / 9e5);
+      s.async = true; document.head.appendChild(s);
+    }
+  } catch (e) {}
+})();
 (function () {
   var CFG = {
     whatsapp: "5568992822275",
