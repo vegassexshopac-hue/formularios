@@ -1,4 +1,4 @@
-/* ===== Roleta de Natal · Las Vegas Sex Shop · www.lasvegassexshop.com.br (v63 · 23/11/2026 · gira na hora do clique, visual cassino + Natal) =====
+/* ===== Roleta de Natal · Las Vegas Sex Shop · www.lasvegassexshop.com.br (v63 · 23/11/2026 · gira na hora do clique, visual cassino + Natal, com sons leves) =====
    Fica hospedada no Portal (equipe.lasvegassexshop.com.br/site/roleta.js).
    A Nuvemshop só tem um "carregador" em Configurações › Códigos externos — para mudar a roleta, edite ESTE arquivo.
    Liga / desliga / teste: Portal › Administração › Roleta do site (lá também fica a lista de quem girou).
@@ -92,6 +92,7 @@
 .lvr-luzes i:nth-child(4n){background:#fff;color:#fff;animation-delay:.96s}\
 @keyframes lvrPisca{0%,100%{opacity:.35;box-shadow:0 0 0 currentColor}50%{opacity:1;box-shadow:0 0 10px 2px currentColor}}\
 .lvr-x{position:absolute!important;top:14px;right:10px;background:rgba(0,0,0,.35);border:0;border-radius:50%;width:32px;height:32px;color:#e9dccf;font-size:22px;line-height:1;cursor:pointer;padding:0;z-index:5}\
+.lvr-som{right:48px;font-size:15px}\
 .lvr-eye{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#ffd84a;text-align:center;font-weight:800;text-shadow:0 0 12px rgba(245,197,24,.7)}\
 .lvr-h{font-family:'Bodoni Moda',Georgia,serif;font-style:italic;font-weight:800;font-size:clamp(23px,7vw,32px);line-height:1.05;text-align:center;margin:6px 0 4px;background:linear-gradient(100deg,#f5c518 0%,#fff6c4 25%,#f5c518 50%,#fff6c4 75%,#f5c518 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:#f5c518;animation:lvrBrilho 3.2s linear infinite;filter:drop-shadow(0 2px 10px rgba(245,197,24,.35))}\
 @keyframes lvrBrilho{to{background-position:-200% 0}}\
@@ -215,6 +216,35 @@
     } catch (e) {}
   }
 
+  /* ---- sons (feitos na hora pelo navegador, sem arquivo): tique do ponteiro, largada, sininho do prêmio. Volume baixo; botão 🔊 silencia e fica lembrado. ---- */
+  var AC = null, MUDO = false;
+  try { MUDO = localStorage.getItem("lvr_mudo") === "1"; } catch (e) {}
+  function audio() {
+    if (MUDO) return null;
+    try {
+      if (!AC) { var K = window.AudioContext || window.webkitAudioContext; if (!K) return null; AC = new K(); }
+      if (AC.state === "suspended") AC.resume();
+      return AC;
+    } catch (e) { return null; }
+  }
+  function nota(tipo, f0, f1, quando, dura, vol) {
+    var a = audio(); if (!a) return;
+    try {
+      var o = a.createOscillator(), g = a.createGain(), t = a.currentTime + (quando || 0);
+      o.type = tipo; o.frequency.setValueAtTime(f0, t); if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + dura);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dura);
+      o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dura + 0.03);
+    } catch (e) {}
+  }
+  function sino(f, quando, vol) { nota("sine", f, 0, quando, 0.9, vol); nota("sine", f * 2.76, 0, quando, 0.35, vol * 0.35); }   // sininho de Natal
+  var SOM = {
+    tic: function () { nota("triangle", 1500, 800, 0, 0.045, 0.05); },
+    largada: function () { nota("sawtooth", 180, 620, 0, 0.32, 0.025); },
+    premio: function () { [1047, 1319, 1568, 2093, 1568, 2093, 2637].forEach(function (f, i) { sino(f, i * 0.11, 0.07); }); },
+    quase: function () { sino(784, 0, 0.06); sino(659, 0.16, 0.06); },
+    erro: function () { nota("sine", 330, 220, 0, 0.3, 0.05); }
+  };
+
   /* fatia da roda que mostra o prêmio sorteado pelo servidor */
   function sliceDe(pIdx) {
     var slots = [];
@@ -252,6 +282,9 @@
     var box = el("div", "lvr-box");
     var x = el("button", "lvr-x", "&times;"); x.setAttribute("aria-label", "Fechar"); x.onclick = close;
     box.appendChild(x);
+    var bs = el("button", "lvr-x lvr-som", MUDO ? "🔇" : "🔊"); bs.type = "button"; bs.setAttribute("aria-label", "Ligar ou desligar o som");
+    bs.onclick = function () { MUDO = !MUDO; try { localStorage.setItem("lvr_mudo", MUDO ? "1" : "0"); } catch (e) {} bs.textContent = MUDO ? "🔇" : "🔊"; if (!MUDO) SOM.tic(); };
+    box.appendChild(bs);
     var neve = el("div", "lvr-neve"), nh = "";
     for (var ni = 0; ni < 16; ni++) nh += '<i style="left:' + Math.round(Math.random() * 96) + '%;width:' + (3 + ni % 3) + 'px;height:' + (3 + ni % 3) + 'px;animation-duration:' + (5 + Math.random() * 6).toFixed(1) + 's;animation-delay:-' + (Math.random() * 9).toFixed(1) + 's"></i>';
     neve.innerHTML = nh; box.appendChild(neve);
@@ -294,7 +327,7 @@
         var fa = Math.floor(ang / GRAU);
         if (fa !== fatia) {                      // o ponteiro "bate" em cada pino que passa
           fatia = fa;
-          if (ts - ultTic > 70 && pin.animate) { ultTic = ts; pin.animate([{ transform: "rotate(-22deg)" }, { transform: "rotate(0deg)" }], { duration: 130, easing: "ease-out" }); }
+          if (ts - ultTic > 70) { ultTic = ts; SOM.tic(); if (pin.animate) pin.animate([{ transform: "rotate(-22deg)" }, { transform: "rotate(0deg)" }], { duration: 130, easing: "ease-out" }); }
         }
       }
       function quadro(ts) {
@@ -336,10 +369,11 @@
         if (!f.querySelector("#lvr-18").checked) { err.textContent = "A roleta é só para maiores de 18 anos."; return; }
         err.textContent = "";
         var btn = f.querySelector("button[type=submit]"); btn.disabled = true; btn.textContent = "Girando… 🎰"; hub.textContent = "★";
+        audio(); SOM.largada();
         girar();                                 // gira já, sem esperar o servidor
         var libera = function (rotulo) { btn.disabled = false; btn.textContent = rotulo; hub.textContent = "Girar"; };
         var falhou = function (msg) {
-          depoisDoEmbalo(function () { frear(300, function () { libera("🎁 Girar a roleta"); err.textContent = msg || "Não deu certo agora. Tente de novo em instantes."; }); });
+          depoisDoEmbalo(function () { frear(300, function () { SOM.erro(); libera("🎁 Girar a roleta"); err.textContent = msg || "Não deu certo agora. Tente de novo em instantes."; }); });
         };
         girarNoServidor(nome, zap, f.querySelector("#lvr-ok").checked).then(function (j) {
           if (!ov) return;
@@ -349,6 +383,7 @@
             return depoisDoEmbalo(function () {
               pararNa(sliceDe(pIdx), function () {
                 if (!ov) return;
+                SOM.quase();
                 libera("🎁 Girar de novo");
                 err.style.color = "#ffd84a"; err.textContent = "Quase! Você ganhou mais um giro. Toque em Girar de novo.";
               });
@@ -367,7 +402,7 @@
           depoisDoEmbalo(function () {
             pararNa(sliceDe(pIdx), function () {
               if (!ov) return;
-              wrap.classList.add("ganhou"); confete();
+              wrap.classList.add("ganhou"); SOM.premio(); confete();
               setTimeout(mostra, PARADO ? 0 : 850);
             });
           });
