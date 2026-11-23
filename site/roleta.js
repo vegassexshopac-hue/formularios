@@ -5,13 +5,21 @@
    Modo teste: abra o site com ?roleta=teste (sair: ?roleta=sair).
    Cupons que precisam existir na Nuvemshop (Marketing › Cupons): GIRO5, GIRO10, GIRO15, ENTREGA0, BRINDEVEGAS
 */
-/* Barra do topo do site: o texto do layout ainda diz "só até sábado, 21/11" e a promoção foi estendida até 30/11 (pedido da Madu em 23/11/2026).
-   Troca só o texto, na tela. O definitivo é mudar em Nuvemshop › Loja online › Layout › Editar layout atual › barra de anúncio — aí este trecho pode sair. */
+/* Textos do site que ainda dizem 21/11 (barra do topo, aviso do Pix na página do produto e faixa "termina sábado"): a promoção foi estendida
+   até 30/11 (pedido da Madu em 23/11/2026). Troca só o texto, na tela. O definitivo é mudar em Nuvemshop › Loja online › Layout › Editar layout atual › barra de anúncio — aí este trecho pode sair. */
 (function () {
+  function novo(t) {
+    return t.replace(/termina s[áa]bado,?\s*21\/11/gi, "termina segunda, 30/11")
+            .replace(/s[óo] at[ée] s[áa]bado,?\s*21\/11/gi, "só até 30/11")
+            .replace(/at[ée] s[áa]bado,?\s*21\/11/gi, "até 30/11")
+            .replace(/at[ée] 21\/11/gi, "até 30/11");
+  }
   function troca() {
     try {
-      var l = document.querySelectorAll(".js-topbar a, .section-topbar a");
-      for (var i = 0; i < l.length; i++) if (/21\/11/.test(l[i].textContent)) l[i].textContent = l[i].textContent.replace(/s[óo] at[ée] s[áa]bado,?\s*21\/11/i, "só até 30/11");
+      var l = document.querySelectorAll(".js-topbar a, .section-topbar a");          // barra do topo
+      for (var i = 0; i < l.length; i++) if (/21\/11/.test(l[i].textContent)) l[i].textContent = novo(l[i].textContent);
+      var st = document.querySelectorAll("style");                                     // avisos escritos no CSS do layout (página do produto e faixa "termina sábado")
+      for (var j = 0; j < st.length; j++) if (/21\/11/.test(st[j].textContent)) st[j].textContent = novo(st[j].textContent);
     } catch (e) {}
   }
   troca(); document.addEventListener("DOMContentLoaded", troca); setTimeout(troca, 1200); setTimeout(troca, 4000);
