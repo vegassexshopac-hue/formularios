@@ -211,14 +211,12 @@ function bv24SiteLigar() {
   Logger.log(JSON.stringify({ mudou: mudou, erros: erros }));
   return { mudou: mudou, erros: erros };
 }
-/** Teste de ida e volta numa variação (põe R$ 24, confere, tira, confere). Rodar pelo editor; o resultado sai no registro de execução. */
+/** Teste de ida e volta numa variação (põe R$ 24, confere, tira, confere). Rodar pelo editor; o resultado sai no registro de execução.
+    Conferido em 23/11/2026: a Nuvemshop NÃO limpa o preço promocional com null — limpa com texto vazio (""). */
 function bv24SiteTeste() {
-  var pid = '308736355', p = nsApi_('get', '/products/' + pid + '?fields=id,variants'), v = p.variants[0], out = { antes: v.promotional_price, preco: v.price };
-  nsApi_('put', '/products/' + pid + '/variants/' + v.id, { promotional_price: '24.00' });
-  out.com = nsApi_('get', '/products/' + pid + '/variants/' + v.id).promotional_price;
-  try { nsApi_('put', '/products/' + pid + '/variants/' + v.id, { promotional_price: v.promotional_price == null ? null : v.promotional_price }); out.modo = 'null'; }
-  catch (e) { out.erro_null = String(e && e.message || e).slice(0, 200); }
-  out.depois = nsApi_('get', '/products/' + pid + '/variants/' + v.id).promotional_price;
+  var pid = '308736355', p = nsApi_('get', '/products/' + pid + '?fields=id,variants'), v = p.variants[0], url = '/products/' + pid + '/variants/' + v.id, out = { antes: v.promotional_price, preco: v.price };
+  nsApi_('put', url, { promotional_price: '24.00' }); out.com = nsApi_('get', url).promotional_price;
+  nsApi_('put', url, { promotional_price: v.promotional_price == null ? '' : v.promotional_price }); out.depois = nsApi_('get', url).promotional_price;
   Logger.log(JSON.stringify(out));
   return out;
 }
@@ -228,7 +226,7 @@ function bv24SiteDesligar() {
   Object.keys(g.vars || {}).forEach(function (chave) {
     try {
       var pv = chave.split('/'), antes = g.vars[chave];
-      nsApi_('put', '/products/' + pv[0] + '/variants/' + pv[1], { promotional_price: antes === '' ? null : antes });
+      nsApi_('put', '/products/' + pv[0] + '/variants/' + pv[1], { promotional_price: antes });      // '' (texto vazio) é o que limpa o preço promocional na Nuvemshop; null não limpa
       voltou++; Utilities.sleep(350);
     } catch (e) { erros.push(chave + ': ' + String(e && e.message || e).slice(0, 120)); }
   });
