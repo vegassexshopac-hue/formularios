@@ -166,7 +166,7 @@ document.write('<script src="app59.js?v=60"><\/script>');
 /* v60: Black Vegas — 24 produtos por R$ 24 na terça 24/11/2026 (app60.js; servidor BV24.gs). Fora do dia não muda nada. */
 document.write('<script src="app60.js?v=60"><\/script>');
 /* v61: Roleta do site (Natal) — lista "Quem girou" em Administração › Roleta do site; sorteio e cupom único de 24 h no servidor (app61.js; servidor ROLETA_SITE.gs) */
-document.write('<script src="app61.js?v=61"><\/script>');
+document.write('<script src="app61.js?v=61b"><\/script>');
 /* velocidade (etapa 1): a Arena da vendedora atualiza pela ação leve "arena" do servidor (LEVE.gs), sem baixar o pacote inteiro a cada 30 s (rapido.js) */
 document.write('<script src="rapido.js?v=rap1"><\/script>');
 document.write('<script src="app12.js?v=35"><\/script>');

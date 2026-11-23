@@ -193,12 +193,31 @@ if (typeof nsProcessarPedido_ === 'function') {
   };
 }
 
+/* ───────── conferir um código (usado pelo robô da Kommo quando a cliente manda a mensagem da roleta) ─────────
+   Devolve só o que a dona do código já sabe (primeiro nome, prêmio, até quando vale). Com whats:1 anota que ela chamou no WhatsApp. */
+function rsConferir_(req) {
+  var cod = String(req.codigo || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20);
+  if (cod.length < 6) return { ok: true, achou: false };
+  var cache = CacheService.getScriptCache(), chaveMin = 'rs_conf_' + Math.floor(new Date().getTime() / 60000), n = Number(cache.get(chaveMin) || 0);
+  if (n >= 60) throw new Error('Muitas consultas. Tente de novo em 1 minuto.');
+  cache.put(chaveMin, String(n + 1), 120);
+  var g = ler_('GirosSite').filter(function (x) { return String(x.id).toUpperCase() === cod && x.status !== 'cancelado'; })[0];
+  if (!g) return { ok: true, achou: false };
+  if ((req.whats === 1 || req.whats === '1' || req.whats === true) && String(g.obs || '').indexOf('WhatsApp') < 0) {
+    rsTrava_(function () { g.obs = (g.obs ? g.obs + ' · ' : '') + 'Chamou no WhatsApp'; gravar_('GirosSite', g); });
+  }
+  var agoraMs = new Date().getTime(), st = g.status === 'aberto' && Number(g.vence_ms) <= agoraMs ? 'vencido' : g.status;
+  return { ok: true, achou: true, codigo: g.id, nome: String(g.nome || '').split(' ')[0], premio: g.premio, tipo: g.tipo, minimo: Number(g.minimo) || 0,
+           vence: Number(g.vence_ms) || 0, agora: agoraMs, status: st, modo: g.modo };
+}
+
 /* ───────── entrada pública: a = 'roletaSite' ───────── */
 var _rsRodar = rodar_;
 rodar_ = function (req) {
   if (req && req.a === 'roletaSite') {
     try {
       if (req.op === 'girar') return rsGirar_(req);
+      if (req.op === 'conferir') return rsConferir_(req);
       var cfg = rsCfg_();
       return { ok: true, modo: roletaCfg_().modo, horas: cfg.horas, premios: rsPremiosPublico_(cfg) };
     } catch (e) { return { ok: false, erro: String(e && e.message || e) }; }

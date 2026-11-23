@@ -39,7 +39,7 @@ function rs61Lista(){
   const linhas = giros.map(g => `<tr>
       <td>${rs61Hora(g.criado_em)}${g.modo==='teste' ? ' <span class="selo">teste</span>' : ''}</td>
       <td><b>${esc(g.nome)}</b></td>
-      <td><a href="https://wa.me/55${esc(g.tel)}" target="_blank" rel="noopener">${esc(rs61Fone(g.tel))}</a>${g.aceita==='sim' ? '' : ' <small class="apagado" title="Não marcou que aceita receber novidades">sem novidades</small>'}</td>
+      <td><a href="https://wa.me/55${esc(g.tel)}" target="_blank" rel="noopener">${esc(rs61Fone(g.tel))}</a>${/WhatsApp/.test(g.obs||'') ? ' <span class="selo" title="Mandou a mensagem da roleta no WhatsApp da loja">💬 chamou</span>' : ''}${g.aceita==='sim' ? '' : ' <small class="apagado" title="Não marcou que aceita receber novidades">sem novidades</small>'}</td>
       <td>${esc(g.premio)}</td>
       <td><span class="selo">${esc(g.id)}</span></td>
       <td>${rs61Situacao(g)}${g.tipo==='brinde' && g.status==='aberto' ? ` <button class="btn p" onclick="rs61Brinde('${esc(g.id)}')">Entreguei</button>` : ''}</td>
