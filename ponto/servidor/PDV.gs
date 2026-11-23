@@ -27,11 +27,11 @@ function comTrava_(fn) {
 var PDV_PADRAO = { desconto_max: 15, cancelar_min: 15, acrescimo: 1 };   // acrescimo: 1 = este servidor já sabe somar acréscimo (o site só mostra o campo se vier 1)
 CONFIG_PADRAO.push(['pdv', JSON.stringify(PDV_PADRAO), 'Regras do PDV (JSON): desconto_max em % e minutos para a vendedora desfazer a própria venda']);
 
-/* ───────── Black Friday (v59, 19/11/2026): botão temporário na comanda ─────────
+/* ───────── Black Friday (v59, 19/11/2026; estendida até 30/11 em 23/11): botão temporário na comanda ─────────
    De PDV_BF.de até PDV_BF.ate (inclusive), qualquer vendedora dá PDV_BF.pct % na venda inteira pelo botão da comanda.
    Fora dessas datas o servidor não avisa o site (o botão some sozinho) e recusa a venda com a promoção.
    Não soma com o cupom da roleta nem com os 20% do cartão fidelidade. Para repetir em outra data, mude as datas aqui. */
-var PDV_BF = { nome: 'Black Friday', pct: 30, de: '2026-11-19', ate: '2026-11-21' };
+var PDV_BF = { nome: 'Black Friday', pct: 30, de: '2026-11-19', ate: '2026-11-30' };
 var _pdvBfVenda = false;      // ligado só enquanto uma venda com o botão está sendo gravada
 function pdvBf_() { var h = hoje_(); return (h >= PDV_BF.de && h <= PDV_BF.ate) ? { nome: PDV_BF.nome, pct: PDV_BF.pct, ate: PDV_BF.ate } : null; }
 function pdvCfg_() {
