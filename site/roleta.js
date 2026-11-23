@@ -322,7 +322,11 @@
     if (PREVIEW) { open(); return; }
     modo(function (m) {
       if (m === "desligada" || (m === "teste" && !TESTER)) return;
-      if (TESTER) { setTimeout(open, 1500); return; }
+      if (TESTER) {   // teste: abre sozinha só na primeira página da visita; depois fica o botão "Roleta (teste)" no canto
+        var ja = false; try { ja = sessionStorage.getItem("lvr_teste_abriu") === "1"; sessionStorage.setItem("lvr_teste_abriu", "1"); } catch (e) {}
+        if (ja) showFab(); else setTimeout(open, 1500);
+        return;
+      }
       var s = store(true) || {};
       if (s.won && Date.now() - (s.won.at || 0) > 30 * 864e5) { delete s.won; store(false, s); }   // depois de 30 dias pode girar de novo
       var recent = s.closedAt && Date.now() - s.closedAt < CFG.repeatDays * 864e5;
