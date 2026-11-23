@@ -255,3 +255,57 @@ function bv24Agendar() {
   log_('Sistema', 'bv24 agendado', 'liga ' + dia + ' 00:00 · desliga ' + prox + ' 00:00');
   return 'Agendado: liga ' + dia + ' 00:00 · desliga ' + prox + ' 00:00 (Acre)';
 }
+
+/* ═════════ RESULTADO DA CAMPANHA (v62) — Administração › Vendas › Resultado 24 por R$ 24 ═════════
+   Só leitura. Soma as vendas do PDV marcadas com a campanha (coluna promo "… 24 por R$ 24 (N)", item com bv24:1)
+   e os pedidos do site do dia que levaram produto da campanha pelo preço de R$ 24. Venda cancelada não entra. */
+ADMIN.admBv24 = function (req) {
+  var dia = BV24.data, hoje = hoje_(), porSkuProd = {}, nsDaCampanha = {};
+  ler_('Produtos').forEach(function (p) { var it = bv24PorSku_()[String(p.sku || '').trim()]; if (it) porSkuProd[p.id] = it; });
+  BV24.itens.forEach(function (it) { it.ns.forEach(function (id) { nsDaCampanha[id] = it; }); });
+  var tot = { vendas: 0, pecas: 0, valor24: 0, total: 0, outros: 0, canceladas: 0 }, prod = {}, vend = {}, loja = {}, hora = {};
+  var soma = function (m, k, nome, pecas, valor, total) { var o = m[k] = m[k] || { k: k, nome: nome, vendas: 0, pecas: 0, valor24: 0, total: 0 }; o.vendas++; o.pecas += pecas; o.valor24 = bv24R2_(o.valor24 + valor); o.total = bv24R2_(o.total + total); };
+  ler_('VendasPDV').forEach(function (v) {
+    if (v.data !== dia || !/24 por/.test(String(v.promo || ''))) return;
+    if (v.status === 'cancelada') { tot.canceladas++; return; }
+    var itens = []; try { itens = JSON.parse(v.itens || '[]'); } catch (e) {}
+    var pecas = 0, valor = 0;
+    itens.forEach(function (i) {
+      if (!i.bv24) return;
+      var q = Number(i.qtd) || 0, it = porSkuProd[i.id], k = it ? it.n : 0;
+      pecas += q; valor += (Number(i.preco) || 0) * q;
+      var o = prod[k] = prod[k] || { n: k, nome: it ? it.nome : String(i.nome || 'Produto'), loja: 0, site: 0 }; o.loja += q;
+    });
+    if (!pecas) return;
+    valor = bv24R2_(valor); var total = Number(v.total) || 0;
+    tot.vendas++; tot.pecas += pecas; tot.valor24 = bv24R2_(tot.valor24 + valor); tot.total = bv24R2_(tot.total + total);
+    tot.outros = bv24R2_(tot.outros + Math.max(0, (Number(v.subtotal) || 0) - valor));
+    soma(vend, v.colaboradora_id || v.colaboradora, v.colaboradora, pecas, valor, total);
+    soma(loja, v.loja, v.loja, pecas, valor, total);
+    soma(hora, String(v.hora || '').slice(0, 2), String(v.hora || '').slice(0, 2) + 'h', pecas, valor, total);
+  });
+  var site = { pedidos: 0, pecas: 0, valor24: 0, total: 0 };
+  try {
+    ler_('VendasSite').forEach(function (v) {
+      if (v.data !== dia || /cancel/.test(String(v.status || ''))) return;
+      var itens = []; try { itens = JSON.parse(v.itens || '[]'); } catch (e) {}
+      var pecas = 0, valor = 0;
+      itens.forEach(function (i) {
+        var it = nsDaCampanha[String(i.ns_produto_id || '')];
+        if (!it || Math.abs((Number(i.preco) || 0) - BV24.preco) > 0.011) return;
+        var q = Number(i.qtd) || 0; pecas += q; valor += BV24.preco * q;
+        var o = prod[it.n] = prod[it.n] || { n: it.n, nome: it.nome, loja: 0, site: 0 }; o.site += q;
+      });
+      if (!pecas) return;
+      site.pedidos++; site.pecas += pecas; site.valor24 = bv24R2_(site.valor24 + valor); site.total = bv24R2_(site.total + (Number(v.total) || 0));
+    });
+  } catch (e) { site.erro = String(e && e.message || e); }
+  var lista = function (m) { return Object.keys(m).map(function (k) { return m[k]; }); };
+  var g = {}; try { g = bv24Prop_(); } catch (e) {}
+  return { ok: true, agora: agora_(), hoje: hoje, estado: hoje < dia ? 'antes' : hoje === dia ? 'hoje' : 'depois',
+    campanha: { nome: BV24.nome, titulo: BV24.titulo, preco: BV24.preco, data: dia, itens: BV24.itens.map(function (it) { return { n: it.n, nome: it.nome, de: it.de }; }) },
+    lojas: tot, site: site, site_ligado_em: g.ligado_em || '', site_desligado_em: g.desligado_em || '',
+    produtos: lista(prod).sort(function (a, b) { return (b.loja + b.site) - (a.loja + a.site); }),
+    vendedoras: lista(vend).sort(function (a, b) { return b.pecas - a.pecas; }),
+    por_loja: lista(loja), por_hora: lista(hora).sort(function (a, b) { return a.k < b.k ? -1 : 1; }) };
+};

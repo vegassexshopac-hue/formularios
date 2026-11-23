@@ -167,6 +167,8 @@ document.write('<script src="app59.js?v=60"><\/script>');
 document.write('<script src="app60.js?v=60"><\/script>');
 /* v61: Roleta do site (Natal) — lista "Quem girou" em Administração › Roleta do site; sorteio e cupom único de 24 h no servidor (app61.js; servidor ROLETA_SITE.gs) */
 document.write('<script src="app61.js?v=61b"><\/script>');
+/* v62: Resultado da campanha 24 por R$ 24 em Administração › Vendas (app62.js; servidor BV24.gs › admBv24). Só leitura. */
+document.write('<script src="app62.js?v=62"><\/script>');
 /* velocidade (etapa 1): a Arena da vendedora atualiza pela ação leve "arena" do servidor (LEVE.gs), sem baixar o pacote inteiro a cada 30 s (rapido.js) */
 document.write('<script src="rapido.js?v=rap1"><\/script>');
 document.write('<script src="app12.js?v=35"><\/script>');
