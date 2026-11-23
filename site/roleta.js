@@ -5,6 +5,17 @@
    Modo teste: abra o site com ?roleta=teste (sair: ?roleta=sair).
    Cupons que precisam existir na Nuvemshop (Marketing › Cupons): GIRO5, GIRO10, GIRO15, ENTREGA0, BRINDEVEGAS
 */
+/* Barra do topo do site: o texto do layout ainda diz "só até sábado, 21/11" e a promoção foi estendida até 30/11 (pedido da Madu em 23/11/2026).
+   Troca só o texto, na tela. O definitivo é mudar em Nuvemshop › Loja online › Layout › Editar layout atual › barra de anúncio — aí este trecho pode sair. */
+(function () {
+  function troca() {
+    try {
+      var l = document.querySelectorAll(".js-topbar a, .section-topbar a");
+      for (var i = 0; i < l.length; i++) if (/21\/11/.test(l[i].textContent)) l[i].textContent = l[i].textContent.replace(/s[óo] at[ée] s[áa]bado,?\s*21\/11/i, "só até 30/11");
+    } catch (e) {}
+  }
+  troca(); document.addEventListener("DOMContentLoaded", troca); setTimeout(troca, 1200); setTimeout(troca, 4000);
+})();
 /* Black Vegas — 24 por R$ 24 (terça 24/11/2026): a faixa com contagem regressiva fica em site/blackvegas.js e só aparece no dia. */
 (function () {
   try {
