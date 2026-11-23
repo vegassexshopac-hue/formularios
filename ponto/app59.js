@@ -44,7 +44,9 @@ pdvContas = function pdvContas(){
   const b = bfOn() && !bfRoleta() ? bfCfg() : null;
   if(!b) return _pdvContasV59.apply(this, arguments);
   const cfg = pdvD().cfg, max0 = cfg.desconto_max;
-  PDV.descTipo = '%'; PDV.descV = String(b.pct);
+  const base24 = (typeof bvBase === 'function') ? bvBase() : null;      // v60: com produto de R$ 24 na comanda, os 30% contam só sobre os outros produtos
+  if(base24 != null){ PDV.descTipo = 'R$'; PDV.descV = String(r2(base24*Number(b.pct)/100)).replace('.', ','); }
+  else { PDV.descTipo = '%'; PDV.descV = String(b.pct); }
   cfg.desconto_max = Math.max(Number(max0 == null ? 15 : max0), Number(b.pct));
   let k;
   try{ k = _pdvContasV59.apply(this, arguments); } finally { cfg.desconto_max = max0; }
@@ -64,7 +66,7 @@ function bfRestaurar(){
   PDV._bf59 = PDV.eid;
   try{ const g = PDV.eid && LS.get('lv_pdv59_'+PDV.eid); PDV.bf = !!(g && g.bf && g.uid && g.uid===PDV.uid && PDV.car.length); }catch(e){ PDV.bf = false; }
 }
-function bfDesligar(){ if(PDV.bf){ PDV.bf = false; PDV.descV = ''; } }
+function bfDesligar(){ if(PDV.bf){ PDV.bf = false; PDV.descV = ''; PDV.descTipo = '%'; } }
 
 function bfAlternar(){
   const b = bfCfg(); if(!b) { toast('A promoção já acabou.', true); bfDesligar(); pdvGuardar(); pdvPintarComanda(); return; }
@@ -73,9 +75,11 @@ function bfAlternar(){
   if(!PDV.car.length){ toast('Coloque os produtos na comanda primeiro 🛍️', true); return; }
   if(bfRoleta()){ toast('A '+b.nome+' não soma com o cupom da roleta. Tire o cupom para usar os '+b.pct+'%.', true); return; }
   try{ const k = pdvContas(); if(k.fid && k.fid.tem20){ toast('Esta compra já tem os 20% do cartão fidelidade — não soma com a '+b.nome+'.', true); return; } }catch(e){}
+  const base24 = (typeof bvBase === 'function') ? bvBase() : null;      // v60
+  if(base24 != null && base24 < .01){ toast('Os produtos de R$ 24 já estão no preço final. A '+b.nome+' vale para os outros produtos.', true); return; }
   PDV.bf = true; PDV.descTipo = '%'; PDV.descV = String(b.pct);
   pdvGuardar(); pdvPintarComanda(true);
-  toast('🖤 '+b.nome+': '+b.pct+'% aplicado na venda');
+  toast('🖤 '+b.nome+': '+b.pct+'% aplicado '+(base24 != null ? 'nos produtos fora da campanha de R$ 24' : 'na venda'));
 }
 
 function bfBotao(k){
@@ -109,7 +113,7 @@ function bfArrumar(){
   if(k.bf){                                  // com a promoção ligada o desconto não é digitado
     linha.classList.add('bf59-travado');
     const inp = linha.querySelector('input'); if(inp){ inp.disabled = true; inp.value = String(k.bf.pct); inp.title = 'Desconto da '+k.bf.nome+'. Para digitar outro desconto, tire a promoção no botão acima.'; }
-    linha.querySelectorAll('button').forEach(x=>{ x.disabled = true; });
+    linha.querySelectorAll('button').forEach(x=>{ x.disabled = true; if(x.textContent.trim()==='%' || x.textContent.trim()==='R$') x.classList.toggle('on', x.textContent.trim()==='%'); });
     const rot = linha.querySelector('span'); if(rot) rot.innerHTML = 'Desconto <small class="apagado">('+esc(k.bf.nome)+')</small>';
     const info = el.querySelector('#pdv-desc-info span'); if(info) info.textContent = '🖤 '+k.bf.nome+' · '+k.bf.pct+'% OFF';
   }
@@ -140,5 +144,6 @@ pdvLimpar = function pdvLimpar(){
 const _textoComprovanteV59 = textoComprovante;
 textoComprovante = function textoComprovante(v){
   const t = _textoComprovanteV59.apply(this, arguments);
-  return (v && v.promo) ? t.replace('\nDesconto: −', '\n🖤 '+v.promo+' OFF: −') : t;
+  const bf = v && v.promo ? String(v.promo).split(' + ').find(x=>!/24 por/.test(x)) : '';      // v60: a marca "24 por R$ 24" não é o nome do desconto
+  return bf ? t.replace('\nDesconto: −', '\n🖤 '+bf+' OFF: −') : t;
 };
