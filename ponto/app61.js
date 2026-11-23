@@ -52,7 +52,7 @@ function rs61Lista(){
   </div>
   ${giros.length ? `<div class="tabela"><table><thead><tr><th>Quando</th><th>Nome</th><th>WhatsApp</th><th>Prêmio</th><th>Código</th><th>Situação</th></tr></thead><tbody>${linhas}</tbody></table></div>`
     : `<p class="apagado">Ninguém girou ainda${R.testes && !RS61_TESTES ? ' (só testes)' : ''}.</p>`}
-  <p class="apagado" style="font-size:13px;margin-top:10px">Cada cliente ganha <b>um cupom só dela</b>, que vale <b>${c.horas||24} horas</b>, serve para <b>1 compra</b> e <b>não soma</b> com outras promoções. Um giro por WhatsApp a cada ${c.bloqueio_dias||30} dias. Quando o prazo acaba, o portal apaga o cupom na Nuvemshop sozinho. Toque no WhatsApp para chamar a cliente antes de vencer.</p></div>`;
+  <p class="apagado" style="font-size:13px;margin-top:10px">Cada cliente ganha <b>um cupom só dela</b>, que vale <b>${c.horas||24} horas</b>, serve para <b>1 compra</b> e <b>soma</b> com outras promoções (vale também em produto com preço promocional). Um giro por WhatsApp a cada ${c.bloqueio_dias||30} dias. Quando o prazo acaba, o portal apaga o cupom na Nuvemshop sozinho. Toque no WhatsApp para chamar a cliente antes de vencer.</p></div>`;
 }
 function rs61Premios(){
   const ps = (RS61 && RS61.cfg && RS61.cfg.premios) || [];

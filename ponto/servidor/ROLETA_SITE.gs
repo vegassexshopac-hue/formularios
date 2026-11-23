@@ -5,7 +5,8 @@
    O que faz:
    • O sorteio acontece AQUI (não no navegador da cliente).
    • Cada giro é gravado na aba GirosSite: nome, WhatsApp, prêmio, código, quando vence, aceite de mensagens.
-   • Cada prêmio de desconto/frete vira um CUPOM ÚNICO na Nuvemshop (1 uso, não soma com outras promoções).
+   • Cada prêmio de desconto/frete vira um CUPOM ÚNICO na Nuvemshop (1 uso; SOMA com outras promoções desde 23/11 —
+     cupom que não soma é recusado pela Nuvemshop quando há produto com preço promocional no carrinho).
      A Nuvemshop só aceita vencimento por dia; por isso o portal apaga o cupom quando completam as 24 h
      (gatilho roletaSiteLimpar a cada 15 min).
    • 1 giro por WhatsApp a cada X dias: quem volta vê o mesmo prêmio (ou o aviso de que venceu).
@@ -18,7 +19,7 @@ ABAS.GirosSite = ['id', 'criado_em', 'data', 'hora', 'nome', 'tel', 'chave_tel',
                   'vence_em', 'vence_ms', 'status', 'usado_em', 'pedido', 'aceita', 'modo', 'obs'];
 
 var RS_PADRAO = {
-  horas: 24, bloqueio_dias: 30, limite_minuto: 30, prefixo: 'NATAL', combina: false,
+  horas: 24, bloqueio_dias: 30, limite_minuto: 30, prefixo: 'NATAL', combina: true,
   premios: [
     { k: 'p5',     nome: '5% OFF',       tipo: 'percentage', valor: 5,  minimo: 0,   chance: 30 },
     { k: 'p10',    nome: '10% OFF',      tipo: 'percentage', valor: 10, minimo: 0,   chance: 25 },
@@ -36,7 +37,7 @@ function rsCfg_() {
   o.bloqueio_dias = Math.min(365, Math.max(0, Math.round(rsNum_(c.bloqueio_dias, RS_PADRAO.bloqueio_dias))));
   o.limite_minuto = Math.max(5, Math.round(rsNum_(c.limite_minuto, RS_PADRAO.limite_minuto)));
   o.prefixo = String(c.prefixo || RS_PADRAO.prefixo).toUpperCase().replace(/[^A-Z]/g, '').slice(0, 8) || 'LV';
-  o.combina = c.combina === true;
+  o.combina = c.combina !== false;   // 23/11: a Madu decidiu deixar somar (cupom que não soma é recusado se houver produto em promoção no carrinho)
   var base = {}; RS_PADRAO.premios.forEach(function (p) { base[p.k] = p; });
   var lista = Array.isArray(c.premios) && c.premios.length ? c.premios : RS_PADRAO.premios;
   o.premios = lista.filter(function (p) { return p && base[p.k]; }).map(function (p) {

@@ -4,7 +4,7 @@
    Liga / desliga / teste: Portal › Administração › Roleta do site (lá também fica a lista de quem girou).
    Modo teste: abra o site com ?roleta=teste (sair: ?roleta=sair).
    O sorteio e o cupom são do SERVIDOR (ponto/servidor/ROLETA_SITE.gs): cada giro cria um cupom único na Nuvemshop,
-   válido por 24 h, 1 uso, que não soma com outras promoções. 1 giro por WhatsApp.
+   válido por 24 h, 1 uso, que SOMA com outras promoções (decisão da Madu em 23/11). 1 giro por WhatsApp.
 */
 /* Textos do site que ainda dizem 21/11 (barra do topo, aviso do Pix na página do produto e faixa "termina sábado"): a promoção foi estendida
    até 30/11 (pedido da Madu em 23/11/2026). Troca só o texto, na tela. O definitivo é mudar em Nuvemshop › Loja online › Layout › Editar layout atual › barra de anúncio — aí este trecho pode sair. */
@@ -110,6 +110,8 @@
 .lvr-code{display:inline-block;border:2px dashed #f5c518;border-radius:10px;padding:8px 18px;font:800 20px/1 Manrope,monospace;letter-spacing:.12em;color:#fff;margin:0 auto;user-select:all}\
 .lvr-clock{display:inline-flex;align-items:center;gap:8px;margin:0 auto;background:#1c1010;border:1px solid #5a1a1a;border-radius:999px;padding:7px 14px;font:800 13px Manrope,system-ui,sans-serif;color:#ffd9d9;letter-spacing:.03em}\
 .lvr-clock b{font-variant-numeric:tabular-nums;color:#fff;font-size:15px}\
+.lvr-min{margin:0 auto;background:#3a2a05;border:1px solid #f5c518;color:#ffe9a8;border-radius:10px;padding:7px 12px;font:600 13px Manrope,system-ui,sans-serif}\
+.lvr-min b{color:#fff}\
 .lvr-fine{font-size:11.5px;color:#8f8378;margin:2px 0 0}\
 .lvr-test{position:absolute!important;top:12px;left:14px;background:#f5c518;color:#140f0f;font:800 10.5px Manrope,system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:4px 10px}\
 .lvr-fab{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:2147482999;background:#0d0b0b;color:#f5c518;border:2px solid #f5c518;border-radius:999px;padding:10px 16px;font:800 13px Manrope,system-ui,sans-serif;letter-spacing:.05em;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.35);animation:lvrPulse 2.4s infinite}\
@@ -273,14 +275,16 @@
       r.querySelector(".ghost").onclick = close;
       return r;
     }
-    var msg = "Oi! Aqui é " + w.name + " 🎄 Girei a Roleta de Natal no site e ganhei *" + (w.premio || p.label) + "*. Meu código: *" + w.codigo + "* (vale até " + ateQuando(w.vence) + ")";
+    var msg = "Oi! Aqui é " + w.name + " 🎄 Girei a Roleta de Natal no site e ganhei *" + (w.premio || p.label) + "*. Meu código: *" + w.codigo + "* (vale até " + ateQuando(w.vence) + (!w.noCart && w.minimo > 0 ? ", em compras acima de R$ " + String(w.minimo).replace(".", ",") : "") + ")";
     var regra = w.noCart ? "Resgate pelo WhatsApp em até 24 horas."
-      : "Vale por 24 horas · 1 uso · não soma com outras promoções" + (w.minimo > 0 ? " · em compras acima de R$ " + String(w.minimo).replace(".", ",") : "") + ".";
+      : "Vale por 24 horas · 1 uso · vale também em produtos em promoção.";
+    var aviso = !w.noCart && w.minimo > 0 ? '<div class="lvr-min">⚠️ Vale em compras <b>acima de R$ ' + String(w.minimo).replace(".", ",") + '</b></div>' : "";
     r.innerHTML =
       '<div class="lvr-eye">🎁 ' + (nome ? nome + ", " : "") + (w.ja ? "você já girou. Seu presente:" : "você ganhou") + '</div>' +
       '<div class="lvr-prize">' + limpo(w.premio || p.label) + '</div>' +
       '<p class="lvr-sub" style="margin:0">' + (w.noCart ? "Seu código para resgatar " + p.text + ":" : "Seu cupom de " + p.text + ":") + '</p>' +
       '<div class="lvr-code">' + cod + '</div>' +
+      aviso +
       '<div class="lvr-clock">⏳ Acaba em <b class="lvr-t">' + falta(w.vence - Date.now()) + '</b></div>' +
       (w.noCart ? "" : '<a class="lvr-btn" href="/discount/' + encodeURIComponent(w.codigo) + '">Usar agora no carrinho</a>') +
       zap(msg, w.noCart ? "Resgatar brinde no WhatsApp" : "Guardar no meu WhatsApp") +
