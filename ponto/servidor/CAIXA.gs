@@ -451,9 +451,7 @@ COLAB.venda = function (c, req) {
   var vend = c;
   var vid = String(req.vendedora_id || '');
   if (vid && vid !== c.id && !repetida) {
-    var no = cx48NoPonto_(hoje).filter(function (p) { return p.id === vid; })[0];
-    if (!no) throw new Error('Essa vendedora não está com o ponto aberto hoje. Ela precisa bater o ponto para vender.');
-    if (no.loja && no.loja !== loja) throw new Error('Essa vendedora bateu o ponto na outra loja hoje.');
+    /* v64: pode ser qualquer vendedora ativa (com ponto aqui, na outra loja ou sem ponto) — fica gravado quem lançou */
     vend = colabs_().filter(function (x) { return x.id === vid && x.ativa === 'SIM'; })[0];
     if (!vend) throw new Error('Vendedora não encontrada');
   }
