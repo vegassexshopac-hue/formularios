@@ -174,11 +174,11 @@ ADMIN.admDados = function (req) {
 
 var _opxRodar = rodar_;
 rodar_ = function (req) {
-  if (req && req.a === 'sangria') {               // v28: foto do envelope obrigatória
+  if (req && req.a === 'sangria') {               // v28: foto do envelope (opcional desde v28d)
     try {
       var cs = checarColab_(req);
-      var bytes = Utilities.base64Decode(String(req.foto || '').replace(/^data:image\/\w+;base64,/, ''));
-      if (bytes.length < 1500) throw new Error('Tire a foto do envelope antes de registrar a sangria');
+      var bytes = req.foto ? Utilities.base64Decode(String(req.foto).replace(/^data:image\/\w+;base64,/, '')) : [];
+      if (bytes.length < 1500) { delete req.foto; return _opxRodar(req); }   // v28d (24/11): foto deixou de ser obrigatória
       if (bytes.length > 900 * 1024) throw new Error('Foto grande demais — tire de novo');
       var raiz = pastaAnexos_(), it = raiz.getFoldersByName('Sangrias - fotos dos envelopes');
       var pasta = it.hasNext() ? it.next() : raiz.createFolder('Sangrias - fotos dos envelopes');

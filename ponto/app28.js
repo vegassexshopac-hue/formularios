@@ -100,7 +100,7 @@ function opRelatorioMes(){
   <h2>Fechamentos</h2><table><thead><tr><th>Data</th><th>Loja</th><th>Fechou</th><th class="n">Contado</th><th class="n">Esperado</th><th class="n">Diferença</th><th>Status</th><th>Refeito</th></tr></thead><tbody>
   ${F.map(f=>`<tr><td>${ddmm(f.data)}</td><td>${esc(opLojaNome(f.loja))}</td><td>${esc(primeiroNome(f.por||''))} ${esc(String(f.criado_em).slice(11,16))}</td><td class="n">${brl2(opSoma(f.contado))}</td><td class="n">${opBrl(opSoma(f.esperado))}</td><td class="n">${opDifTxt(opSoma(f.diferenca))}</td><td>${opStatusTxt(f.status)}</td><td class="c">${opVersoes(f.id).length||''}</td></tr>`).join('')||'<tr><td colspan="8">Nenhum fechamento.</td></tr>'}</tbody></table>
   <h2>Sangrias</h2><table><thead><tr><th>Data</th><th>Hora</th><th>Loja</th><th class="n">Valor</th><th>Tirou</th><th>Conferiu</th><th>Foto</th></tr></thead><tbody>
-  ${SG.map(s=>`<tr><td>${ddmm(s.data)}</td><td>${esc(s.hora)}</td><td>${esc(opLojaNome(s.loja))}</td><td class="n">${brl2(s.valor)}</td><td>${esc(primeiroNome(s.tirou||''))}</td><td>${esc(s.conferiu||'—')}</td><td>${s.video_url?'sim':'NÃO'}</td></tr>`).join('')||'<tr><td colspan="7">Nenhuma sangria.</td></tr>'}</tbody></table>
+  ${SG.map(s=>`<tr><td>${ddmm(s.data)}</td><td>${esc(s.hora)}</td><td>${esc(opLojaNome(s.loja))}</td><td class="n">${brl2(s.valor)}</td><td>${esc(primeiroNome(s.tirou||''))}</td><td>${esc(s.conferiu||'—')}</td><td>${s.video_url?'sim':'—'}</td></tr>`).join('')||'<tr><td colspan="7">Nenhuma sangria.</td></tr>'}</tbody></table>
   <div style="display:flex;gap:30px"><div class="ass" style="flex:1">Conferido por</div><div class="ass" style="flex:1">Data</div></div></body></html>`;
   opImprimirHtml(html, `Relatorio de Caixa - ${mes}-${ano}`);
 }
@@ -111,32 +111,6 @@ admCaixa = function admCaixa(){
     .replace(/🎥 ver/g, '📷 ver').replace('<th>Vídeo</th>', '<th>Foto</th>');
 };
 
-/* ───────── sangria com foto obrigatória do envelope ───────── */
-const _abrirSangriaV28 = abrirSangria;
-abrirSangria = function abrirSangria(){
-  _abrirSangriaV28.apply(this, arguments);
-  if(!SG) return;
-  SG.foto = '';
-  const campos = [...document.querySelectorAll('#modal .modal-c .campo')], video = campos.find(c=>/vídeo/i.test(c.textContent));
-  const bloco = `<div class="campo" id="sg-foto-campo"><label>📷 Foto do envelope (obrigatória)</label>
-    <p class="suave" style="margin:0 0 6px;font-size:13px">Escreva no envelope a data, a loja e o valor, e fotografe com o dinheiro dentro antes de fechar.</p>
-    <label class="btn largo" style="cursor:pointer"><i class="ti ti-camera"></i> <span id="sg-foto-txt">Tirar foto do envelope</span>
-      <input type="file" accept="image/*" capture="environment" style="display:none" onchange="sgFoto(this)"></label>
-    <img id="sg-foto-prev" alt="" style="display:none;margin-top:8px;max-width:100%;max-height:220px;border-radius:10px;object-fit:contain"></div>`;
-  if(video){ video.insertAdjacentHTML('beforebegin', bloco); const l = video.querySelector('label'); if(l) l.textContent = 'Link do vídeo do envelope (opcional)'; }
-  else document.querySelector('#btn-sg')?.insertAdjacentHTML('beforebegin', bloco);
-};
-async function sgFoto(inp){
-  const f = inp.files && inp.files[0]; if(!f || !SG) return;
-  const t = $('#sg-foto-txt'); if(t) t.textContent = 'Preparando a foto…';
-  try{
-    SG.foto = await fotoReduzir(f, 1000);
-    const p = $('#sg-foto-prev'); if(p){ p.src = SG.foto; p.style.display = 'block'; }
-    if(t) t.textContent = 'Foto pronta ✔ — tocar para tirar outra';
-  }catch(e){ SG.foto = ''; if(t) t.textContent = 'Tirar foto do envelope'; toast('Não consegui ler a foto, tente de novo', true); }
-}
-const _salvarSangriaV28 = salvarSangria;
-salvarSangria = async function salvarSangria(){
-  if(SG && !SG.foto){ toast('Tire a foto do envelope antes de registrar', true); $('#sg-foto-campo')?.scrollIntoView({behavior:'smooth', block:'center'}); return; }
-  return _salvarSangriaV28.apply(this, arguments);
-};
+/* v28d (24/11/2026): foto do envelope na sangria REMOVIDA a pedido da Madu — no computador da loja não há câmera
+   e a equipe travava no seletor de arquivos. A sangria volta a ser só loja + valor + quem conferiu (+ vídeo/obs opcionais). */
+
