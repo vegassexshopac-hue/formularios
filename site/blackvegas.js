@@ -76,7 +76,7 @@
     + ".item .js-price-display.lvbv-por{font-size:1.25em!important}"
     + ".js-price-display.lvbv-por:before{content:'por '!important;text-decoration:none!important;color:#444!important;font-weight:600!important;font-size:.72em!important}"
     + ".item.lvbv-24 .js-product-item-image-container-private:after{content:'\\1F525  SÓ HOJE · R$ 24'!important}"
-    + ".item.lvbv-24p .js-product-item-image-container-private:after{content:'\\1F525  SÓ HOJE · TAM. P POR R$ 24'!important}"
+    + ".item.lvbv-24p .js-product-item-image-container-private:after{content:'\\1F525  TAM. P POR R$ 24 · HOJE'!important}"
     + ".js-price-container.lvbv-24:after{content:'\\1F525  Black Vegas: R$ 24 só hoje · preço final de campanha, não acumula com outros descontos'!important}";
   var SO_VARIACAO = ["plug-anal-formato-circulo"];   // só o tamanho P está na campanha
   function visivel(e) { return !!e && getComputedStyle(e).display !== "none" && /\d/.test(e.textContent) && !/^\s*R\$\s*0,00\s*$/.test(e.textContent); }
