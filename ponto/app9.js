@@ -171,6 +171,8 @@ document.write('<script src="app61.js?v=61d"><\/script>');
 document.write('<script src="app62.js?v=62"><\/script>');
 /* v64: "Quem vendeu?" com qualquer colega (+ Outra colega) e impressão automática da abertura/fechamento do caixa no computador da loja (app64.js; servidor CAIXA.gs v64) */
 document.write('<script src="app64.js?v=64b"><\/script>');
+/* v65: Relatórios no WhatsApp — relatório do dia quando o último caixa fecha + aviso a cada ponto, para Madu e Matheus; colaboradoras prontas para ligar (Comunicação › Relatórios, perfil Matheus) (app65.js; servidor RELATORIO.gs) */
+document.write('<script src="app65.js?v=65"><\/script>');
 /* velocidade (etapa 1): a Arena da vendedora atualiza pela ação leve "arena" do servidor (LEVE.gs), sem baixar o pacote inteiro a cada 30 s (rapido.js) */
 document.write('<script src="rapido.js?v=rap1"><\/script>');
 document.write('<script src="app12.js?v=35"><\/script>');
