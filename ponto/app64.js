@@ -11,6 +11,7 @@
 (function(){ const st = document.createElement('style'); st.textContent = `
 .cx48-quem .cx64-mais{border:2px dashed var(--borda,#ddd);background:#fff;color:var(--suave,#777);padding:6px 12px}
 .cx48-quem .cx64-mais:hover{border-color:var(--pri,#E3101F);color:var(--pri,#E3101F)}
+.cx48-quem .cx48-chips{flex-wrap:wrap;overflow-x:visible;gap:6px}
 .cx64-lista{margin-top:6px;padding-top:6px;border-top:1px dashed var(--borda,#e5e5e5)}
 .cx64-lista>small{display:block;font-size:11px;margin-bottom:4px}
 .cx48-quem .cx48-chip small{font-size:10px;font-weight:500;color:var(--suave,#888)}

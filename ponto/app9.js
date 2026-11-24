@@ -170,7 +170,7 @@ document.write('<script src="app61.js?v=61d"><\/script>');
 /* v62: Resultado da campanha 24 por R$ 24 em Administração › Vendas (app62.js; servidor BV24.gs › admBv24). Só leitura. */
 document.write('<script src="app62.js?v=62"><\/script>');
 /* v64: "Quem vendeu?" com qualquer colega (+ Outra colega) e impressão automática da abertura/fechamento do caixa no computador da loja (app64.js; servidor CAIXA.gs v64) */
-document.write('<script src="app64.js?v=64"><\/script>');
+document.write('<script src="app64.js?v=64b"><\/script>');
 /* velocidade (etapa 1): a Arena da vendedora atualiza pela ação leve "arena" do servidor (LEVE.gs), sem baixar o pacote inteiro a cada 30 s (rapido.js) */
 document.write('<script src="rapido.js?v=rap1"><\/script>');
 document.write('<script src="app12.js?v=35"><\/script>');
