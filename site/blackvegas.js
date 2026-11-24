@@ -67,4 +67,37 @@
     var rel = setInterval(tique, 1000); tique();
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", montar); else montar();
+
+  /* Preço no dia da campanha (24/11): o layout da Black Friday risca o preço e escreve "de" antes dele, porque espera o
+     "por R$ … com Pix" logo abaixo. Produto com preço promocional não tem o Pix hoje (caixa "combinar promoções" desmarcada),
+     então ficava "R$39,99 de R$24,00" com os dois riscados. Aqui o preço da promoção volta a aparecer como preço de verdade. */
+  var cssPreco = ""
+    + ".js-price-display.lvbv-por{text-decoration:none!important;color:#E0162B!important;font-weight:900!important}"
+    + ".item .js-price-display.lvbv-por{font-size:1.25em!important}"
+    + ".js-price-display.lvbv-por:before{content:'por '!important;text-decoration:none!important;color:#444!important;font-weight:600!important;font-size:.72em!important}"
+    + ".item.lvbv-24 .js-product-item-image-container-private:after{content:'\\1F525  SÓ HOJE · R$ 24'!important}"
+    + ".js-price-container.lvbv-24:after{content:'\\1F525  Black Vegas: R$ 24 só hoje · preço final de campanha, não acumula com outros descontos'!important}";
+  function visivel(e) { return !!e && getComputedStyle(e).display !== "none" && /\d/.test(e.textContent) && !/^\s*R\$\s*0,00\s*$/.test(e.textContent); }
+  function arrumarPrecos() {
+    if (antesDe() || Date.now() >= FIM) return;
+    if (!document.getElementById("lvbv-css-preco")) { var st = document.createElement("style"); st.id = "lvbv-css-preco"; st.textContent = cssPreco; document.head.appendChild(st); }
+    var l = document.querySelectorAll(".js-price-display");
+    for (var i = 0; i < l.length; i++) {
+      var p = l[i], card = p.closest(".item"), caixa = card || p.closest(".js-price-container") || p.parentNode.parentNode;
+      if (!caixa) continue;
+      var de = caixa.querySelector(".js-compare-price-display:not(.js-installments-one-payment)");
+      var pix = caixa.querySelector(".js-payment-discount-price-product-container");
+      var promo = visivel(de) && !visivel(pix);                       // tem preço "de" e não tem o "por … com Pix"
+      p.classList.toggle("lvbv-por", promo);
+      /* o tema ganha das folhas de estilo: aqui vai direto no elemento */
+      var est = { "text-decoration": "none", "color": "#E0162B", "font-weight": "900", "opacity": "1", "font-size": card ? "22px" : "32px" };
+      for (var k in est) { if (promo) p.style.setProperty(k, est[k], "important"); else if (p.getAttribute("data-lvbv")) p.style.removeProperty(k); }
+      if (promo) p.setAttribute("data-lvbv", "1"); else p.removeAttribute("data-lvbv");
+      var e24 = promo && /^\s*R\$\s*24,00\s*$/.test(p.textContent);
+      if (card) card.classList.toggle("lvbv-24", e24);
+      else { var pc = p.closest(".js-price-container"); if (pc) pc.classList.toggle("lvbv-24", e24); }
+    }
+  }
+  function ligarPrecos() { arrumarPrecos(); setInterval(arrumarPrecos, 1500); }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", ligarPrecos); else ligarPrecos();
 })();
