@@ -118,6 +118,19 @@ function pv66ItemBusca(c, i){
 }
 
 
+
+/* v66d: quem chama relCarregar enquanto a lista já está carregando espera o MESMO carregamento
+   (antes voltava na hora sem nada e quem desenhava a tela chamava de novo → laço que travava a página) */
+if(typeof relCarregar==='function'){
+  const _relCarregarV66 = relCarregar; let andamento = null;
+  relCarregar = function relCarregar(forcar){
+    if(REL.carregando && andamento) return andamento;
+    const p = _relCarregarV66.apply(this, arguments);
+    if(REL.carregando){ andamento = p; p.finally(()=>{ if(andamento===p) andamento = null; }); }
+    return p;
+  };
+}
+
 /* carrega a lista UMA vez (v66c: tocar no botão enquanto a lista ainda carregava travava a página num laço) */
 function pv66Carregar(forcar){
   if(PV66.esperando || typeof relCarregar!=='function') return;
