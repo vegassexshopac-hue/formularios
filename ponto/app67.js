@@ -174,9 +174,11 @@ function et67Reais(v){
   const n = Math.round((Number(v)||0)*100), int = Math.floor(n/100).toLocaleString('pt-BR'), cent = String(n%100).padStart(2,'0');
   return `<small>R$</small>${int}<i>,${cent}</i>`;
 }
-function et67Estilo(){ const c = ET67.cfg, k = Math.max(.5, Math.min(1.6, Math.min(c.w, c.h*1.0)/40)); return `--w:${c.w}mm;--h:${c.h}mm;--k:${k.toFixed(3)};--dx:${c.dx}mm;--dy:${c.dy}mm`; }
+/* v67b: etiqueta mais larga que alta (40×30, 50×30…) aproveita melhor o papel — letra ~20% maior */
+function et67K(){ const c = ET67.cfg, baixa = c.h/c.w < .8; return Math.max(.5, Math.min(1.6, baixa ? Math.min(c.w/40, c.h/33) : Math.min(c.w, c.h)/40)); }
+function et67Estilo(){ const c = ET67.cfg, k = et67K(); return `--w:${c.w}mm;--h:${c.h}mm;--k:${k.toFixed(3)};--dx:${c.dx}mm;--dy:${c.dy}mm`; }
 function et67Etiqueta(p, modelo){
-  const c = ET67.cfg, k = Math.max(.5, Math.min(1.6, Math.min(c.w, c.h)/40)), nome = String(p.nome||'').replace(/\s+/g,' ').trim(), cod = et67Cod(p);
+  const c = ET67.cfg, k = et67K(), nome = String(p.nome||'').replace(/\s+/g,' ').trim(), cod = et67Cod(p);
   const baixa = c.h/c.w < .8, n = nome.length;
   let fn = n <= 18 ? 3.5 : n <= 34 ? 3.0 : n <= 54 ? 2.6 : 2.25, ln = baixa ? 2 : 3, fp = 7.2, hb = baixa ? 6.5 : 8.5;
   const preco = et67Preco(p), cheio = Number(p.preco)||0, promo = preco > 0 && preco < cheio;
@@ -321,7 +323,7 @@ function et67BarraHtml(){
 }
 function et67AjHtml(){
   if(!ET67.aj) return '';
-  const c = ET67.cfg, pre = [[40,40],[50,30],[60,40],[40,25]];
+  const c = ET67.cfg, pre = [[40,30],[40,40],[50,30],[60,40],[40,25]];
   return `<div class="et67-aj"><h4>Tamanho da etiqueta do rolo</h4>
     <div class="ln"><div class="et67-seg">${pre.map(([w,h])=>`<button class="${c.w===w&&c.h===h?'on':''}" data-a="tam" data-id="${w}x${h}">${w} × ${h}</button>`).join('')}</div>
       <span>ou</span><input type="number" min="15" max="110" step="1" value="${c.w}" data-cfg="w" aria-label="Largura em mm"> × <input type="number" min="10" max="160" step="1" value="${c.h}" data-cfg="h" aria-label="Altura em mm"> mm</div>
@@ -331,7 +333,7 @@ function et67AjHtml(){
     <div class="ln" style="margin-top:10px"><label style="display:flex;gap:7px;align-items:center;cursor:pointer"><input type="checkbox" data-cfg="marca" ${c.marca?'checked':''}> Escrever <b>LAS VEGAS</b> no topo da etiqueta</label></div>
     <div class="ln" style="margin-top:10px"><button class="et67-bt" data-a="teste"><i class="ti ti-printer"></i> Imprimir 1 etiqueta de teste</button></div>
     <h4>Na janela de impressão (só na primeira vez)</h4>
-    <ol><li><b>Destino:</b> a impressora de etiquetas (a branca, TOMATE) — não a do cupom.</li><li><b>Mais definições › Tamanho do papel:</b> ${c.w} × ${c.h} mm (o do rolo).</li><li><b>Margens:</b> Nenhuma · <b>Escala:</b> 100 · sem cabeçalho e rodapé.</li><li>Imprima a etiqueta de teste: a moldura tem que sair inteira. Se cortar, use as setas aqui em cima.</li></ol></div>`;
+    <ol><li><b>Destino:</b> a impressora de etiquetas (a branca — aparece como <b>argox</b>) — não a do cupom.</li><li><b>Mais definições › Tamanho do papel:</b> ${c.w} × ${c.h} mm (o do rolo).</li><li><b>Margens:</b> Nenhuma · <b>Escala:</b> 100 · sem cabeçalho e rodapé.</li><li>Imprima a etiqueta de teste: a moldura tem que sair inteira. Se cortar, use as setas aqui em cima.</li></ol></div>`;
 }
 
 /* ───────── janela ───────── */

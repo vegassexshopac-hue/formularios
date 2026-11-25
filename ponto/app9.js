@@ -176,7 +176,7 @@ document.write('<script src="app65.js?v=65"><\/script>');
 /* v66: Pós-venda — botão no Início, busca de qualquer cliente, lista de quem comprou há 2–7 dias e botão em Minhas vendas; abre o WhatsApp com mensagem pronta e registra quem chamou (app66.js; servidor POSVENDA.gs) */
 document.write('<script src="app66.js?v=66b"><\/script>');
 /* v67: Etiquetas — botão "Imprimir etiquetas" no Início: bipa ou procura o produto, vê a etiqueta na tela (nome, preço, código de barras) e imprime no rolo 40×40 da impressora térmica; entradas de mercadoria viram etiquetas com um toque; botão na ficha do produto (app67.js; sem servidor) */
-document.write('<script src="app67.js?v=67"><\/script>');
+document.write('<script src="app67.js?v=67b"><\/script>');
 /* v68: bateu o ponto → continua logada: a tela de sucesso volta para o Início do portal em vez de deslogar (menos na saída do dia) (app68.js; sem servidor) */
 document.write('<script src="app68.js?v=68"><\/script>');
 /* velocidade (etapa 1): a Arena da vendedora atualiza pela ação leve "arena" do servidor (LEVE.gs), sem baixar o pacote inteiro a cada 30 s (rapido.js) */
