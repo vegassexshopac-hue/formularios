@@ -173,6 +173,8 @@ document.write('<script src="app62.js?v=62"><\/script>');
 document.write('<script src="app64.js?v=64b"><\/script>');
 /* v65: Relatórios no WhatsApp — relatório do dia quando o último caixa fecha + aviso a cada ponto, para Madu e Matheus; colaboradoras prontas para ligar (Comunicação › Relatórios, perfil Matheus) (app65.js; servidor RELATORIO.gs) */
 document.write('<script src="app65.js?v=65"><\/script>');
+/* v66: Pós-venda — botão no Início, busca de qualquer cliente, lista de quem comprou há 2–7 dias e botão em Minhas vendas; abre o WhatsApp com mensagem pronta e registra quem chamou (app66.js; servidor POSVENDA.gs) */
+document.write('<script src="app66.js?v=66"><\/script>');
 /* velocidade (etapa 1): a Arena da vendedora atualiza pela ação leve "arena" do servidor (LEVE.gs), sem baixar o pacote inteiro a cada 30 s (rapido.js) */
 document.write('<script src="rapido.js?v=rap1"><\/script>');
 document.write('<script src="app12.js?v=35"><\/script>');
