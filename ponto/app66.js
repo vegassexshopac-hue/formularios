@@ -60,7 +60,7 @@
 
 `; document.head.appendChild(st); })();
 
-const PV66 = { q:'', res:null, t:null, filtro:'minhas', feitos:new Set(), ok:new Set() };
+const PV66 = { q:'', res:null, t:null, esperando:false, falhou:false, filtro:'minhas', feitos:new Set(), ok:new Set() };
 const pv66Admin = () => S.tela==='admin' && !!S.adm;
 const pv66Eu = () => { try{ return primeiroNome(S.sess.dados.colaboradora.nome); }catch(e){ return ''; } };
 function pv66Lista(){ return (typeof REL!=='undefined' && REL.d && REL.d.posvenda) || []; }
@@ -117,11 +117,23 @@ function pv66ItemBusca(c, i){
     ${c.tel_mask?`<button class="pv66-zap" onclick="pv66Zap('${c.id}','',this)"><i class="ti ti-brand-whatsapp"></i> Chamar</button>`:'<small class="apagado">sem WhatsApp</small>'}</div>`;
 }
 
+
+/* carrega a lista UMA vez (v66c: tocar no botão enquanto a lista ainda carregava travava a página num laço) */
+function pv66Carregar(forcar){
+  if(PV66.esperando || typeof relCarregar!=='function') return;
+  PV66.esperando = true;
+  const fim = () => { PV66.esperando = false; if(!REL.d) PV66.falhou = true; pv66Pintar(); pv66AtualizarCard(); };
+  if(REL.carregando){ const t = setInterval(()=>{ if(!REL.carregando){ clearInterval(t); fim(); } }, 300); return; }
+  relCarregar(forcar).then(fim, fim);
+}
 /* ───────── janela (equipe) ───────── */
 function pv66ListaHtml(){
   if(PV66.q.trim().length >= 2) return '';
   const d = typeof REL!=='undefined' ? REL.d : null;
-  if(!d){ relCarregar().then(()=>{ pv66Pintar(); pv66AtualizarCard(); }); return `<p class="suave"><i class="ti ti-loader-2"></i> Procurando as clientes…</p>`; }
+  if(!d){
+    if(PV66.falhou) return `<div class="nota warn"><i class="ti ti-wifi-off"></i><div>Não deu para carregar a lista agora. <button class="btn p" onclick="PV66.falhou=false;pv66Carregar(true)">Tentar de novo</button></div></div>`;
+    pv66Carregar(); return `<p class="suave"><i class="ti ti-loader-2"></i> Procurando as clientes…</p>`;
+  }
   if(d.semServidor || !d.posvenda) return `<div class="nota warn"><i class="ti ti-plug-connected-x"></i><div><b>Falta o servidor.</b> A administração precisa colar o arquivo <b>POSVENDA</b> no Apps Script e publicar uma nova versão.</div></div>`;
   const eu = S.sess?.eid, todas = d.posvenda;
   const minhas = todas.filter(x=>x.colaboradora_id===eu);
@@ -141,7 +153,7 @@ function pv66ResHtml(){
 }
 function pv66Abrir(){
   PV66.q = ''; PV66.res = null;
-  if(typeof REL!=='undefined' && REL.d && Date.now()-REL.em > 5*60e3) relCarregar(true).then(()=>{ pv66Pintar(); pv66AtualizarCard(); });
+  if(typeof REL!=='undefined' && REL.d && !REL.carregando && Date.now()-REL.em > 5*60e3) pv66Carregar(true);
   $('#modal').innerHTML = `<div class="veu" onclick="if(event.target===this)fecharModal()"><div class="modal largo"><div class="modal-t"><h3 class="cresce">🛍️ Pós-venda</h3><button class="icone" onclick="fecharModal()"><i class="ti ti-x"></i></button></div><div class="modal-c" id="pv66-corpo">
     <p class="suave" style="margin:0 0 10px;font-size:13.5px">Toque no <b>nome</b> para ver a ficha da cliente (compras, quem vendeu, o que ela mais leva). <b>Mandar</b> abre o WhatsApp com a mensagem pronta — sem produto, e fica registrado que você chamou.</p>
     <div class="pv66-busca"><i class="ti ti-search"></i><input id="pv66-q" type="search" autocomplete="off" placeholder="Procurar qualquer cliente (nome ou final do WhatsApp)" oninput="pv66Buscar(this.value)"></div>
