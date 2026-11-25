@@ -10,6 +10,8 @@
       quando alguém faz o pós-venda.
    2) Ação "zap": devolve o WhatsApp da cliente na hora do toque e REGISTRA quem pegou
       (aba Contatos: tipo posvenda quando vem de uma venda; tipo contato quando veio da busca).
+   3) Ficha da cliente (v66b): histórico de compras (portal + sistema antigo), quem vendeu, o que ela mais
+      leva, cartão fidelidade/cashback e quem já chamou — para a equipe conhecer a cliente. Só dentro do portal.
    Nunca vai produto na mensagem nem na lista.
    Arquivo SEPARADO — fica no FIM da lista (depois do RELATORIO). Precisa do RELACIONAMENTO e do FIDELIDADE.
    ───────────────────────────────────────────────────────────────
@@ -105,11 +107,56 @@ function pvZap_(req, por) {
            ja: anterior ? { por: anterior.por, quando: anterior.quando } : null };
 }
 
+
+/* ═════════ 3) ficha da cliente (v66b) ═════════ */
+function pvTitulo_(s) { return String(s || '').toLowerCase().replace(/(^|\s)\S/g, function (x) { return x.toUpperCase(); }).trim(); }
+function pvFicha_(id) {
+  var todas = ler_('Clientes'), c = todas.filter(function (x) { return x.id === String(id || '') && x.ativo !== 'NÃO'; })[0];
+  if (!c) throw new Error('Cliente não encontrada');
+  var idx = fidIndice_(null, todas), cfg = fidCfg_(), k = fidCartao_(c, idx, cfg, false);
+  var compras = [];
+  (idx.porCli[c.id] || []).forEach(function (v) {
+    var it = []; try { it = JSON.parse(v.itens || '[]'); } catch (e) {}
+    compras.push({ origem: v.origem === 'kommo' ? 'kommo' : 'portal', data: String(v.data).slice(0, 10), hora: String(v.hora || '').slice(0, 5), loja: v.loja,
+      numero: Number(v.numero) || 0, vendedora: String(v.colaboradora || '').split(' ')[0], total: fidR2_(v.total), pagamento: v.pagamento || '',
+      itens: it.map(function (i) { return { id: i.id || '', nome: i.nome || '', qtd: Number(i.qtd) || 1 }; }) });
+  });
+  var antigas = [];
+  try { if (typeof histDoCliente_ === 'function') antigas = histDoCliente_(c.tel, c.nome); } catch (e) {}
+  antigas.forEach(function (h) {
+    compras.push({ origem: 'antigo', data: String(h.data).slice(0, 10), hora: String(h.data).slice(11, 16), loja: h.loja, numero: 0, vendedora: pvTitulo_(h.vendedora).split(' ')[0],
+      total: Number(h.total) || 0, pagamento: '', itens: (h.itens || []).map(function (i) { return { cod: i.cod || '', nome: pvTitulo_(i.desc), qtd: Number(i.qtd) || 1 }; }) });
+  });
+  compras.sort(function (a, b) { var x = a.data + ' ' + a.hora, y = b.data + ' ' + b.hora; return x < y ? 1 : x > y ? -1 : 0; });
+  // o que ela mais leva e quem mais atende
+  var prods = {}, vends = {}, lojas = {}, gasto = 0;
+  compras.forEach(function (v) {
+    gasto += v.total; if (v.loja) lojas[v.loja] = (lojas[v.loja] || 0) + 1;
+    if (v.vendedora) vends[v.vendedora] = (vends[v.vendedora] || 0) + 1;
+    v.itens.forEach(function (i) { var n = norm_(i.nome); if (!n) return; var p = prods[n] || (prods[n] = { nome: i.nome, id: i.id || '', cod: i.cod || '', vezes: 0, qtd: 0, ultima: '' }); p.vezes++; p.qtd += i.qtd; if (v.data > p.ultima) p.ultima = v.data; if (i.id && !p.id) p.id = i.id; });
+  });
+  var top = Object.keys(prods).map(function (n) { return prods[n]; }).sort(function (a, b) { return b.vezes - a.vezes || b.qtd - a.qtd || (a.ultima < b.ultima ? 1 : -1); }).slice(0, 8);
+  var quem = Object.keys(vends).map(function (n) { return { nome: n, vezes: vends[n] }; }).sort(function (a, b) { return b.vezes - a.vezes; }).slice(0, 5);
+  var lojaFav = Object.keys(lojas).sort(function (a, b) { return lojas[b] - lojas[a]; })[0] || '';
+  var contatos = ler_('Contatos').filter(function (r) { return r.cliente_id === c.id; }).map(function (r) { return { tipo: r.tipo, quando: String(r.quando || r.data), por: r.por }; })
+    .sort(function (a, b) { return a.quando < b.quando ? 1 : -1; }).slice(0, 10);
+  var n = compras.length, ult = n ? compras[0].data : '';
+  return { ok: true, ficha: {
+    id: c.id, nome: c.nome, tel_mask: fidMascara_(c.tel), tem_zap: /^\d{10,11}$/.test(fidTel_(c.tel)),
+    aniversario: /^\d{4}-\d{2}-\d{2}$/.test(c.nascimento || '') ? c.nascimento.slice(5) : '', desde: String(c.criado_em || '').slice(0, 10), obs: c.obs || '',
+    indicado_por: k.indicado_por_nome || '', indicacoes: k.indicacoes_validas || 0,
+    compras: n, gasto: fidR2_(gasto), ticket: n ? fidR2_(gasto / n) : 0, ultima: ult, dias_ultima: ult ? relDias_(ult, hoje_()) : null, loja_fav: lojaFav,
+    selos: k.selos, no_cartao: k.no_cartao, ciclo: k.ciclo, presente_em: k.presente_em, premios_pendentes: (k.pendentes || []).length,
+    cashback: k.cashback && k.cashback.saldo > 0 ? { saldo: k.cashback.saldo, vence: k.cashback.vence ? k.cashback.vence.data : '' } : null,
+    top: top, quem: quem, historico: compras.slice(0, 60), historico_total: n, contatos: contatos
+  } };
+}
+
 /* ═════════ ações ═════════ */
 var _pvRodar = rodar_;
 rodar_ = function (req) {
-  if (req && req.a === 'relacionamento' && req.op === 'zap') {
-    try { var c = checarColab_(req); return pvZap_(req, c.nome); }
+  if (req && req.a === 'relacionamento' && (req.op === 'zap' || req.op === 'ficha')) {
+    try { var c = checarColab_(req); return req.op === 'ficha' ? pvFicha_(req.cliente_id) : pvZap_(req, c.nome); }
     catch (e) { return { ok: false, erro: String(e && e.message || e) }; }
   }
   return _pvRodar(req);
@@ -117,6 +164,7 @@ rodar_ = function (req) {
 var _pvAdmRel = ADMIN.admRelacionamento;
 ADMIN.admRelacionamento = function (req) {
   if (req.op === 'zap') return pvZap_(req, 'Administração');
+  if (req.op === 'ficha') return pvFicha_(req.cliente_id);
   if (req.op === 'cfg_pv') {
     var v = req.valor || {}, atual = cfgJson_('posvenda', {}) || {};
     for (var k in PV_PADRAO) if (v[k] != null && v[k] !== '' && !isNaN(Number(v[k]))) atual[k] = Math.max(0, Math.round(Number(v[k])));
