@@ -28,10 +28,10 @@ htmlEntrada = function htmlEntrada(){
     if(!c.temPin) return {cls:'sem', ic:'ti-key-off', t:'PIN não criado', s:'Fale com a administração'};
     if(!ponto) return {cls:'portal', ic:'ti-layout-dashboard', t:'Entrar no portal', s:a ? (ST_TXT[a.st]||'')+' · '+a.desde : 'Toque para entrar'};
     if(!a) return {cls:'entrar', ic:'ti-login-2', t:'Registrar entrada', s:escalaHoje.has(c.id) ? 'Na escala de hoje' : 'Toque para começar'};
-    if(a.st==='ativa') return {cls:'ativa', ic:'ti-player-play', t:'Trabalhando · desde '+a.desde, s:'Almoço, pausa ou saída'};
-    if(a.st==='almoco') return {cls:'pausa', ic:'ti-tools-kitchen-2', t:'No almoço · '+a.desde, s:'Toque para voltar'};
-    if(a.st==='pausa') return {cls:'pausa', ic:'ti-coffee', t:'Na pausa · '+a.desde, s:'Toque para voltar'};
-    if(a.st==='saiu') return {cls:'saiu', ic:'ti-moon-stars', t:'Já saiu · '+a.desde, s:'Dia encerrado'};
+    if(a.st==='ativa') return {cls:'ativa', ic:'ti-player-play', t:'Trabalhando', s:'desde '+a.desde};
+    if(a.st==='almoco') return {cls:'pausa', ic:'ti-tools-kitchen-2', t:'No almoço', s:'desde '+a.desde+' · toque p/ voltar'};
+    if(a.st==='pausa') return {cls:'pausa', ic:'ti-coffee', t:'Na pausa', s:'desde '+a.desde+' · toque p/ voltar'};
+    if(a.st==='saiu') return {cls:'saiu', ic:'ti-moon-stars', t:'Já saiu', s:'às '+a.desde+' · dia encerrado'};
     return {cls:'ativa', ic:'ti-clock', t:(ST_TXT[a.st]||'')+' · '+a.desde, s:''};
   };
   const pessoa = (c, i) => { const a = agora.get(c.id), e = estado(c, a);
@@ -125,7 +125,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .e69-passos li:not(:last-child)::after{content:'';width:6px;height:6px;border-top:2px solid var(--creme3);border-right:2px solid var(--creme3);transform:rotate(45deg);margin-left:4px;opacity:.6}
 .e69-passos li:first-child span{animation:e69Toque 2.6s ease-in-out infinite}
 @keyframes e69Toque{0%,70%,100%{transform:none}80%{transform:scale(1.18)}90%{transform:scale(.95)}}
-.e69-pessoas{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:14px}
+.e69-pessoas{display:grid;grid-template-columns:repeat(auto-fit,minmax(138px,1fr));gap:12px}
 .e69-p{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:22px 12px 18px;border-radius:22px;background:var(--noite);border:1.5px solid transparent;color:var(--creme);overflow:hidden;transition:transform .3s var(--mola),box-shadow .3s,border-color .25s,background .25s}
 .e69-p::before{content:'';position:absolute;inset:0 0 auto;height:56px;background:linear-gradient(180deg,rgba(227,16,31,.07),transparent);pointer-events:none}
 .e69-p.ativa::before{background:linear-gradient(180deg,rgba(14,159,98,.10),transparent)}
@@ -133,7 +133,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .e69-av{margin-bottom:6px}
 .e69-p .lob-av{font-size:26px;transition:transform .4s var(--mola)}
 .e69-p b{font-size:18.5px;line-height:1.1;letter-spacing:-.01em}
-.e69-st{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:12.5px;font-weight:700;background:var(--vermelho-claro);color:var(--vermelho2)}
+.e69-st{white-space:nowrap;display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:12.5px;font-weight:700;background:var(--vermelho-claro);color:var(--vermelho2)}
 .e69-st i{font-size:14px}
 .e69-p.ativa .e69-st{background:var(--ok-bg);color:var(--ok)}
 .e69-p.pausa .e69-st{background:var(--warn-bg);color:var(--warn)}
