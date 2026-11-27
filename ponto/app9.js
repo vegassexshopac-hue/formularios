@@ -179,6 +179,8 @@ document.write('<script src="app66.js?v=66b"><\/script>');
 document.write('<script src="app67.js?v=67b"><\/script>');
 /* v68: bateu o ponto → continua logada: a tela de sucesso volta para o Início do portal em vez de deslogar (menos na saída do dia) (app68.js; sem servidor) */
 document.write('<script src="app68.js?v=68"><\/script>');
+/* v69: entrada nova — QR Code pausado por enquanto (a equipe bate no computador) e tela de entrada mais intuitiva: passo a passo, cartões grandes com o que cada uma vai fazer agora, lojas ao vivo ao lado (app69.js; sem servidor) */
+document.write('<script src="app69.js?v=69"><\/script>');
 /* velocidade (etapa 1): a Arena da vendedora atualiza pela ação leve "arena" do servidor (LEVE.gs), sem baixar o pacote inteiro a cada 30 s (rapido.js) */
 document.write('<script src="rapido.js?v=rap1"><\/script>');
 document.write('<script src="app12.js?v=35"><\/script>');
